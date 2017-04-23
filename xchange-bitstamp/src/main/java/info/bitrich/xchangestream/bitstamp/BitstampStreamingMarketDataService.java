@@ -31,7 +31,7 @@ public class BitstampStreamingMarketDataService implements StreamingMarketDataSe
                     ObjectMapper mapper = new ObjectMapper();
                     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                     BitstampOrderBook bitstampOrderBook = mapper.readValue(s, BitstampOrderBook.class);
-                    bitstampOrderBook = new BitstampOrderBook(new Date().getTime(), bitstampOrderBook.getBids(), bitstampOrderBook.getAsks());
+                    bitstampOrderBook = new BitstampOrderBook(new Date().getTime()/1000L, bitstampOrderBook.getBids(), bitstampOrderBook.getAsks());
 
                     return BitstampAdapters.adaptOrderBook(bitstampOrderBook, currencyPair, 1000);
                 });
@@ -52,6 +52,8 @@ public class BitstampStreamingMarketDataService implements StreamingMarketDataSe
                     ObjectMapper mapper = new ObjectMapper();
                     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                     BitstampWebSocketTransaction transactions = mapper.readValue(s, BitstampWebSocketTransaction.class);
+                    transactions = new BitstampWebSocketTransaction(new Date().getTime()/1000L, transactions.getTid(),
+                            transactions.getPrice(), transactions.getAmount(), transactions.getType());
                     return BitstampAdapters.adaptTrade(transactions, currencyPair, 1000);
                 });
     }
