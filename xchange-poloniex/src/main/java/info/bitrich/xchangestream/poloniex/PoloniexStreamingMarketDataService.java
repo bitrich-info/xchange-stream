@@ -53,7 +53,7 @@ public class PoloniexStreamingMarketDataService implements StreamingMarketDataSe
             askQueue = orderBookAsks.get(currencyPair);
         }
 
-        String channel = currencyPair.toString().replace("/", "_");
+        String channel = PoloniexUtils.toPairString(currencyPair);
         Observable<OrderBook> result = streamingService.subscribeChannel(channel)
                 .map(pubSubData -> {
                     Date now = new Date();
