@@ -15,6 +15,10 @@ public abstract class JsonNettyStreamingService extends NettyStreamingService<Js
         super(apiUrl);
     }
 
+    public JsonNettyStreamingService(String apiUrl, int maxFramePayloadLength) {
+        super(apiUrl, maxFramePayloadLength);
+    }
+
     @Override
     public void massegeHandler(String message) {
         LOG.debug("Received message: {}", message);
