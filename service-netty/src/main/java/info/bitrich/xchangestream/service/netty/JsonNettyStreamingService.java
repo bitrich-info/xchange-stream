@@ -20,7 +20,7 @@ public abstract class JsonNettyStreamingService extends NettyStreamingService<Js
     }
 
     @Override
-    public void massegeHandler(String message) {
+    public void messageHandler(String message) {
         LOG.debug("Received message: {}", message);
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode;

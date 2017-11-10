@@ -23,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -87,7 +89,7 @@ public abstract class NettyStreamingService<T> {
 
                 final WebSocketClientHandler handler = getWebSocketClientHandler(WebSocketClientHandshakerFactory.newHandshaker(
                   uri, WebSocketVersion.V13, null, true, new DefaultHttpHeaders(), maxFramePayloadLength),
-                  this::massegeHandler);
+                  this::messageHandler);
 
                 Bootstrap b = new Bootstrap();
                 b.group(group)
@@ -99,11 +101,14 @@ public abstract class NettyStreamingService<T> {
                                 if (sslCtx != null) {
                                     p.addLast(sslCtx.newHandler(ch.alloc(), host, port));
                                 }
-                                p.addLast(
-                                        new HttpClientCodec(),
-                                        new HttpObjectAggregator(8192),
-                                        getWebSocketClientExtensionHandler(),
-                                        handler);
+
+                                WebSocketClientExtensionHandler clientExtensionHandler = getWebSocketClientExtensionHandler();
+                                List<ChannelHandler> handlers = new ArrayList<>(4);
+                                handlers.add(new HttpClientCodec());
+                                handlers.add(new HttpObjectAggregator(8192));
+                                handlers.add(handler);
+                                if (clientExtensionHandler != null) handlers.add(clientExtensionHandler);
+                                p.addLast(handlers.toArray(new ChannelHandler[handlers.size()]));
                             }
                         });
 
@@ -142,7 +147,7 @@ public abstract class NettyStreamingService<T> {
      *
      * @param message Content of the message from the server.
      */
-    public abstract void massegeHandler(String message);
+    public abstract void messageHandler(String message);
 
     public void sendMessage(String message) {
         LOG.debug("Sending message: {}", message);
