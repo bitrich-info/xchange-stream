@@ -6,8 +6,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
 
 /**
  * Created by Lukas Zaoralek on 11.11.17.
@@ -35,11 +38,14 @@ public class PoloniexWebSocketEventsTransaction {
         PoloniexWebSocketOrderbookModifiedEvent insertEvent = new PoloniexWebSocketOrderbookModifiedEvent(orderbookModifiedEvent);
         events.add(insertEvent);
       } else if (eventType.equals("t")) {
+        Instant timestamp = Instant.ofEpochSecond(jsonNode.get(5).asInt());
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         TradeEvent tradeEvent = new TradeEvent(jsonNode.get(1).asText(),
                                                jsonNode.get(2).asText(),
                                                new BigDecimal(jsonNode.get(3).asText()),
                                                new BigDecimal(jsonNode.get(4).asText()),
-                                               jsonNode.get(5).asText());
+                                               sdf.format(timestamp));
         PoloniexWebSocketTradeEvent insertEvent = new PoloniexWebSocketTradeEvent(tradeEvent);
         events.add(insertEvent);
       }
