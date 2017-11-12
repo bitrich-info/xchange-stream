@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -38,14 +39,16 @@ public class PoloniexWebSocketEventsTransaction {
         PoloniexWebSocketOrderbookModifiedEvent insertEvent = new PoloniexWebSocketOrderbookModifiedEvent(orderbookModifiedEvent);
         events.add(insertEvent);
       } else if (eventType.equals("t")) {
+        String formatedDate = "";
         Instant timestamp = Instant.ofEpochSecond(jsonNode.get(5).asInt());
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        formatedDate = sdf.format(Date.from(timestamp));
         TradeEvent tradeEvent = new TradeEvent(jsonNode.get(1).asText(),
                                                jsonNode.get(2).asText(),
                                                new BigDecimal(jsonNode.get(3).asText()),
                                                new BigDecimal(jsonNode.get(4).asText()),
-                                               sdf.format(timestamp));
+                                               formatedDate);
         PoloniexWebSocketTradeEvent insertEvent = new PoloniexWebSocketTradeEvent(tradeEvent);
         events.add(insertEvent);
       }
