@@ -15,7 +15,7 @@ import java.util.List;
 @JsonFormat(shape= JsonFormat.Shape.ARRAY)
 public class PoloniexWebSocketEventsTransaction {
   public String channelId;
-  public String timestamp;
+  public String seqId;
   public JsonNode[] jsonEvents;
 
   public PoloniexWebSocketEvent[] getEvents() {
@@ -46,5 +46,13 @@ public class PoloniexWebSocketEventsTransaction {
     }
 
     return events.toArray(new PoloniexWebSocketEvent[events.size()]);
+  }
+
+  public String getChannelId() {
+    return channelId;
+  }
+
+  public String getSeqId() {
+    return seqId;
   }
 }
