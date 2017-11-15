@@ -93,7 +93,7 @@ public class PubnubStreamingService {
     }).doOnDispose(() -> {
       LOG.debug("Unsubscribe channel: {}", channelName);
       pubnub.unsubscribe().channels(Collections.singletonList(channelName)).execute();
-    });
+    }).share();
   }
 
   public Completable disconnect() {
