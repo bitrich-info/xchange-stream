@@ -49,8 +49,7 @@ public class BitflyerStreamingMarketDataService implements StreamingMarketDataSe
       return bitflyerOrderbook;
     });
 
-    Observable<BitflyerOrderbook> updateTransactions =  streamingService.subscribeChannel
-            (channelOrderbookUpdatesName)
+    Observable<BitflyerOrderbook> updateTransactions =  streamingService.subscribeChannel(channelOrderbookUpdatesName)
             .filter(s -> orderbooks.containsKey(currencyPair))
             .map(s -> {
               BitflyerOrderbook bitflyerOrderbook = orderbooks.get(currencyPair);

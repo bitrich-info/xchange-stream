@@ -16,7 +16,7 @@ public class BitflyerManualExample {
     StreamingExchange exchange = StreamingExchangeFactory.INSTANCE.createExchange(BitflyerStreamingExchange.class.getName());
     exchange.connect().blockingAwait();
 
-    //Note that, the first order book snapshot takes several seconds!
+    //Note that, the receiving first order book snapshot takes several seconds or minutes!
     exchange.getStreamingMarketDataService().getOrderBook(CurrencyPair.BTC_JPY).subscribe(orderBook -> {
       LOG.info("First ask: {}", orderBook.getAsks().get(0));
       LOG.info("First bid: {}", orderBook.getBids().get(0));
