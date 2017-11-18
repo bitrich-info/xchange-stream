@@ -74,7 +74,7 @@ public class OkCoinOrderbook {
   }
 
   public OkCoinDepth toOkCoinDepth(long epoch) {
-    Date timestamp = new java.util.Date(epoch*1000);
+    Date timestamp = new java.util.Date(epoch);
     return new OkCoinDepth(getAsks(), getBids(), timestamp);
   }
 }
