@@ -9,7 +9,7 @@ public interface StreamingExchange extends Exchange {
      *
      * @return {@link Completable} that completes upon successful connection.
      */
-    Completable connect();
+    Completable connect(ProductSubscription... args);
 
     /**
      * Disconnect from the WebSocket API.
