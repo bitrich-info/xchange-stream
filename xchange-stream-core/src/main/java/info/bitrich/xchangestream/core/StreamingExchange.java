@@ -18,6 +18,8 @@ public interface StreamingExchange extends Exchange {
      * @return {@link Completable} that completes upon successful disconnect.
      */
     Completable disconnect();
+    
+    boolean isAlive();
 
     /**
      * Returns service that can be used to access market data.
