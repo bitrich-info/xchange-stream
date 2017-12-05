@@ -7,6 +7,9 @@ import info.bitrich.xchangestream.poloniex2.dto.PoloniexWebSocketEvent;
 import info.bitrich.xchangestream.poloniex2.dto.PoloniexWebSocketEventsTransaction;
 import info.bitrich.xchangestream.poloniex2.dto.PoloniexWebSocketSubscriptionMessage;
 import info.bitrich.xchangestream.service.netty.JsonNettyStreamingService;
+import info.bitrich.xchangestream.service.netty.WebSocketClientHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker;
 import io.reactivex.Observable;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.slf4j.Logger;
@@ -122,5 +125,27 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
 
     ObjectMapper objectMapper = new ObjectMapper();
     return objectMapper.writeValueAsString(subscribeMessage);
+  }
+
+  @Override
+  protected WebSocketClientHandler getWebSocketClientHandler(WebSocketClientHandshaker handshaker,
+                                                             WebSocketClientHandler.WebSocketMessageHandler handler) {
+    LOG.info("Registering Poloniex2WebSocketClientHandler");
+    return new Poloniex2WebSocketClientHandler(handshaker, handler);
+  }
+
+  private class Poloniex2WebSocketClientHandler extends  WebSocketClientHandler{
+
+    Poloniex2WebSocketClientHandler(WebSocketClientHandshaker handshaker, WebSocketMessageHandler handler) {
+      super(handshaker, handler);
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+      super.channelInactive(ctx);
+      LOG.info("Reconnecting channels because the websocket was closed...");
+      connect().blockingAwait();
+      resubscribeChannels();
+    }
   }
 }
