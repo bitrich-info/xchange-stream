@@ -1,33 +1,35 @@
 package info.bitrich.xchangestream.core;
 
 import org.knowm.xchange.currency.CurrencyPair;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Lukas Zaoralek on 24.11.17.
+ * Use to specify subscriptions during the connect phase
+ * For instancing, use builder @link {@link ProductSubscriptionBuilder}
  */
 public class ProductSubscription {
-  private List<CurrencyPair> orderbook;
+  private List<CurrencyPair> orderBook;
   private List<CurrencyPair> trades;
   private List<CurrencyPair> ticker;
 
   private ProductSubscription(ProductSubscriptionBuilder builder) {
-    this.orderbook = builder.orderbook;
+    this.orderBook = builder.orderBook;
     this.trades = builder.trades;
     this.ticker = builder.ticker;
   }
 
-  public CurrencyPair[] getOrderbook() {
-    return orderbook.toArray(new CurrencyPair[orderbook.size()]);
+  public List<CurrencyPair> getOrderBook() {
+    return orderBook;
   }
 
-  public CurrencyPair[] getTrades() {
-    return trades.toArray(new CurrencyPair[trades.size()]);
+  public List<CurrencyPair> getTrades() {
+    return trades;
   }
 
-  public CurrencyPair[] getTicker() {
-    return ticker.toArray(new CurrencyPair[ticker.size()]);
+  public List<CurrencyPair> getTicker() {
+    return ticker;
   }
 
   public static ProductSubscriptionBuilder create() {
@@ -35,18 +37,18 @@ public class ProductSubscription {
   }
 
   public static class ProductSubscriptionBuilder {
-    private List<CurrencyPair> orderbook;
+    private List<CurrencyPair> orderBook;
     private List<CurrencyPair> trades;
     private List<CurrencyPair> ticker;
 
     private ProductSubscriptionBuilder() {
-      orderbook = new ArrayList<>();
+      orderBook = new ArrayList<>();
       trades = new ArrayList<>();
       ticker = new ArrayList<>();
     }
 
     public ProductSubscriptionBuilder addOrderbook(CurrencyPair pair) {
-      orderbook.add(pair);
+      orderBook.add(pair);
       return this;
     }
 
@@ -61,7 +63,7 @@ public class ProductSubscription {
     }
 
     public ProductSubscriptionBuilder addAll(CurrencyPair pair) {
-      orderbook.add(pair);
+      orderBook.add(pair);
       trades.add(pair);
       ticker.add(pair);
       return this;

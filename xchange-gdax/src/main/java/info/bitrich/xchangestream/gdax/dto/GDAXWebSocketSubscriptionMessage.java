@@ -82,16 +82,18 @@ public class GDAXWebSocketSubscriptionMessage {
 
   private void generateSubscriptionMessage(ProductSubscription productSubscription) {
     List<GDAXProductSubsctiption> channels = new ArrayList<>(3);
-    Map<String, CurrencyPair[]> pairs = new HashMap<>(3);
+    Map<String, List<CurrencyPair>> pairs = new HashMap<>(3);
 
-    pairs.put("level2", productSubscription.getOrderbook());
+    pairs.put("level2", productSubscription.getOrderBook());
     pairs.put("ticker", productSubscription.getTicker());
     pairs.put("matches", productSubscription.getTrades());
 
-    for (Map.Entry<String, CurrencyPair[]> product : pairs.entrySet()) {
-      CurrencyPair[] currencyPairs = product.getValue();
-      if (currencyPairs == null || currencyPairs.length == 0) continue;
-      GDAXProductSubsctiption gdaxProduct = generateGDAXProduct(product.getKey(), product.getValue());
+    for (Map.Entry<String, List<CurrencyPair>> product : pairs.entrySet()) {
+      List<CurrencyPair> currencyPairs = product.getValue();
+      if (currencyPairs == null || currencyPairs.size() == 0) {
+        continue;
+      }
+      GDAXProductSubsctiption gdaxProduct = generateGDAXProduct(product.getKey(), product.getValue().toArray(new CurrencyPair[product.getValue().size()]));
       channels.add(gdaxProduct);
     }
 

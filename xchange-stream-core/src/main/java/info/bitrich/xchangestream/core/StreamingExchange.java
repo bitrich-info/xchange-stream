@@ -7,6 +7,7 @@ public interface StreamingExchange extends Exchange {
     /**
      * Connects to the WebSocket API of the exchange.
      *
+     * @param args Product subscription is used only in certain exchanges where you need to specify subscriptions during the connect phase.
      * @return {@link Completable} that completes upon successful connection.
      */
     Completable connect(ProductSubscription... args);

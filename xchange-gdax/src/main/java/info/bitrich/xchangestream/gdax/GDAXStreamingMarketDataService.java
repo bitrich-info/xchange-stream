@@ -17,10 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 import static io.netty.util.internal.StringUtil.isNullOrEmpty;
 import static org.knowm.xchange.gdax.GDAXAdapters.*;
@@ -39,7 +36,7 @@ public class GDAXStreamingMarketDataService implements StreamingMarketDataServic
     this.service = service;
   }
 
-  private boolean containsPair(CurrencyPair[] pairs, CurrencyPair pair) {
+  private boolean containsPair(List<CurrencyPair> pairs, CurrencyPair pair) {
     for (CurrencyPair item : pairs) {
       if (item.compareTo(pair) == 0) {
         return true;
@@ -51,7 +48,7 @@ public class GDAXStreamingMarketDataService implements StreamingMarketDataServic
 
   @Override
   public Observable<OrderBook> getOrderBook(CurrencyPair currencyPair, Object... args) {
-    if (!containsPair(service.getProduct().getOrderbook(), currencyPair))
+    if (!containsPair(service.getProduct().getOrderBook(), currencyPair))
       throw new UnsupportedOperationException(String.format("The currency pair %s is not subscribed for orderbook", currencyPair));
 
     String channelName = currencyPair.base.toString() + "-" + currencyPair.counter.toString();
