@@ -161,12 +161,15 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
     Duration maxLag = Duration.ofSeconds(5);
     LOG.info("Starting weboscket health watcher for poloniex2");
     new Thread(() -> {
-      if (getLastHeartBeat() != null && getLastHeartBeat().plus(maxLag).isBefore(Instant.now())) {
-        LOG.warn("Websocket is lagging behind!");
+      while (true) {
+        if (getLastHeartBeat() != null && getLastHeartBeat().plus(maxLag).isBefore(Instant.now())) {
+          LOG.warn("Websocket is lagging behind!");
+        }
+        try {
+          Thread.sleep(1000);
+        } catch (InterruptedException ignored) {
+        }
       }
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException ignored) {}
     }).start();
   }
 
