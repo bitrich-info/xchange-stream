@@ -17,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +34,16 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
   private final Map<String, String> subscribedChannels = new HashMap<>();
   private final Map<String, Observable<JsonNode>> subscriptions = new HashMap<>();
   private boolean isManualDisconnect = false;
+
+  private Instant lastHeartBeat = null;
+
+  private synchronized void setLastHeartBeat(Instant lastHeartBeat) {
+    this.lastHeartBeat = lastHeartBeat;
+  }
+
+  private synchronized Instant getLastHeartBeat() {
+    return lastHeartBeat;
+  }
 
   public PoloniexStreamingService(String apiUrl) {
     super(apiUrl, Integer.MAX_VALUE);
@@ -74,7 +86,10 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
     }
 
     if (jsonNode.isArray() && jsonNode.size() < 3) {
-      if (jsonNode.get(0).asText().equals(HEARTBEAT)) return;
+      if (jsonNode.get(0).asText().equals(HEARTBEAT)) {
+        setLastHeartBeat(Instant.now());
+        return;
+      }
       else if (jsonNode.get(0).asText().equals("1002")) return;
     }
 
@@ -133,6 +148,26 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
   public Completable disconnect() {
     isManualDisconnect = true;
     return super.disconnect();
+  }
+
+  @Override
+  public Completable connect() {
+    Completable connect = super.connect();
+    connect.subscribe(this::startWebsocketHealthWatcher);
+    return connect;
+  }
+
+  private void startWebsocketHealthWatcher() {
+    Duration maxLag = Duration.ofSeconds(5);
+    LOG.info("Starting weboscket health watcher for poloniex2");
+    new Thread(() -> {
+      if (getLastHeartBeat() != null && getLastHeartBeat().plus(maxLag).isBefore(Instant.now())) {
+        LOG.warn("Websocket is lagging behind!");
+      }
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException ignored) {}
+    }).start();
   }
 
   @Override
