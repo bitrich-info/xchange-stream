@@ -128,10 +128,16 @@ public abstract class NettyStreamingService<T> {
     }
 
     public Completable disconnect() {
+        return disconnect(true);
+    }
+
+    public Completable disconnect(boolean resetChannels) {
         return Completable.create(completable -> {
             CloseWebSocketFrame closeFrame = new CloseWebSocketFrame();
             webSocketChannel.writeAndFlush(closeFrame).addListener(future -> {
-                channels = new ConcurrentHashMap<>();
+                if (resetChannels) {
+                    channels = new ConcurrentHashMap<>();
+                }
                 completable.onComplete();
             });
         });

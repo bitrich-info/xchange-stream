@@ -150,27 +150,34 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
     return super.disconnect();
   }
 
-  @Override
-  public Completable connect() {
-    Completable connect = super.connect();
-    connect.subscribe(this::startWebsocketHealthWatcher);
-    return connect;
-  }
+  private boolean isWebsocketWatcherRunning = false;
 
   private void startWebsocketHealthWatcher() {
-    Duration maxLag = Duration.ofSeconds(5);
-    LOG.info("Starting weboscket health watcher for poloniex2");
-    new Thread(() -> {
-      while (true) {
-        if (getLastHeartBeat() != null && getLastHeartBeat().plus(maxLag).isBefore(Instant.now())) {
-          LOG.warn("Websocket is lagging behind!");
+    Duration maxLag = Duration.ofSeconds(15);
+
+    // prevent starting watcher several times
+    if (!isWebsocketWatcherRunning) {
+      isWebsocketWatcherRunning = true;
+      LOG.info("Starting weboscket health watcher for poloniex2");
+      new Thread(() -> {
+        while (true) {
+          if (getLastHeartBeat() != null && getLastHeartBeat().plus(maxLag).isBefore(Instant.now())) {
+            LOG.warn("Websocket is lagging 15 seconds behind, reconnecting ...");
+            try {
+              disconnect(false).blockingAwait();
+              connect().blockingAwait();
+              resubscribeChannels();
+            } catch (Exception e) {
+              LOG.warn("Exception while socket reconnect! Message: " + e.getMessage());
+            }
+          }
+          try {
+            Thread.sleep(1000);
+          } catch (InterruptedException ignored) {
+          }
         }
-        try {
-          Thread.sleep(1000);
-        } catch (InterruptedException ignored) {
-        }
-      }
-    }).start();
+      }).start();
+    }
   }
 
   @Override
@@ -196,6 +203,12 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
         LOG.info("Resubscribing channels");
         resubscribeChannels();
       }
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) {
+      super.channelActive(ctx);
+      startWebsocketHealthWatcher();
     }
   }
 }
