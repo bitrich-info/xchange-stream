@@ -29,7 +29,7 @@ import java.util.Map;
  * Created by Lukas Zaoralek on 10.11.17.
  */
 public class PoloniexStreamingService extends JsonNettyStreamingService {
-  private static final String API_URL = "api2.poloniex.com";
+  private static final String API_URL = "poloniex.com";
   private static final Logger LOG = LoggerFactory.getLogger(PoloniexStreamingService.class);
 
   private static final String HEARTBEAT = "1010";
@@ -175,6 +175,9 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
                 disconnect(false).blockingAwait();
                 connect().blockingAwait();
                 resubscribeChannels();
+
+                // reset heartbeat to prevent redundant reconnects
+                setLastHeartBeat(null);
               } catch (Exception e) {
                 LOG.warn("Exception while socket reconnect! Message: " + e.getMessage());
               }
