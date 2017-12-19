@@ -157,7 +157,7 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
   private boolean isReconnectingWebsocket = false;
 
   private void startWebsocketHealthWatcher() {
-    Duration maxLag = Duration.ofSeconds(5);
+    Duration maxLag = Duration.ofSeconds(15);
 
     // prevent starting watcher several times
     if (!isWebsocketWatcherRunning) {
@@ -166,7 +166,7 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
       new Thread(() -> {
         while (true) {
           if (getLastHeartBeat() != null && getLastHeartBeat().plus(maxLag).isBefore(Instant.now())) {
-            LOG.warn("Websocket is lagging 5 seconds behind, reconnecting ...");
+            LOG.warn("Websocket is lagging 15 seconds behind, reconnecting ...");
             if (!isConnectionAvailable()) {
               LOG.warn("Connection to Poloniex is not available, postpone websocket reconnect.");
             } else if (!isReconnectingWebsocket) {
