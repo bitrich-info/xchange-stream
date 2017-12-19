@@ -9,6 +9,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpServerKeepAliveHandler;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.handler.codec.http.websocketx.extensions.WebSocketClientExtensionHandler;
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler;
@@ -110,6 +111,7 @@ public abstract class NettyStreamingService<T> {
                                 WebSocketClientExtensionHandler clientExtensionHandler = getWebSocketClientExtensionHandler();
                                 List<ChannelHandler> handlers = new ArrayList<>(4);
                                 handlers.add(new HttpClientCodec());
+                                handlers.add(new HttpServerKeepAliveHandler());
                                 handlers.add(new HttpObjectAggregator(8192));
                                 handlers.add(handler);
                                 if (clientExtensionHandler != null) handlers.add(clientExtensionHandler);

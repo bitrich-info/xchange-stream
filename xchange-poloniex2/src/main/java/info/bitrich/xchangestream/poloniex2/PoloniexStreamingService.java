@@ -232,7 +232,7 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
       super.channelActive(ctx);
-      startWebsocketHealthWatcher();
+      //startWebsocketHealthWatcher();
     }
   }
 }
