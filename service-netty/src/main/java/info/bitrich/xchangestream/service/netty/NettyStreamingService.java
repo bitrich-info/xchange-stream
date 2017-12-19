@@ -15,6 +15,8 @@ import io.netty.handler.codec.http.websocketx.extensions.WebSocketClientExtensio
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -109,9 +111,11 @@ public abstract class NettyStreamingService<T> {
                                 }
 
                                 WebSocketClientExtensionHandler clientExtensionHandler = getWebSocketClientExtensionHandler();
-                                List<ChannelHandler> handlers = new ArrayList<>(4);
+                                List<ChannelHandler> handlers = new ArrayList<>(6);
                                 handlers.add(new HttpClientCodec());
                                 handlers.add(new HttpServerKeepAliveHandler());
+                                handlers.add(new WriteTimeoutHandler(3));
+                                handlers.add(new ReadTimeoutHandler(3));
                                 handlers.add(new HttpObjectAggregator(8192));
                                 handlers.add(handler);
                                 if (clientExtensionHandler != null) handlers.add(clientExtensionHandler);
@@ -211,11 +215,19 @@ public abstract class NettyStreamingService<T> {
 
     public void resubscribeChannels() {
         for (String channelName : channels.keySet()) {
+            int resubscribeRetrys = 3;
+            do {
             try {
                 sendMessage(getSubscribeMessage(channelName, channels.get(channelName).args));
+                resubscribeRetrys = 0;
             } catch (IOException e) {
                 LOG.error("Failed to reconnect channel: {}", channelName);
+                resubscribeRetrys--;
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ignored) {}
             }
+            } while (resubscribeRetrys > 0);
         }
     }
 
