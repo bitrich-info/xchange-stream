@@ -17,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
@@ -27,6 +29,7 @@ import java.util.Map;
  * Created by Lukas Zaoralek on 10.11.17.
  */
 public class PoloniexStreamingService extends JsonNettyStreamingService {
+  private static final String API_URL = "wss://api2.poloniex.com";
   private static final Logger LOG = LoggerFactory.getLogger(PoloniexStreamingService.class);
 
   private static final String HEARTBEAT = "1010";
@@ -153,7 +156,7 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
   private boolean isWebsocketWatcherRunning = false;
 
   private void startWebsocketHealthWatcher() {
-    Duration maxLag = Duration.ofSeconds(15);
+    Duration maxLag = Duration.ofSeconds(5);
 
     // prevent starting watcher several times
     if (!isWebsocketWatcherRunning) {
@@ -162,13 +165,17 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
       new Thread(() -> {
         while (true) {
           if (getLastHeartBeat() != null && getLastHeartBeat().plus(maxLag).isBefore(Instant.now())) {
-            LOG.warn("Websocket is lagging 15 seconds behind, reconnecting ...");
-            try {
-              disconnect(false).blockingAwait();
-              connect().blockingAwait();
-              resubscribeChannels();
-            } catch (Exception e) {
-              LOG.warn("Exception while socket reconnect! Message: " + e.getMessage());
+            LOG.warn("Websocket is lagging 5 seconds behind, reconnecting ...");
+            if (!isConnectionAvailable()) {
+              LOG.warn("Connection to Poloniex is not available, postpone websocket reconnect.");
+            } else {
+              try {
+                disconnect(false).blockingAwait();
+                connect().blockingAwait();
+                resubscribeChannels();
+              } catch (Exception e) {
+                LOG.warn("Exception while socket reconnect! Message: " + e.getMessage());
+              }
             }
           }
           try {
@@ -177,6 +184,15 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
           }
         }
       }).start();
+    }
+  }
+
+  public static boolean isConnectionAvailable() {
+    try (Socket socket = new Socket()) {
+      socket.connect(new InetSocketAddress(API_URL, 80), 2000);
+      return true;
+    } catch (IOException e) {
+      return false; // Either timeout or unreachable or failed DNS lookup.
     }
   }
 
