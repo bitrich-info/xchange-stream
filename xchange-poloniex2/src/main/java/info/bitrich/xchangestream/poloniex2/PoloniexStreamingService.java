@@ -29,7 +29,7 @@ import java.util.Map;
  * Created by Lukas Zaoralek on 10.11.17.
  */
 public class PoloniexStreamingService extends JsonNettyStreamingService {
-  private static final String API_URL = "wss://api2.poloniex.com";
+  private static final String API_URL = "api2.poloniex.com";
   private static final Logger LOG = LoggerFactory.getLogger(PoloniexStreamingService.class);
 
   private static final String HEARTBEAT = "1010";
