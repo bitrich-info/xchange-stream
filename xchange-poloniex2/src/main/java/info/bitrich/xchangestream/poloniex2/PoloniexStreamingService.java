@@ -88,11 +88,10 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
       return;
     }
 
+    setLastHeartBeat(Instant.now());
+
     if (jsonNode.isArray() && jsonNode.size() < 3) {
-      if (jsonNode.get(0).asText().equals(HEARTBEAT)) {
-        setLastHeartBeat(Instant.now());
-        return;
-      }
+      if (jsonNode.get(0).asText().equals(HEARTBEAT)) return;
       else if (jsonNode.get(0).asText().equals("1002")) return;
     }
 
@@ -157,29 +156,26 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
   private boolean isReconnectingWebsocket = false;
 
   private void startWebsocketHealthWatcher() {
-    Duration maxLag = Duration.ofSeconds(15);
+    Duration maxLag = Duration.ofSeconds(10);
 
-    // prevent starting watcher several times
+    // prevent it from being started several times
     if (!isWebsocketWatcherRunning) {
       isWebsocketWatcherRunning = true;
       LOG.info("Starting weboscket health watcher for poloniex2");
       new Thread(() -> {
         while (true) {
           if (getLastHeartBeat() != null && getLastHeartBeat().plus(maxLag).isBefore(Instant.now())) {
-            LOG.warn("Websocket is lagging 15 seconds behind, reconnecting ...");
-            if (!isConnectionAvailable()) {
-              LOG.warn("Connection to Poloniex is not available, postpone websocket reconnect.");
-            } else if (!isReconnectingWebsocket) {
+            if (!isReconnectingWebsocket) {
               isReconnectingWebsocket = true;
+              LOG.warn("Websocket is lagging 10 seconds behind, reconnecting ...");
               try {
-                disconnect(false).blockingAwait();
-                connect().blockingAwait();
-                resubscribeChannels();
+                // this subscription will cause a reconnect if the websocket was closed
+                subscribeChannel("1010");
 
                 // reset heartbeat to prevent redundant reconnects
                 setLastHeartBeat(null);
               } catch (Exception e) {
-                LOG.warn("Exception while socket reconnect! Message: " + e.getMessage());
+                LOG.warn("Exception while socket resubscribe! Message: " + e.getMessage());
               }
               isReconnectingWebsocket = false;
             }
@@ -190,15 +186,6 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
           }
         }
       }).start();
-    }
-  }
-
-  public static boolean isConnectionAvailable() {
-    try (Socket socket = new Socket()) {
-      socket.connect(new InetSocketAddress(API_URL, 80), 2000);
-      return true;
-    } catch (IOException e) {
-      return false; // Either timeout or unreachable or failed DNS lookup.
     }
   }
 
@@ -218,21 +205,19 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
     public void channelInactive(ChannelHandlerContext ctx) {
       if (isManualDisconnect) {
         isManualDisconnect = false;
-      } else if (!isReconnectingWebsocket) {
-        isReconnectingWebsocket = true;
+      } else {
         super.channelInactive(ctx);
         LOG.info("Reopening websocket because it was closed by the host");
         connect().blockingAwait();
         LOG.info("Resubscribing channels");
         resubscribeChannels();
-        isReconnectingWebsocket = false;
       }
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
       super.channelActive(ctx);
-      //startWebsocketHealthWatcher();
+      startWebsocketHealthWatcher();
     }
   }
 }
