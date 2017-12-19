@@ -170,7 +170,7 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
               LOG.warn("Websocket is lagging 10 seconds behind, reconnecting ...");
               try {
                 // this subscription will cause a reconnect if the websocket was closed
-                subscribeChannel("1010");
+                resubscribeChannels();
 
                 // reset heartbeat to prevent redundant reconnects
                 setLastHeartBeat(null);
