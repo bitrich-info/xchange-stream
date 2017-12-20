@@ -179,8 +179,9 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
                 setLastHeartBeat(null);
               } catch (Exception e) {
                 LOG.warn("Exception while socket resubscribe! Message: " + e.getMessage());
+              } finally {
+                isReconnectingWebsocket = false;
               }
-              isReconnectingWebsocket = false;
             }
           }
           try {
@@ -208,12 +209,18 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
     public void channelInactive(ChannelHandlerContext ctx) {
       if (isManualDisconnect) {
         isManualDisconnect = false;
-      } else {
-        super.channelInactive(ctx);
-        LOG.info("Reopening websocket because it was closed by the host");
-        connect().blockingAwait();
-        LOG.info("Resubscribing channels");
-        resubscribeChannels();
+      } else if (!isReconnectingWebsocket) {
+        try {
+          isReconnectingWebsocket = true;
+          super.channelInactive(ctx);
+          LOG.info("Reopening websocket because it was closed by the host");
+          connect().blockingAwait();
+          LOG.info("Resubscribing channels");
+          resubscribeChannels();
+        } catch (Exception ignored) {}
+        finally {
+          isReconnectingWebsocket = false;
+        }
       }
     }
 
