@@ -17,8 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
@@ -161,7 +159,7 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
     // prevent it from being started several times
     if (!isWebsocketWatcherRunning) {
       isWebsocketWatcherRunning = true;
-      LOG.info("Starting weboscket health watcher for poloniex2");
+      LOG.info("Starting websocket health watcher for poloniex2");
       new Thread(() -> {
         while (true) {
           if (getLastHeartBeat() != null && getLastHeartBeat().plus(maxLag).isBefore(Instant.now())) {
@@ -169,6 +167,11 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
               isReconnectingWebsocket = true;
               LOG.warn("Websocket is lagging 10 seconds behind, reconnecting ...");
               try {
+                // resubscribe will fail if the websocket isn't open
+                if (!isWebSocketOpen()) {
+                  connect().blockingAwait();
+                }
+
                 // this subscription will cause a reconnect if the websocket was closed
                 resubscribeChannels();
 

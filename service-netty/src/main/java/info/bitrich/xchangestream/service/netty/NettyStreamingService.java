@@ -216,17 +216,18 @@ public abstract class NettyStreamingService<T> {
     public void resubscribeChannels() {
         for (String channelName : channels.keySet()) {
             int resubscribeRetrys = 3;
+
             do {
-            try {
-                sendMessage(getSubscribeMessage(channelName, channels.get(channelName).args));
-                resubscribeRetrys = 0;
-            } catch (IOException e) {
-                LOG.error("Failed to reconnect channel: {}", channelName);
-                resubscribeRetrys--;
                 try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ignored) {}
-            }
+                    sendMessage(getSubscribeMessage(channelName, channels.get(channelName).args));
+                    resubscribeRetrys = 0;
+                } catch (IOException e) {
+                    LOG.error("Failed to resubscribe channel: {}", channelName);
+                    resubscribeRetrys--;
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException ignored) {}
+                }
             } while (resubscribeRetrys > 0);
         }
     }
@@ -271,6 +272,10 @@ public abstract class NettyStreamingService<T> {
         }
 
         emitter.onError(t);
+    }
+
+    protected boolean isWebSocketOpen() {
+        return webSocketChannel.isOpen();
     }
     
     protected WebSocketClientExtensionHandler getWebSocketClientExtensionHandler(){
