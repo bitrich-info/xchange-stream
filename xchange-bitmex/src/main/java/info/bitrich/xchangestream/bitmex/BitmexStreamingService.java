@@ -45,11 +45,6 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
         })
                 .share();
     }
-    if(message.has("error")) {
-      String error = message.get("error").asText();
-      LOG.error("Error with message: " + error);
-      return;
-    }
 
     @Override
     protected String getChannelNameFromMessage(JsonNode message) throws IOException {
