@@ -7,9 +7,6 @@ import info.bitrich.xchangestream.poloniex2.dto.PoloniexWebSocketEvent;
 import info.bitrich.xchangestream.poloniex2.dto.PoloniexWebSocketEventsTransaction;
 import info.bitrich.xchangestream.poloniex2.dto.PoloniexWebSocketSubscriptionMessage;
 import info.bitrich.xchangestream.service.netty.JsonNettyStreamingService;
-import info.bitrich.xchangestream.service.netty.WebSocketClientHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import org.knowm.xchange.currency.CurrencyPair;
@@ -29,38 +26,38 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
 
     private static final String HEARTBEAT = "1010";
 
-  private final Map<String, String> subscribedChannels = new HashMap<>();
-  private final Map<String, Observable<JsonNode>> subscriptions = new HashMap<>();
+    private final Map<String, String> subscribedChannels = new HashMap<>();
+    private final Map<String, Observable<JsonNode>> subscriptions = new HashMap<>();
 
 
     public PoloniexStreamingService(String apiUrl) {
         super(apiUrl, Integer.MAX_VALUE);
     }
 
-  @Override
-  protected void handleMessage(JsonNode message) {
-    if (message.isArray()) {
-      Integer channelId = new Integer(message.get(0).toString());
-      if (channelId > 0 && channelId < 1000) {
-        JsonNode events = message.get(2);
-        if (events.isArray()) {
-          JsonNode event = events.get(0);
-          if (event.get(0).toString().equals("\"i\"")) {
-            if (event.get(1).has("orderBook")) {
-              String currencyPair = event.get(1).get("currencyPair").asText();
-              LOG.info("Register {} as {}", String.valueOf(channelId), currencyPair);
-              subscribedChannels.put(String.valueOf(channelId), currencyPair);
+    @Override
+    protected void handleMessage(JsonNode message) {
+        if (message.isArray()) {
+            Integer channelId = new Integer(message.get(0).toString());
+            if (channelId > 0 && channelId < 1000) {
+                JsonNode events = message.get(2);
+                if (events.isArray()) {
+                    JsonNode event = events.get(0);
+                    if (event.get(0).toString().equals("\"i\"")) {
+                        if (event.get(1).has("orderBook")) {
+                            String currencyPair = event.get(1).get("currencyPair").asText();
+                            LOG.info("Register {} as {}", String.valueOf(channelId), currencyPair);
+                            subscribedChannels.put(String.valueOf(channelId), currencyPair);
+                        }
+                    }
+                }
             }
-          }
         }
-      }
+        if (message.has("error")) {
+            LOG.error("Error with message: " + message.get("error").asText());
+            return;
+        }
+        super.handleMessage(message);
     }
-if(message.has("error")) {
-      LOG.error("Error with message: " + message.get("error").asText());
-      return;
-    }
-    super.handleMessage(message);
-  }
 
     @Override
     public void messageHandler(String message) {
@@ -132,10 +129,10 @@ if(message.has("error")) {
         return objectMapper.writeValueAsString(subscribeMessage);
     }
 
-  @Override
-  public Completable disconnect() {
+    @Override
+    public Completable disconnect() {
 
-    return super.disconnect();
-  }
+        return super.disconnect();
+    }
 
 }
