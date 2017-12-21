@@ -25,16 +25,17 @@ import java.util.Map;
  * Created by Lukas Zaoralek on 10.11.17.
  */
 public class PoloniexStreamingService extends JsonNettyStreamingService {
-  private static final Logger LOG = LoggerFactory.getLogger(PoloniexStreamingService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PoloniexStreamingService.class);
 
-  private static final String HEARTBEAT = "1010";
+    private static final String HEARTBEAT = "1010";
 
   private final Map<String, String> subscribedChannels = new HashMap<>();
   private final Map<String, Observable<JsonNode>> subscriptions = new HashMap<>();
 
-  public PoloniexStreamingService(String apiUrl) {
-    super(apiUrl, Integer.MAX_VALUE);
-  }
+
+    public PoloniexStreamingService(String apiUrl) {
+        super(apiUrl, Integer.MAX_VALUE);
+    }
 
   @Override
   protected void handleMessage(JsonNode message) {
@@ -54,85 +55,86 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
         }
       }
     }
-    if(message.has("error")) {
+if(message.has("error")) {
       LOG.error("Error with message: " + message.get("error").asText());
       return;
     }
     super.handleMessage(message);
   }
 
-  @Override
-  public void messageHandler(String message) {
-    LOG.debug("Received message: {}", message);
-    ObjectMapper objectMapper = new ObjectMapper();
-    JsonNode jsonNode;
+    @Override
+    public void messageHandler(String message) {
+        LOG.debug("Received message: {}", message);
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode;
 
-    // Parse incoming message to JSON
-    try {
-      jsonNode = objectMapper.readTree(message);
-    } catch (IOException e) {
-      LOG.error("Error parsing incoming message to JSON: {}", message);
-      return;
+        // Parse incoming message to JSON
+        try {
+            jsonNode = objectMapper.readTree(message);
+        } catch (IOException e) {
+            LOG.error("Error parsing incoming message to JSON: {}", message);
+            return;
+        }
+
+        if (jsonNode.isArray() && jsonNode.size() < 3) {
+            if (jsonNode.get(0).asText().equals(HEARTBEAT)) return;
+            else if (jsonNode.get(0).asText().equals("1002")) return;
+        }
+
+        handleMessage(jsonNode);
     }
 
-    if (jsonNode.isArray() && jsonNode.size() < 3) {
-      if (jsonNode.get(0).asText().equals(HEARTBEAT)) return;
-      else if (jsonNode.get(0).asText().equals("1002")) return;
+    @Override
+    public Observable<JsonNode> subscribeChannel(String channelName, Object... args) {
+        if (!channels.containsKey(channelName)) {
+            Observable<JsonNode> subscription = super.subscribeChannel(channelName, args);
+            subscriptions.put(channelName, subscription);
+        }
+
+        return subscriptions.get(channelName);
     }
 
-    handleMessage(jsonNode);
-  }
+    public Observable<PoloniexWebSocketEvent> subscribeCurrencyPairChannel(CurrencyPair currencyPair) {
+        String channelName = currencyPair.counter.toString() + "_" + currencyPair.base.toString();
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-  @Override
-  public Observable<JsonNode> subscribeChannel(String channelName, Object... args) {
-    if (!channels.containsKey(channelName)) {
-      Observable<JsonNode> subscription = super.subscribeChannel(channelName, args);
-      subscriptions.put(channelName, subscription);
+        return subscribeChannel(channelName)
+                .flatMapIterable(s -> {
+                    PoloniexWebSocketEventsTransaction transaction = mapper.readValue(s.toString(), PoloniexWebSocketEventsTransaction.class);
+                    return Arrays.asList(transaction.getEvents());
+                }).share();
     }
 
-    return subscriptions.get(channelName);
-  }
+    @Override
+    protected String getChannelNameFromMessage(JsonNode message) throws IOException {
+        String strChannelId = message.get(0).asText();
+        Integer channelId = new Integer(strChannelId);
+        if (channelId >= 1000) return strChannelId;
+        else return subscribedChannels.get(message.get(0).asText());
+    }
 
-  public Observable<PoloniexWebSocketEvent> subscribeCurrencyPairChannel(CurrencyPair currencyPair) {
-    String channelName = currencyPair.counter.toString() + "_" + currencyPair.base.toString();
-    final ObjectMapper mapper = new ObjectMapper();
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    @Override
+    public String getSubscribeMessage(String channelName, Object... args) throws IOException {
+        PoloniexWebSocketSubscriptionMessage subscribeMessage = new PoloniexWebSocketSubscriptionMessage("subscribe",
+                channelName);
 
-    return subscribeChannel(channelName)
-      .flatMapIterable(s -> {
-        PoloniexWebSocketEventsTransaction transaction = mapper.readValue(s.toString(), PoloniexWebSocketEventsTransaction.class);
-        return Arrays.asList(transaction.getEvents());
-      }).share();
-  }
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.writeValueAsString(subscribeMessage);
+    }
 
-  @Override
-  protected String getChannelNameFromMessage(JsonNode message) throws IOException {
-    String strChannelId = message.get(0).asText();
-    Integer channelId = new Integer(strChannelId);
-    if (channelId >= 1000) return strChannelId;
-    else return subscribedChannels.get(message.get(0).asText());
-  }
+    @Override
+    public String getUnsubscribeMessage(String channelName) throws IOException {
+        PoloniexWebSocketSubscriptionMessage subscribeMessage = new PoloniexWebSocketSubscriptionMessage("unsubscribe",
+                channelName);
 
-  @Override
-  public String getSubscribeMessage(String channelName, Object... args) throws IOException {
-    PoloniexWebSocketSubscriptionMessage subscribeMessage = new PoloniexWebSocketSubscriptionMessage("subscribe",
-            channelName);
-
-    ObjectMapper objectMapper = new ObjectMapper();
-    return objectMapper.writeValueAsString(subscribeMessage);
-  }
-
-  @Override
-  public String getUnsubscribeMessage(String channelName) throws IOException {
-    PoloniexWebSocketSubscriptionMessage subscribeMessage = new PoloniexWebSocketSubscriptionMessage("unsubscribe",
-            channelName);
-
-    ObjectMapper objectMapper = new ObjectMapper();
-    return objectMapper.writeValueAsString(subscribeMessage);
-  }
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.writeValueAsString(subscribeMessage);
+    }
 
   @Override
   public Completable disconnect() {
+
     return super.disconnect();
   }
 

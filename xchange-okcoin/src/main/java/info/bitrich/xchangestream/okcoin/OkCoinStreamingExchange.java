@@ -37,6 +37,11 @@ public class OkCoinStreamingExchange extends OkCoinExchange implements Streaming
     }
 
     @Override
+    public boolean isAlive() {
+        return streamingService.isSocketOpen();
+    }
+
+    @Override
     public StreamingMarketDataService getStreamingMarketDataService() {
         return streamingMarketDataService;
     }

@@ -37,6 +37,11 @@ public class BitfinexStreamingExchange extends BitfinexExchange implements Strea
     }
 
     @Override
+    public boolean isAlive() {
+        return streamingService.isSocketOpen();
+    }
+
+    @Override
     public ExchangeSpecification getDefaultExchangeSpecification() {
         ExchangeSpecification spec = super.getDefaultExchangeSpecification();
         spec.setShouldLoadRemoteMetaData(false);
