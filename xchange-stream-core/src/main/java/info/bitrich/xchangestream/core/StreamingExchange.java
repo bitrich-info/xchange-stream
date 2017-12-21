@@ -18,7 +18,12 @@ public interface StreamingExchange extends Exchange {
      * @return {@link Completable} that completes upon successful disconnect.
      */
     Completable disconnect();
-    
+
+    /**
+     * Checks whether connection to the exchange is alive.
+     *
+     * @return true if connection is open, otherwise false.
+     */
     boolean isAlive();
 
     /**
