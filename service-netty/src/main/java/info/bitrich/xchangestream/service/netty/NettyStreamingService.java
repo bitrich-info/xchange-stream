@@ -114,8 +114,8 @@ public abstract class NettyStreamingService<T> {
                                 List<ChannelHandler> handlers = new ArrayList<>(6);
                                 handlers.add(new HttpClientCodec());
                                 handlers.add(new HttpServerKeepAliveHandler());
-                                handlers.add(new WriteTimeoutHandler(3));
-                                handlers.add(new ReadTimeoutHandler(3));
+                                handlers.add(new WriteTimeoutHandler(10));
+                                handlers.add(new ReadTimeoutHandler(10));
                                 handlers.add(new HttpObjectAggregator(8192));
                                 handlers.add(handler);
                                 if (clientExtensionHandler != null) handlers.add(clientExtensionHandler);
