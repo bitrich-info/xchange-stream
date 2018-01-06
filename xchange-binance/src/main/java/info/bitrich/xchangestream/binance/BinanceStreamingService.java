@@ -67,5 +67,7 @@ public class BinanceStreamingService extends JsonNettyStreamingService {
         return productSubscription;
     }
 
-
+    public boolean isAlive() {
+        return this.isSocketOpen();
+    }
 }
