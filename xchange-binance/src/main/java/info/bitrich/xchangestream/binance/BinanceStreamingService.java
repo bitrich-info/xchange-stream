@@ -40,4 +40,9 @@ public class BinanceStreamingService {
 
         return productSubscriptions.get(currencyPair);
     }
+    
+    public boolean isAlive() {
+    		return productStreamingServices.values().stream()
+    				.allMatch(ps -> ps.isSocketOpen());
+    }
 }
