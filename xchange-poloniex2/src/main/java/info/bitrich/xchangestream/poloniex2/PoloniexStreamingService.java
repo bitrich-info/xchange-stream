@@ -27,7 +27,6 @@ import java.util.Map;
  * Created by Lukas Zaoralek on 10.11.17.
  */
 public class PoloniexStreamingService extends JsonNettyStreamingService {
-  private static final String API_URL = "poloniex.com";
   private static final Logger LOG = LoggerFactory.getLogger(PoloniexStreamingService.class);
 
   private static final String HEARTBEAT = "1010";
@@ -89,8 +88,9 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
     setLastHeartBeat(Instant.now());
 
     if (jsonNode.isArray() && jsonNode.size() < 3) {
-      if (jsonNode.get(0).asText().equals(HEARTBEAT)) return;
-      else if (jsonNode.get(0).asText().equals("1002")) return;
+      if (jsonNode.get(0).asText().equals(HEARTBEAT) || jsonNode.get(0).asText().equals("1002"))  {
+        return;
+      }
     }
 
     handleMessage(jsonNode);
@@ -162,32 +162,29 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
       LOG.info("Starting websocket health watcher for poloniex2");
       new Thread(() -> {
         while (true) {
-          if (getLastHeartBeat() != null && getLastHeartBeat().plus(maxLag).isBefore(Instant.now())) {
-            if (!isReconnectingWebsocket) {
-              isReconnectingWebsocket = true;
-              LOG.warn("Websocket is lagging 10 seconds behind, reconnecting ...");
-              try {
-                // resubscribe will fail if the websocket isn't open
-                if (!isWebSocketOpen()) {
-                  connect().blockingAwait();
-                }
-
-                // this subscription will cause a reconnect if the websocket was closed
-                resubscribeChannels();
-
-                // reset heartbeat to prevent redundant reconnects
-                setLastHeartBeat(null);
-              } catch (Exception e) {
-                LOG.warn("Exception while socket resubscribe! Message: " + e.getMessage());
-              } finally {
-                isReconnectingWebsocket = false;
+          if (!isReconnectingWebsocket && getLastHeartBeat() != null && getLastHeartBeat().plus(maxLag).isBefore(Instant.now())) {
+            isReconnectingWebsocket = true;
+            LOG.warn("Websocket is lagging 10 seconds behind, reconnecting ...");
+            try {
+              // resubscribe will fail if the websocket isn't open
+              if (!isWebSocketOpen()) {
+                connect().blockingAwait();
               }
+
+              // this subscription will cause a reconnect if the websocket was closed
+              resubscribeChannels();
+
+              // reset heartbeat to prevent redundant reconnects
+              setLastHeartBeat(null);
+            } catch (Exception e) {
+              LOG.warn("Exception while socket resubscribe! Message: " + e.getMessage());
+            } finally {
+              isReconnectingWebsocket = false;
             }
           }
           try {
             Thread.sleep(1000);
-          } catch (InterruptedException ignored) {
-          }
+          } catch (InterruptedException ignored) {}
         }
       }).start();
     }

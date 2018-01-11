@@ -215,20 +215,20 @@ public abstract class NettyStreamingService<T> {
 
     public void resubscribeChannels() {
         for (String channelName : channels.keySet()) {
-            int resubscribeRetrys = 3;
+            int resubscribeRetries = 3;
 
             do {
                 try {
                     sendMessage(getSubscribeMessage(channelName, channels.get(channelName).args));
-                    resubscribeRetrys = 0;
+                    resubscribeRetries = 0;
                 } catch (IOException e) {
                     LOG.error("Failed to resubscribe channel: {}", channelName);
-                    resubscribeRetrys--;
+                    resubscribeRetries--;
                     try {
                         Thread.sleep(500);
                     } catch (InterruptedException ignored) {}
                 }
-            } while (resubscribeRetrys > 0);
+            } while (resubscribeRetries > 0);
         }
     }
 
