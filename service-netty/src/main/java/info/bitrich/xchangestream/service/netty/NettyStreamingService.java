@@ -9,11 +9,14 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpServerKeepAliveHandler;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.handler.codec.http.websocketx.extensions.WebSocketClientExtensionHandler;
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -108,8 +111,11 @@ public abstract class NettyStreamingService<T> {
                                 }
 
                                 WebSocketClientExtensionHandler clientExtensionHandler = getWebSocketClientExtensionHandler();
-                                List<ChannelHandler> handlers = new ArrayList<>(4);
+                                List<ChannelHandler> handlers = new ArrayList<>(6);
                                 handlers.add(new HttpClientCodec());
+                                handlers.add(new HttpServerKeepAliveHandler());
+                                handlers.add(new WriteTimeoutHandler(10));
+                                handlers.add(new ReadTimeoutHandler(10));
                                 handlers.add(new HttpObjectAggregator(8192));
                                 handlers.add(handler);
                                 if (clientExtensionHandler != null) handlers.add(clientExtensionHandler);
@@ -128,10 +134,16 @@ public abstract class NettyStreamingService<T> {
     }
 
     public Completable disconnect() {
+        return disconnect(true);
+    }
+
+    public Completable disconnect(boolean resetChannels) {
         return Completable.create(completable -> {
             CloseWebSocketFrame closeFrame = new CloseWebSocketFrame();
             webSocketChannel.writeAndFlush(closeFrame).addListener(future -> {
-                channels = new ConcurrentHashMap<>();
+                if (resetChannels) {
+                    channels = new ConcurrentHashMap<>();
+                }
                 completable.onComplete();
             });
         });
@@ -203,11 +215,20 @@ public abstract class NettyStreamingService<T> {
 
     public void resubscribeChannels() {
         for (String channelName : channels.keySet()) {
-            try {
-                sendMessage(getSubscribeMessage(channelName, channels.get(channelName).args));
-            } catch (IOException e) {
-                LOG.error("Failed to reconnect channel: {}", channelName);
-            }
+            int resubscribeRetrys = 3;
+
+            do {
+                try {
+                    sendMessage(getSubscribeMessage(channelName, channels.get(channelName).args));
+                    resubscribeRetrys = 0;
+                } catch (IOException e) {
+                    LOG.error("Failed to resubscribe channel: {}", channelName);
+                    resubscribeRetrys--;
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException ignored) {}
+                }
+            } while (resubscribeRetrys > 0);
         }
     }
 
@@ -251,6 +272,10 @@ public abstract class NettyStreamingService<T> {
         }
 
         emitter.onError(t);
+    }
+
+    protected boolean isWebSocketOpen() {
+        return webSocketChannel.isOpen();
     }
     
     protected WebSocketClientExtensionHandler getWebSocketClientExtensionHandler(){

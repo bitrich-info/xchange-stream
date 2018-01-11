@@ -17,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +27,7 @@ import java.util.Map;
  * Created by Lukas Zaoralek on 10.11.17.
  */
 public class PoloniexStreamingService extends JsonNettyStreamingService {
+  private static final String API_URL = "poloniex.com";
   private static final Logger LOG = LoggerFactory.getLogger(PoloniexStreamingService.class);
 
   private static final String HEARTBEAT = "1010";
@@ -32,6 +35,16 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
   private final Map<String, String> subscribedChannels = new HashMap<>();
   private final Map<String, Observable<JsonNode>> subscriptions = new HashMap<>();
   private boolean isManualDisconnect = false;
+
+  private Instant lastHeartBeat = null;
+
+  private synchronized void setLastHeartBeat(Instant lastHeartBeat) {
+    this.lastHeartBeat = lastHeartBeat;
+  }
+
+  private synchronized Instant getLastHeartBeat() {
+    return lastHeartBeat;
+  }
 
   public PoloniexStreamingService(String apiUrl) {
     super(apiUrl, Integer.MAX_VALUE);
@@ -72,6 +85,8 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
       LOG.error("Error parsing incoming message to JSON: {}", message);
       return;
     }
+
+    setLastHeartBeat(Instant.now());
 
     if (jsonNode.isArray() && jsonNode.size() < 3) {
       if (jsonNode.get(0).asText().equals(HEARTBEAT)) return;
@@ -135,6 +150,49 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
     return super.disconnect();
   }
 
+  private boolean isWebsocketWatcherRunning = false;
+  private boolean isReconnectingWebsocket = false;
+
+  private void startWebsocketHealthWatcher() {
+    Duration maxLag = Duration.ofSeconds(10);
+
+    // prevent it from being started several times
+    if (!isWebsocketWatcherRunning) {
+      isWebsocketWatcherRunning = true;
+      LOG.info("Starting websocket health watcher for poloniex2");
+      new Thread(() -> {
+        while (true) {
+          if (getLastHeartBeat() != null && getLastHeartBeat().plus(maxLag).isBefore(Instant.now())) {
+            if (!isReconnectingWebsocket) {
+              isReconnectingWebsocket = true;
+              LOG.warn("Websocket is lagging 10 seconds behind, reconnecting ...");
+              try {
+                // resubscribe will fail if the websocket isn't open
+                if (!isWebSocketOpen()) {
+                  connect().blockingAwait();
+                }
+
+                // this subscription will cause a reconnect if the websocket was closed
+                resubscribeChannels();
+
+                // reset heartbeat to prevent redundant reconnects
+                setLastHeartBeat(null);
+              } catch (Exception e) {
+                LOG.warn("Exception while socket resubscribe! Message: " + e.getMessage());
+              } finally {
+                isReconnectingWebsocket = false;
+              }
+            }
+          }
+          try {
+            Thread.sleep(1000);
+          } catch (InterruptedException ignored) {
+          }
+        }
+      }).start();
+    }
+  }
+
   @Override
   protected WebSocketClientHandler getWebSocketClientHandler(WebSocketClientHandshaker handshaker,
                                                              WebSocketClientHandler.WebSocketMessageHandler handler) {
@@ -151,13 +209,25 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
     public void channelInactive(ChannelHandlerContext ctx) {
       if (isManualDisconnect) {
         isManualDisconnect = false;
-      } else {
-        super.channelInactive(ctx);
-        LOG.info("Reopening websocket because it was closed by the host");
-        connect().blockingAwait();
-        LOG.info("Resubscribing channels");
-        resubscribeChannels();
+      } else if (!isReconnectingWebsocket) {
+        try {
+          isReconnectingWebsocket = true;
+          super.channelInactive(ctx);
+          LOG.info("Reopening websocket because it was closed by the host");
+          connect().blockingAwait();
+          LOG.info("Resubscribing channels");
+          resubscribeChannels();
+        } catch (Exception ignored) {}
+        finally {
+          isReconnectingWebsocket = false;
+        }
       }
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) {
+      super.channelActive(ctx);
+      startWebsocketHealthWatcher();
     }
   }
 }
