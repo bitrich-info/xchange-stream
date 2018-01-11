@@ -67,23 +67,26 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
         }
       }
     }
-
+    if (message.has("error")) {
+      LOG.error("Error with message: " + message.get("error").asText());
+      return;
+    }
     super.handleMessage(message);
   }
 
-  @Override
-  public void messageHandler(String message) {
-    LOG.debug("Received message: {}", message);
-    ObjectMapper objectMapper = new ObjectMapper();
-    JsonNode jsonNode;
+    @Override
+    public void messageHandler(String message) {
+        LOG.debug("Received message: {}", message);
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode;
 
-    // Parse incoming message to JSON
-    try {
-      jsonNode = objectMapper.readTree(message);
-    } catch (IOException e) {
-      LOG.error("Error parsing incoming message to JSON: {}", message);
-      return;
-    }
+        // Parse incoming message to JSON
+        try {
+            jsonNode = objectMapper.readTree(message);
+        } catch (IOException e) {
+            LOG.error("Error parsing incoming message to JSON: {}", message);
+            return;
+        }
 
     setLastHeartBeat(Instant.now());
 
@@ -91,17 +94,17 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
       if (jsonNode.get(0).asText().equals(HEARTBEAT) || jsonNode.get(0).asText().equals("1002"))  {
         return;
       }
+        }
+
+        handleMessage(jsonNode);
     }
 
-    handleMessage(jsonNode);
-  }
-
-  @Override
-  public Observable<JsonNode> subscribeChannel(String channelName, Object... args) {
-    if (!channels.containsKey(channelName)) {
-      Observable<JsonNode> subscription = super.subscribeChannel(channelName, args);
-      subscriptions.put(channelName, subscription);
-    }
+    @Override
+    public Observable<JsonNode> subscribeChannel(String channelName, Object... args) {
+        if (!channels.containsKey(channelName)) {
+            Observable<JsonNode> subscription = super.subscribeChannel(channelName, args);
+            subscriptions.put(channelName, subscription);
+        }
 
     return subscriptions.get(channelName);
   }
