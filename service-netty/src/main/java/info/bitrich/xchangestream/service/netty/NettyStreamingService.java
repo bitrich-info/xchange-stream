@@ -112,7 +112,7 @@ public abstract class NettyStreamingService<T> {
                                 }
 
                                 WebSocketClientExtensionHandler clientExtensionHandler = getWebSocketClientExtensionHandler();
-                                List<ChannelHandler> handlers = new ArrayList<>(6);
+                                List<ChannelHandler> handlers = new ArrayList<>(7);
                                 handlers.add(new HttpClientCodec());
                                 handlers.add(new HttpServerKeepAliveHandler());
                                 handlers.add(new WriteTimeoutHandler(10));
