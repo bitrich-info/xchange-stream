@@ -212,12 +212,12 @@ public abstract class NettyStreamingService<T> {
     }
 
     public void resubscribeChannels() {
-        for (String channelName : channels.keySet()) {
+        for (String channelId : channels.keySet()) {
             try {
-                Subscription subscription = channels.get(channelName);
+                Subscription subscription = channels.get(channelId);
                 sendMessage(getSubscribeMessage(subscription.channelName, subscription.args));
             } catch (IOException e) {
-                LOG.error("Failed to reconnect channel: {}", channelName);
+                LOG.error("Failed to reconnect channel: {}", channelId);
             }
         }
     }
