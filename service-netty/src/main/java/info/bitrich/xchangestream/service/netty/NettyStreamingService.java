@@ -32,8 +32,15 @@ public abstract class NettyStreamingService<T> {
     private static final Logger LOG = LoggerFactory.getLogger(NettyStreamingService.class);
 
     private class Subscription {
-        ObservableEmitter<T> emitter;
-        Object[] args;
+        final ObservableEmitter<T> emitter;
+        final String channelName;
+        final Object[] args;
+
+        public Subscription(ObservableEmitter<T> emitter, String channelName, Object[] args) {
+            this.emitter = emitter;
+            this.channelName = channelName;
+            this.args = args;
+        }
     }
 
     private final int maxFramePayloadLength;
@@ -188,9 +195,7 @@ public abstract class NettyStreamingService<T> {
             }
 
             if (!channels.containsKey(channelId)) {
-                Subscription newSubscription = new Subscription();
-                newSubscription.args = args;
-                newSubscription.emitter = e;
+                Subscription newSubscription = new Subscription(e, channelName, args);
                 channels.put(channelId, newSubscription);
                 try {
                     sendMessage(getSubscribeMessage(channelName, args));
@@ -209,7 +214,8 @@ public abstract class NettyStreamingService<T> {
     public void resubscribeChannels() {
         for (String channelName : channels.keySet()) {
             try {
-                sendMessage(getSubscribeMessage(channelName, channels.get(channelName).args));
+                Subscription subscription = channels.get(channelName);
+                sendMessage(getSubscribeMessage(subscription.channelName, subscription.args));
             } catch (IOException e) {
                 LOG.error("Failed to reconnect channel: {}", channelName);
             }
