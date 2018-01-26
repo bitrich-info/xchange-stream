@@ -51,25 +51,25 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
 
   @Override
   protected void handleMessage(JsonNode message) {
-    try {
-      if (message.isArray()) {
-        Integer channelId = new Integer(message.get(0).toString());
-        if (channelId > 0 && channelId < 1000) {
-          JsonNode events = message.get(2);
-          if (events.isArray()) {
-            JsonNode event = events.get(0);
-            if (event.get(0).toString().equals("\"i\"")) {
-              if (event.get(1).has("orderBook")) {
-                String currencyPair = event.get(1).get("currencyPair").asText();
-                LOG.info("Register {} as {}", String.valueOf(channelId), currencyPair);
-                subscribedChannels.put(String.valueOf(channelId), currencyPair);
-              }
+    if (message.isArray()) {
+      Integer channelId = new Integer(message.get(0).toString());
+      if (channelId > 0 && channelId < 1000) {
+        if (!message.has(2)) {
+          LOG.warn("Websocket message doesn't contain events: {}", message);
+          return;
+        }
+        JsonNode events = message.get(2);
+        if (events.isArray()) {
+          JsonNode event = events.get(0);
+          if (event.get(0).toString().equals("\"i\"")) {
+            if (event.get(1).has("orderBook")) {
+              String currencyPair = event.get(1).get("currencyPair").asText();
+              LOG.info("Register {} as {}", String.valueOf(channelId), currencyPair);
+              subscribedChannels.put(String.valueOf(channelId), currencyPair);
             }
           }
         }
       }
-    } catch (NullPointerException ex) {
-      LOG.error("Message caused NullPointerException {}", message);
     }
     if (message.has("error")) {
       LOG.error("Error with message: " + message.get("error").asText());
