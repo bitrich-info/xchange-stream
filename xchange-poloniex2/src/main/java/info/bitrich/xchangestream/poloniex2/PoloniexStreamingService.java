@@ -169,6 +169,7 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
       LOG.info("Starting websocket health watcher for poloniex2");
       new Thread(() -> {
         while (true) {
+            LOG.trace("Websocket watcher thread: isReconnectingWebsocket: {}, lastHeartbeat: {},", isReconnectingWebsocket, getLastHeartBeat());
           if (!isReconnectingWebsocket && getLastHeartBeat() != null && getLastHeartBeat().plus(maxLag).isBefore(Instant.now())) {
             isReconnectingWebsocket = true;
             LOG.warn("Websocket is lagging 10 seconds behind, reconnecting ...");
@@ -211,6 +212,7 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
+        LOG.trace("Poloniex2WebSocketClientHandler: isManualDisconnect: {}, isReconnectingWebsocket: {},", isManualDisconnect, isReconnectingWebsocket);
       if (isManualDisconnect) {
         isManualDisconnect = false;
       } else if (!isReconnectingWebsocket) {
