@@ -182,7 +182,7 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
               resubscribeChannels();
 
               // reset heartbeat to prevent redundant reconnects
-              setLastHeartBeat(null);
+              setLastHeartBeat(Instant.now().plus(maxLag));
             } catch (Exception e) {
               LOG.warn("Exception while socket resubscribe! Message: " + e.getMessage());
             } finally {
