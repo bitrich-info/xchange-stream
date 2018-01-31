@@ -38,7 +38,7 @@ public class GDAXWebSocketTransaction {
     private final String reason;
     private final long tradeId;
     private final String makerOrderId;
-    private final String takenOrderId;
+    private final String takerOrderId;
 
     public GDAXWebSocketTransaction(
             @JsonProperty("type") String type,
@@ -65,13 +65,13 @@ public class GDAXWebSocketTransaction {
             @JsonProperty("reason") String reason,
             @JsonProperty("trade_id") long tradeId,
             @JsonProperty("maker_order_id") String makerOrderId,
-            @JsonProperty("taken_order_id") String takenOrderId) {
+            @JsonProperty("taker_order_id") String takerOrderId) {
 
         this.remainingSize = remainingSize;
         this.reason = reason;
         this.tradeId = tradeId;
         this.makerOrderId = makerOrderId;
-        this.takenOrderId = takenOrderId;
+        this.takerOrderId = takerOrderId;
         this.type = type;
         this.orderId = orderId;
         this.orderType = orderType;
@@ -235,8 +235,8 @@ public class GDAXWebSocketTransaction {
         return makerOrderId;
     }
 
-    public String getTakenOrderId() {
-        return takenOrderId;
+    public String gettakerOrderId() {
+        return takerOrderId;
     }
 
     @Override
