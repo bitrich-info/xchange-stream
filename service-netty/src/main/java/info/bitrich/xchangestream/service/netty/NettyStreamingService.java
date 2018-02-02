@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public abstract class NettyStreamingService<T> {
     private static final Logger LOG = LoggerFactory.getLogger(NettyStreamingService.class);
@@ -301,7 +302,7 @@ public abstract class NettyStreamingService<T> {
             } else {
                 super.channelInactive(ctx);
                 LOG.info("Reopening websocket because it was closed by the host");
-                connect().blockingAwait();
+                connect().blockingAwait(10, TimeUnit.SECONDS);
                 LOG.info("Resubscribing channels");
                 resubscribeChannels();
             }
