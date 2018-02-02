@@ -175,17 +175,13 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
                         LOG.warn("Websocket is lagging 12 seconds behind, reconnecting ...");
                         try {
                             // resubscribe will fail if the websocket isn't open and return if it was unsuccessful
-                            if (!isWebSocketOpen()) {
-                                if (!connect().blockingAwait(10, TimeUnit.SECONDS)) {
-                                    return;
-                                }
+                            if (isWebSocketOpen() || connect().blockingAwait(10, TimeUnit.SECONDS)) {
+                                // this subscription will cause a reconnect if the websocket was closed
+                                resubscribeChannels();
+
+                                // reset heartbeat to prevent redundant reconnects
+                                setLastHeartBeat(Instant.now().plus(maxLag));
                             }
-
-                            // this subscription will cause a reconnect if the websocket was closed
-                            resubscribeChannels();
-
-                            // reset heartbeat to prevent redundant reconnects
-                            setLastHeartBeat(Instant.now().plus(maxLag));
                         } catch (Exception e) {
                             LOG.warn("Exception while socket resubscribe! Message: " + e.getMessage());
                         } finally {
@@ -223,13 +219,10 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
                     isReconnectingWebsocket = true;
                     super.channelInactive(ctx);
                     LOG.info("Reopening websocket because it was closed by the host");
-                    if (!isWebSocketOpen()) {
-                        if (!connect().blockingAwait(10, TimeUnit.SECONDS)) {
-                            return;
-                        }
+                    if (isWebSocketOpen() || connect().blockingAwait(10, TimeUnit.SECONDS)) {
+                        LOG.info("Resubscribing channels");
+                        resubscribeChannels();
                     }
-                    LOG.info("Resubscribing channels");
-                    resubscribeChannels();
                 } catch (Exception ignored) {
                 } finally {
                     isReconnectingWebsocket = false;

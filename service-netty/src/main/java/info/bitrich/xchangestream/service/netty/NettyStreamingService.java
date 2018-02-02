@@ -301,14 +301,10 @@ public abstract class NettyStreamingService<T> {
                 isManualDisconnect = false;
             } else {
                 super.channelInactive(ctx);
-                LOG.info("Reopening websocket because it was closed by the host");
-                if (!isWebSocketOpen()) {
-                    if (!connect().blockingAwait(10, TimeUnit.SECONDS)) {
-                        return;
-                    }
+                if (isWebSocketOpen() || connect().blockingAwait(10, TimeUnit.SECONDS)) {
+                    LOG.info("Resubscribing channels");
+                    resubscribeChannels();
                 }
-                LOG.info("Resubscribing channels");
-                resubscribeChannels();
             }
         }
     }
