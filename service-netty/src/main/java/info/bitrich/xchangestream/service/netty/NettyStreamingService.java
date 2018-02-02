@@ -302,7 +302,11 @@ public abstract class NettyStreamingService<T> {
             } else {
                 super.channelInactive(ctx);
                 LOG.info("Reopening websocket because it was closed by the host");
-                connect().blockingAwait(10, TimeUnit.SECONDS);
+                if (!isWebSocketOpen()) {
+                    if (!connect().blockingAwait(10, TimeUnit.SECONDS)) {
+                        return;
+                    }
+                }
                 LOG.info("Resubscribing channels");
                 resubscribeChannels();
             }

@@ -175,8 +175,10 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
                         LOG.warn("Websocket is lagging 12 seconds behind, reconnecting ...");
                         try {
                             // resubscribe will fail if the websocket isn't open and return if it was unsuccessful
-                            if (!isWebSocketOpen() && !connect().blockingAwait(10, TimeUnit.SECONDS)) {
-                                return;
+                            if (!isWebSocketOpen()) {
+                                if (!connect().blockingAwait(10, TimeUnit.SECONDS)) {
+                                    return;
+                                }
                             }
 
                             // this subscription will cause a reconnect if the websocket was closed
@@ -221,8 +223,10 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
                     isReconnectingWebsocket = true;
                     super.channelInactive(ctx);
                     LOG.info("Reopening websocket because it was closed by the host");
-                    if (!isWebSocketOpen() && !connect().blockingAwait(10, TimeUnit.SECONDS)) {
-                        return;
+                    if (!isWebSocketOpen()) {
+                        if (!connect().blockingAwait(10, TimeUnit.SECONDS)) {
+                            return;
+                        }
                     }
                     LOG.info("Resubscribing channels");
                     resubscribeChannels();
