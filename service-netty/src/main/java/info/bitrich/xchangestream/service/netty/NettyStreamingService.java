@@ -23,7 +23,6 @@ import io.reactivex.ObservableEmitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,7 +31,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 public abstract class NettyStreamingService<T> {
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
@@ -165,6 +163,7 @@ public abstract class NettyStreamingService<T> {
     }
 
     public Completable disconnect(boolean resetChannels) {
+        isManualDisconnect = true;
         return Completable.create(completable -> {
             if (webSocketChannel.isOpen()) {
             CloseWebSocketFrame closeFrame = new CloseWebSocketFrame();
@@ -240,16 +239,16 @@ public abstract class NettyStreamingService<T> {
         }).share();
     }
 
-    public void resubscribeChannels() {
-        for (String channelName : channels.keySet()) {
+    private void resubscribeChannels() {
+        for (Map.Entry<String, Subscription> channel : channels.entrySet()) {
             int resubscribeRetries = 3;
 
             do {
                 try {
-                    sendMessage(getSubscribeMessage(channelName, channels.get(channelName).args));
+                    sendMessage(getSubscribeMessage(channel.getKey(), channel.getValue().args));
                     resubscribeRetries = 0;
                 } catch (IOException e) {
-                    LOG.error("Failed to resubscribe channel: {}", channelName);
+                    LOG.error("Failed to resubscribe channel: {}", channel);
                     resubscribeRetries--;
                     try {
                         Thread.sleep(500);
@@ -310,6 +309,66 @@ public abstract class NettyStreamingService<T> {
         return new NettyWebSocketClientHandler(handshaker, handler);
     }
 
+    private boolean isReconnectingWebsocket = false;
+
+    protected void reconnectAndResubscribe() {
+        if (!isReconnectingWebsocket) {
+            isReconnectingWebsocket  = true;
+            LOG.warn("Websocket is lagging behind, reconnecting ...");
+            try {
+                final Completable c = connect()
+                        .doOnError(t -> LOG.warn("Problem with reconnect", t))
+                        .retryWhen(new RetryWithDelay(retryDuration.toMillis()))
+                        .doOnComplete(() -> {
+                            LOG.info("Resubscribing channels");
+                            resubscribeChannels();
+                        });
+                c.subscribe();
+            } catch (Exception e) {
+                LOG.warn("Exception while socket resubscribe! Message: " + e.getMessage());
+            } finally {
+                isReconnectingWebsocket = false;
+            }
+        }
+    }
+
+    private boolean isWebsocketWatcherRunning = false;
+
+    private void startWebsocketHealthWatcher() {
+        if (!isWebsocketWatcherRunning && isWebsocketWatcherSupported()) {
+            isWebsocketWatcherRunning = true;
+            LOG.info("Starting websocket health watcher for netty socket");
+            new Thread(() -> {
+                boolean isRunning = true;
+                while (isRunning) {
+                    if (isWebsocketReconnectRequired()) {
+                        reconnectAndResubscribe();
+                    }
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ignored) {
+                        isRunning = false;
+                        LOG.info("Stopping websocket health watcher because it was interrupted.");
+                    }
+                }
+            }).start();
+        }
+    }
+
+    /**
+     * Override this method and return true to activate the websocket watcher thread.
+     */
+    protected boolean isWebsocketWatcherSupported() {
+        return false;
+    }
+
+    /**
+     * Calculate with the help of heartbeats if the websocket is still healthy and running correctly.
+     */
+    protected boolean isWebsocketReconnectRequired() {
+        return false;
+    }
+
     protected class NettyWebSocketClientHandler extends WebSocketClientHandler {
         protected NettyWebSocketClientHandler(WebSocketClientHandshaker handshaker, WebSocketMessageHandler handler) {
             super(handshaker, handler);
@@ -322,15 +381,14 @@ public abstract class NettyStreamingService<T> {
             } else {
                 super.channelInactive(ctx);
                 LOG.info("Reopening websocket because it was closed by the host");
-                final Completable c = connect()
-                        .doOnError(t -> LOG.warn("Problem with reconnect", t))
-                        .retryWhen(new RetryWithDelay(retryDuration.toMillis()))
-                        .doOnComplete(() -> {
-                            LOG.info("Resubscribing channels");
-                            resubscribeChannels();
-                        });
-                c.subscribe();
+                reconnectAndResubscribe();
             }
+        }
+
+        @Override
+        public void channelActive(ChannelHandlerContext ctx) {
+            super.channelActive(ctx);
+            startWebsocketHealthWatcher();
         }
     }
 
