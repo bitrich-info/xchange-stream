@@ -15,8 +15,6 @@ import io.netty.handler.codec.http.websocketx.extensions.WebSocketClientExtensio
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.handler.timeout.WriteTimeoutHandler;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -134,8 +132,6 @@ public abstract class NettyStreamingService<T> {
                                 List<ChannelHandler> handlers = new ArrayList<>(7);
                                 handlers.add(new HttpClientCodec());
                                 handlers.add(new HttpServerKeepAliveHandler());
-                                handlers.add(new WriteTimeoutHandler(10));
-                                handlers.add(new ReadTimeoutHandler(10));
                                 handlers.add(new HttpObjectAggregator(8192));
                                 handlers.add(handler);
                                 if (clientExtensionHandler != null) handlers.add(clientExtensionHandler);
@@ -340,7 +336,7 @@ public abstract class NettyStreamingService<T> {
                 boolean isRunning = true;
                 while (isRunning) {
                     if (isWebsocketReconnectRequired()) {
-                        LOG.warn("Websocket needs to be reconnected, reconnecting ...");
+                        LOG.debug("WebsocketHealthWatcher: websocket needs to be reconnected");
                         reconnectAndResubscribe();
                     }
                     try {

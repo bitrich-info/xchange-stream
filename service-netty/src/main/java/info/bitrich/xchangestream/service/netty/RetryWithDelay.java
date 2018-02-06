@@ -1,6 +1,5 @@
 package info.bitrich.xchangestream.service.netty;
 
-import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.functions.Function;
 import org.reactivestreams.Publisher;
@@ -15,12 +14,7 @@ public class RetryWithDelay implements Function<Flowable<? extends Throwable>, P
     }
 
     @Override
-    public Publisher<?> apply(Flowable<? extends Throwable> flowable) throws Exception {
-        return flowable.flatMap(new Function<Throwable, Publisher<?>>() {
-            @Override
-            public Publisher<?> apply(Throwable throwable) throws Exception {
-                return Flowable.timer(retryDelayMillis, TimeUnit.MILLISECONDS);
-            }
-        });
+    public Publisher<?> apply(Flowable<? extends Throwable> flowable) {
+        return flowable.flatMap((Function<Throwable, Publisher<?>>) throwable -> Flowable.timer(retryDelayMillis, TimeUnit.MILLISECONDS));
     }
 }
