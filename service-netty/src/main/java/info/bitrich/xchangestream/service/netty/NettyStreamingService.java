@@ -113,8 +113,9 @@ public abstract class NettyStreamingService<T> {
                                 }
 
                                 WebSocketClientExtensionHandler clientExtensionHandler = getWebSocketClientExtensionHandler();
-                                List<ChannelHandler> handlers = new ArrayList<>(7);
+                                List<ChannelHandler> handlers = new ArrayList<>(8);
                                 handlers.add(new HttpClientCodec());
+                                handlers.add(WebSocketClientCompressionHandler.INSTANCE);
                                 handlers.add(new HttpServerKeepAliveHandler());
                                 handlers.add(new WriteTimeoutHandler(10));
                                 handlers.add(new ReadTimeoutHandler(10));
@@ -141,6 +142,7 @@ public abstract class NettyStreamingService<T> {
 
     public Completable disconnect(boolean resetChannels) {
         return Completable.create(completable -> {
+            if (webSocketChannel.isOpen()) {
             CloseWebSocketFrame closeFrame = new CloseWebSocketFrame();
             webSocketChannel.writeAndFlush(closeFrame).addListener(future -> {
                 if (resetChannels) {
@@ -148,6 +150,7 @@ public abstract class NettyStreamingService<T> {
                 }
                 completable.onComplete();
             });
+            }
         });
     }
 
@@ -289,9 +292,8 @@ public abstract class NettyStreamingService<T> {
         return new NettyWebSocketClientHandler(handshaker, handler);
     }
 
-
-    private class NettyWebSocketClientHandler extends  WebSocketClientHandler{
-        NettyWebSocketClientHandler(WebSocketClientHandshaker handshaker, WebSocketMessageHandler handler) {
+    protected class NettyWebSocketClientHandler extends WebSocketClientHandler {
+        protected NettyWebSocketClientHandler(WebSocketClientHandshaker handshaker, WebSocketMessageHandler handler) {
             super(handshaker, handler);
         }
 
