@@ -166,13 +166,13 @@ public abstract class NettyStreamingService<T> {
         isManualDisconnect = true;
         return Completable.create(completable -> {
             if (webSocketChannel.isOpen()) {
-            CloseWebSocketFrame closeFrame = new CloseWebSocketFrame();
-            webSocketChannel.writeAndFlush(closeFrame).addListener(future -> {
-                if (resetChannels) {
-                    channels = new ConcurrentHashMap<>();
-                }
-                completable.onComplete();
-            });
+                CloseWebSocketFrame closeFrame = new CloseWebSocketFrame();
+                webSocketChannel.writeAndFlush(closeFrame).addListener(future -> {
+                    if (resetChannels) {
+                        channels = new ConcurrentHashMap<>();
+                    }
+                    completable.onComplete();
+                });
             }
         });
     }
@@ -314,7 +314,6 @@ public abstract class NettyStreamingService<T> {
     protected void reconnectAndResubscribe() {
         if (!isReconnectingWebsocket) {
             isReconnectingWebsocket  = true;
-            LOG.warn("Websocket is lagging behind, reconnecting ...");
             try {
                 final Completable c = connect()
                         .doOnError(t -> LOG.warn("Problem with reconnect", t))
@@ -322,12 +321,11 @@ public abstract class NettyStreamingService<T> {
                         .doOnComplete(() -> {
                             LOG.info("Resubscribing channels");
                             resubscribeChannels();
+                            isReconnectingWebsocket = false;
                         });
                 c.subscribe();
             } catch (Exception e) {
-                LOG.warn("Exception while socket resubscribe! Message: " + e.getMessage());
-            } finally {
-                isReconnectingWebsocket = false;
+                LOG.warn("Exception while socket reconnect! Message: " + e.getMessage());
             }
         }
     }
@@ -342,6 +340,7 @@ public abstract class NettyStreamingService<T> {
                 boolean isRunning = true;
                 while (isRunning) {
                     if (isWebsocketReconnectRequired()) {
+                        LOG.warn("Websocket needs to be reconnected, reconnecting ...");
                         reconnectAndResubscribe();
                     }
                     try {
