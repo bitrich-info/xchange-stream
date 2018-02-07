@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public abstract class NettyStreamingService<T> {
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
@@ -332,21 +333,12 @@ public abstract class NettyStreamingService<T> {
         if (!isWebsocketWatcherRunning && isWebsocketWatcherSupported()) {
             isWebsocketWatcherRunning = true;
             LOG.info("Starting websocket health watcher for netty socket");
-            new Thread(() -> {
-                boolean isRunning = true;
-                while (isRunning) {
-                    if (isWebsocketReconnectRequired()) {
-                        LOG.debug("WebsocketHealthWatcher: websocket needs to be reconnected");
-                        reconnectAndResubscribe();
-                    }
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException ignored) {
-                        isRunning = false;
-                        LOG.info("Stopping websocket health watcher because it was interrupted.");
-                    }
+            Observable.interval(1, TimeUnit.SECONDS).forEach(ticker -> {
+                if (isWebsocketReconnectRequired()) {
+                    LOG.debug("WebsocketHealthWatcher: websocket needs to be reconnected");
+                    reconnectAndResubscribe();
                 }
-            }).start();
+            });
         }
     }
 
