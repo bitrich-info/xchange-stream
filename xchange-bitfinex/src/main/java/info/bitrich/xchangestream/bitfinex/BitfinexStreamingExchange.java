@@ -7,50 +7,57 @@ import io.reactivex.Completable;
 import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.bitfinex.v1.BitfinexExchange;
 
+import java.util.concurrent.ThreadFactory;
+
 /**
  * Created by Lukas Zaoralek on 7.11.17.
  */
 public class BitfinexStreamingExchange extends BitfinexExchange implements StreamingExchange {
-    private static final String API_URI = "wss://api.bitfinex.com/ws/2";
+  private static final String API_URI = "wss://api.bitfinex.com/ws/2";
 
-    private final BitfinexStreamingService streamingService;
-    private BitfinexStreamingMarketDataService streamingMarketDataService;
+  private final BitfinexStreamingService streamingService;
+  private BitfinexStreamingMarketDataService streamingMarketDataService;
 
-    public BitfinexStreamingExchange() {
-        this.streamingService = new BitfinexStreamingService(API_URI);
-    }
+  public BitfinexStreamingExchange() {
+    this.streamingService = new BitfinexStreamingService(API_URI);
+  }
 
-    @Override
-    protected void initServices() {
-        super.initServices();
-        streamingMarketDataService = new BitfinexStreamingMarketDataService(streamingService);
-    }
+  @Override
+  protected void initServices() {
+    super.initServices();
+    streamingMarketDataService = new BitfinexStreamingMarketDataService(streamingService);
+  }
 
-    @Override
-    public Completable connect(ProductSubscription... args) {
-        return streamingService.connect();
-    }
+  @Override
+  public Completable connect(ProductSubscription... args) {
+    return streamingService.connect();
+  }
 
-    @Override
-    public Completable disconnect() {
-        return streamingService.disconnect();
-    }
+  @Override
+  public Completable disconnect() {
+    return streamingService.disconnect();
+  }
 
-    @Override
-    public boolean isAlive() {
-        return streamingService.isSocketOpen();
-    }
+  @Override
+  public boolean isAlive() {
+    return streamingService.isSocketOpen();
+  }
 
-    @Override
-    public ExchangeSpecification getDefaultExchangeSpecification() {
-        ExchangeSpecification spec = super.getDefaultExchangeSpecification();
-        spec.setShouldLoadRemoteMetaData(false);
+  @Override
+  public ExchangeSpecification getDefaultExchangeSpecification() {
+    ExchangeSpecification spec = super.getDefaultExchangeSpecification();
+    spec.setShouldLoadRemoteMetaData(false);
 
-        return spec;
-    }
+    return spec;
+  }
 
-    @Override
-    public StreamingMarketDataService getStreamingMarketDataService() {
-        return streamingMarketDataService;
-    }
+  @Override
+  public StreamingMarketDataService getStreamingMarketDataService() {
+    return streamingMarketDataService;
+  }
+
+  @Override
+  public void setThreadFactory(ThreadFactory threadFactory) {
+    streamingService.setThreadFactory(threadFactory);
+  }
 }

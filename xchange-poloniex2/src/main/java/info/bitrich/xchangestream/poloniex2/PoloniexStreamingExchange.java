@@ -17,76 +17,82 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * Created by Lukas Zaoralek on 10.11.17.
  */
 public class PoloniexStreamingExchange extends PoloniexExchange implements StreamingExchange {
-    private static final String API_URI = "wss://api2.poloniex.com";
-    private static final String TICKER_URL = "https://poloniex.com/public?command=returnTicker";
+  private static final String API_URI = "wss://api2.poloniex.com";
+  private static final String TICKER_URL = "https://poloniex.com/public?command=returnTicker";
 
-    private final PoloniexStreamingService streamingService;
-    private PoloniexStreamingMarketDataService streamingMarketDataService;
+  private final PoloniexStreamingService streamingService;
+  private PoloniexStreamingMarketDataService streamingMarketDataService;
 
-    public PoloniexStreamingExchange() {
-        this.streamingService = new PoloniexStreamingService(API_URI);
+  public PoloniexStreamingExchange() {
+    this.streamingService = new PoloniexStreamingService(API_URI);
+  }
+
+  @Override
+  protected void initServices() {
+    super.initServices();
+    Map<CurrencyPair, Integer> currencyPairMap = getCurrencyPairMap();
+    streamingMarketDataService = new PoloniexStreamingMarketDataService(streamingService, currencyPairMap);
+  }
+
+  private Map<CurrencyPair, Integer> getCurrencyPairMap() {
+    Map<CurrencyPair, Integer> currencyPairMap = new HashMap<>();
+    final ObjectMapper mapper = new ObjectMapper();
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    try {
+      URL tickerUrl = new URL(TICKER_URL);
+      JsonNode jsonRootTickers = mapper.readTree(tickerUrl);
+      Iterator<String> pairSymbols = jsonRootTickers.fieldNames();
+      while (pairSymbols.hasNext()) {
+        String pairSymbol = pairSymbols.next();
+        String id = jsonRootTickers.get(pairSymbol).get("id").toString();
+
+        String[] currencies = pairSymbol.split("_");
+        CurrencyPair currencyPair = new CurrencyPair(new Currency(currencies[1]), new Currency(currencies[0]));
+        currencyPairMap.put(currencyPair, new Integer(id));
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
     }
 
-    @Override
-    protected void initServices() {
-        super.initServices();
-        Map<CurrencyPair, Integer> currencyPairMap = getCurrencyPairMap();
-        streamingMarketDataService = new PoloniexStreamingMarketDataService(streamingService, currencyPairMap);
-    }
+    return currencyPairMap;
+  }
 
-    private Map<CurrencyPair, Integer> getCurrencyPairMap() {
-        Map<CurrencyPair, Integer> currencyPairMap = new HashMap<>();
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        try {
-            URL tickerUrl = new URL(TICKER_URL);
-            JsonNode jsonRootTickers = mapper.readTree(tickerUrl);
-            Iterator<String> pairSymbols = jsonRootTickers.fieldNames();
-            while (pairSymbols.hasNext()) {
-                String pairSymbol = pairSymbols.next();
-                String id = jsonRootTickers.get(pairSymbol).get("id").toString();
+  @Override
+  public Completable connect(ProductSubscription... args) {
+    return streamingService.connect();
+  }
 
-                String[] currencies = pairSymbol.split("_");
-                CurrencyPair currencyPair = new CurrencyPair(new Currency(currencies[1]), new Currency(currencies[0]));
-                currencyPairMap.put(currencyPair, new Integer(id));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+  @Override
+  public Completable disconnect() {
+    return streamingService.disconnect();
+  }
 
-        return currencyPairMap;
-    }
+  @Override
+  public ExchangeSpecification getDefaultExchangeSpecification() {
+    ExchangeSpecification spec = super.getDefaultExchangeSpecification();
+    spec.setShouldLoadRemoteMetaData(false);
 
-    @Override
-    public Completable connect(ProductSubscription... args) {
-        return streamingService.connect();
-    }
+    return spec;
+  }
 
-    @Override
-    public Completable disconnect() {
-        return streamingService.disconnect();
-    }
+  @Override
+  public StreamingMarketDataService getStreamingMarketDataService() {
+    return streamingMarketDataService;
+  }
 
-    @Override
-    public ExchangeSpecification getDefaultExchangeSpecification() {
-        ExchangeSpecification spec = super.getDefaultExchangeSpecification();
-        spec.setShouldLoadRemoteMetaData(false);
+  @Override
+  public void setThreadFactory(ThreadFactory threadFactory) {
+    streamingService.setThreadFactory(threadFactory);
+  }
 
-        return spec;
-    }
-
-    @Override
-    public StreamingMarketDataService getStreamingMarketDataService() {
-        return streamingMarketDataService;
-    }
-
-    @Override
-    public boolean isAlive() {
-        return streamingService.isSocketOpen();
-    }
+  @Override
+  public boolean isAlive() {
+    return streamingService.isSocketOpen();
+  }
 }

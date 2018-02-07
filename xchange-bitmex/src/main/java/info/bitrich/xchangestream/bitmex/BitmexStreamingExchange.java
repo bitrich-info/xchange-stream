@@ -8,6 +8,8 @@ import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.bitmex.BitmexExchange;
 import si.mazi.rescu.SynchronizedValueFactory;
 
+import java.util.concurrent.ThreadFactory;
+
 /**
  * Created by Lukas Zaoralek on 12.11.17.
  */
@@ -51,6 +53,11 @@ public class BitmexStreamingExchange extends BitmexExchange implements Streaming
     @Override
     public StreamingMarketDataService getStreamingMarketDataService() {
         return streamingMarketDataService;
+    }
+
+    @Override
+    public void setThreadFactory(ThreadFactory threadFactory) {
+        streamingService.setThreadFactory(threadFactory);
     }
 
     @Override

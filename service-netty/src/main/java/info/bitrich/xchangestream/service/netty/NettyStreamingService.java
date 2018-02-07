@@ -29,11 +29,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadFactory;
 
 public abstract class NettyStreamingService<T> {
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
     private static final Duration DEFAULT_CONNECTION_TIMEOUT = Duration.ofSeconds(10);
     private static final Duration DEFAULT_RETRY_DURATION = Duration.ofSeconds(15);
+    private ThreadFactory threadFactory;
 
     private class Subscription {
         final ObservableEmitter<T> emitter;
@@ -53,7 +55,6 @@ public abstract class NettyStreamingService<T> {
     private Channel webSocketChannel;
     private Duration retryDuration;
     private Duration connectionTimeout;
-    private final NioEventLoopGroup eventLoopGroup;
     protected Map<String, Subscription> channels = new ConcurrentHashMap<>();
 
     public NettyStreamingService(String apiUrl) {
@@ -70,10 +71,13 @@ public abstract class NettyStreamingService<T> {
             this.retryDuration = retryDuration;
             this.connectionTimeout = connectionTimeout;
             this.uri = new URI(apiUrl);
-            this.eventLoopGroup = new NioEventLoopGroup();
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Error parsing URI " + apiUrl, e);
         }
+    }
+
+    public void setThreadFactory(ThreadFactory threadFactory) {
+        this.threadFactory = threadFactory;
     }
 
     public Completable connect() {
@@ -117,6 +121,9 @@ public abstract class NettyStreamingService<T> {
                         this::messageHandler);
 
                 Bootstrap b = new Bootstrap();
+                EventLoopGroup eventLoopGroup = threadFactory == null
+                    ? new NioEventLoopGroup()
+                    : new NioEventLoopGroup(0, threadFactory);
                 b.group(eventLoopGroup)
                         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, java.lang.Math.toIntExact(connectionTimeout.toMillis()))
                         .channel(NioSocketChannel.class)
