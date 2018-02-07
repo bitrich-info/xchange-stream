@@ -7,10 +7,7 @@ import info.bitrich.xchangestream.service.pubnub.PubnubStreamingService;
 import io.reactivex.Completable;
 import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.bitflyer.BitflyerExchange;
-import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import si.mazi.rescu.SynchronizedValueFactory;
-
-import java.util.concurrent.ThreadFactory;
 
 /**
  * Created by Lukas Zaoralek on 14.11.17.
@@ -55,11 +52,6 @@ public class BitflyerStreamingExchange extends BitflyerExchange implements Strea
     @Override
     public StreamingMarketDataService getStreamingMarketDataService() {
         return streamingMarketDataService;
-    }
-
-    @Override
-    public void setThreadFactory(ThreadFactory threadFactory) {
-        throw new NotYetImplementedForExchangeException("ThreadFactory not supported yet");
     }
 
     @Override

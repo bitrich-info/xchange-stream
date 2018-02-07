@@ -29,13 +29,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadFactory;
 
 public abstract class NettyStreamingService<T> {
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
     private static final Duration DEFAULT_CONNECTION_TIMEOUT = Duration.ofSeconds(10);
     private static final Duration DEFAULT_RETRY_DURATION = Duration.ofSeconds(15);
-    private ThreadFactory threadFactory;
 
     private class Subscription {
         final ObservableEmitter<T> emitter;
@@ -55,6 +53,7 @@ public abstract class NettyStreamingService<T> {
     private Channel webSocketChannel;
     private Duration retryDuration;
     private Duration connectionTimeout;
+    private final NioEventLoopGroup eventLoopGroup;
     protected Map<String, Subscription> channels = new ConcurrentHashMap<>();
 
     public NettyStreamingService(String apiUrl) {
@@ -71,13 +70,10 @@ public abstract class NettyStreamingService<T> {
             this.retryDuration = retryDuration;
             this.connectionTimeout = connectionTimeout;
             this.uri = new URI(apiUrl);
+            this.eventLoopGroup = new NioEventLoopGroup();
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Error parsing URI " + apiUrl, e);
         }
-    }
-
-    public void setThreadFactory(ThreadFactory threadFactory) {
-        this.threadFactory = threadFactory;
     }
 
     public Completable connect() {
@@ -116,10 +112,6 @@ public abstract class NettyStreamingService<T> {
                     sslCtx = null;
                 }
 
-                final NioEventLoopGroup eventLoopGroup = threadFactory == null
-                    ? new NioEventLoopGroup()
-                    : new NioEventLoopGroup(0, threadFactory);
-
                 final WebSocketClientHandler handler = getWebSocketClientHandler(WebSocketClientHandshakerFactory.newHandshaker(
                         uri, WebSocketVersion.V13, null, true, new DefaultHttpHeaders(), maxFramePayloadLength),
                         this::messageHandler);
@@ -139,7 +131,6 @@ public abstract class NettyStreamingService<T> {
                                 WebSocketClientExtensionHandler clientExtensionHandler = getWebSocketClientExtensionHandler();
                                 List<ChannelHandler> handlers = new ArrayList<>(4);
                                 handlers.add(new HttpClientCodec());
-                                handlers.add(WebSocketClientCompressionHandler.INSTANCE);
                                 handlers.add(new HttpObjectAggregator(8192));
                                 handlers.add(handler);
                                 if (clientExtensionHandler != null) handlers.add(clientExtensionHandler);
