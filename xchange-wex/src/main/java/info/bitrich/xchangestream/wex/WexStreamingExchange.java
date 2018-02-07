@@ -5,7 +5,10 @@ import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import info.bitrich.xchangestream.service.pusher.PusherStreamingService;
 import io.reactivex.Completable;
+import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import org.knowm.xchange.wex.v3.WexExchange;
+
+import java.util.concurrent.ThreadFactory;
 
 /**
  * Created by Lukas Zaoralek on 16.11.17.
@@ -40,6 +43,11 @@ public class WexStreamingExchange extends WexExchange implements StreamingExchan
     @Override
     public StreamingMarketDataService getStreamingMarketDataService() {
         return streamingMarketDataService;
+    }
+
+    @Override
+    public void setThreadFactory(ThreadFactory threadFactory) {
+        throw new NotYetImplementedForExchangeException("ThreadFactory not supported yet");
     }
 
     @Override

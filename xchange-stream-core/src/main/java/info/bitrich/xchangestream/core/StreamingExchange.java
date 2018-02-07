@@ -3,6 +3,8 @@ package info.bitrich.xchangestream.core;
 import io.reactivex.Completable;
 import org.knowm.xchange.Exchange;
 
+import java.util.concurrent.ThreadFactory;
+
 public interface StreamingExchange extends Exchange {
     /**
      * Connects to the WebSocket API of the exchange.
@@ -30,4 +32,9 @@ public interface StreamingExchange extends Exchange {
      * Returns service that can be used to access market data.
      */
     StreamingMarketDataService getStreamingMarketDataService();
+
+    /**
+     * @param threadFactory thread factory to be used for creating threads for streaming.
+     */
+    void setThreadFactory(ThreadFactory threadFactory);
 }

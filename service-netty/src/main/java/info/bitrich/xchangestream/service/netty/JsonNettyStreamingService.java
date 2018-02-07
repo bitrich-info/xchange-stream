@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.ThreadFactory;
 
 public abstract class JsonNettyStreamingService extends NettyStreamingService<JsonNode> {
     private static final Logger LOG = LoggerFactory.getLogger(JsonNettyStreamingService.class);

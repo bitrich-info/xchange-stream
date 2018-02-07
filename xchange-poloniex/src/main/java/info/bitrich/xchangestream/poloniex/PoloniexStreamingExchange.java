@@ -5,7 +5,10 @@ import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import info.bitrich.xchangestream.service.wamp.WampStreamingService;
 import io.reactivex.Completable;
+import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import org.knowm.xchange.poloniex.PoloniexExchange;
+
+import java.util.concurrent.ThreadFactory;
 
 public class PoloniexStreamingExchange extends PoloniexExchange implements StreamingExchange {
     private static final String API_URI = "wss://api.poloniex.com";
@@ -37,6 +40,11 @@ public class PoloniexStreamingExchange extends PoloniexExchange implements Strea
     @Override
     public StreamingMarketDataService getStreamingMarketDataService() {
         return streamingMarketDataService;
+    }
+
+    @Override
+    public void setThreadFactory(ThreadFactory threadFactory) {
+        throw new NotYetImplementedForExchangeException("ThreadFactory not supported yet");
     }
 
     @Override

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadFactory;
 
 public class BinanceStreamingService {
     private static final Logger LOG = LoggerFactory.getLogger(BinanceStreamingService.class);
@@ -15,6 +16,7 @@ public class BinanceStreamingService {
     private Map<CurrencyPair, BinanceProductStreamingService> productStreamingServices;
     private Map<CurrencyPair, Observable<JsonNode>> productSubscriptions;
     private final String baseUri;
+    private ThreadFactory threadFactory;
 
     public BinanceStreamingService(String _baseUri) {
         baseUri = _baseUri;
@@ -29,6 +31,7 @@ public class BinanceStreamingService {
             String symbolUri = baseUri + currencyPair.base.toString().toLowerCase() + currencyPair.counter.toString().toLowerCase() + "@depth";
             BinanceProductStreamingService productStreamingService = new BinanceProductStreamingService(symbolUri,
                     currencyPair);
+            productStreamingService.setThreadFactory(threadFactory);
             productStreamingService.connect().blockingAwait();
             Observable<JsonNode> productSubscription = productStreamingService
                     .subscribeChannel(currencyPair.toString(), args);
