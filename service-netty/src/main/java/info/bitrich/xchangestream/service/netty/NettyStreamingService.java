@@ -234,7 +234,7 @@ public abstract class NettyStreamingService<T> {
                 e.onError(new NotConnectedException());
             }
 
-            if (!channels.containsKey(channelId)) {
+            if (!channels.containsKey(channelId) || channels.get(channelId).emitter.isDisposed()) {
                 Subscription newSubscription = new Subscription(e, channelName, args);
                 channels.put(channelId, newSubscription);
                 try {
