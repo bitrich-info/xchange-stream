@@ -59,6 +59,12 @@ public class GeminiStreamingMarketDataService implements StreamingMarketDataServ
     public Observable<OrderBook> getOrderBook(CurrencyPair currencyPair, Object... args) {
 
         Observable<GeminiOrderbook> subscribedOrderbookSnapshot = service.subscribeChannel(currencyPair, args)
+                .filter(
+                        s -> filterEventsByReason(s, "change", "initial") ||
+                                filterEventsByReason(s, "change", "place") ||
+                                filterEventsByReason(s, "change", "cancel") ||
+                                filterEventsByReason(s, "change", "trade")
+                )
                 .map((JsonNode s) -> {
 
                     if(filterEventsByReason(s, "change", "initial")) {
@@ -81,7 +87,7 @@ public class GeminiStreamingMarketDataService implements StreamingMarketDataServ
 
                     }
 
-                    throw new NotYetImplementedForExchangeException();
+                    throw new NotYetImplementedForExchangeException(" Unknown message type, even after filtering: " + s.toString());
 
                 });
 
