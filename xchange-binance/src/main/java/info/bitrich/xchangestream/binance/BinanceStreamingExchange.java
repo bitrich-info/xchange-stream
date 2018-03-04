@@ -67,7 +67,7 @@ public class BinanceStreamingExchange extends BinanceExchange implements Streami
     private static String buildSubscriptionStreams(ProductSubscription subscription) {
         return buildSubscriptionStrings(subscription.getTicker(), "ticker") +
                 buildSubscriptionStrings(subscription.getOrderBook(), "depth") +
-                buildSubscriptionStrings(subscription.getTrades(), "trade");
+                buildSubscriptionStrings(subscription.getTrades(), "aggTrade");
     }
 
     private static String buildSubscriptionStrings(List<CurrencyPair> currencyPairs, String subscriptionType) {
