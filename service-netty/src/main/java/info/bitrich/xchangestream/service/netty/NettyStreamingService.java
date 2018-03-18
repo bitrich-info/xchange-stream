@@ -58,14 +58,14 @@ public abstract class NettyStreamingService<T> {
         }
     }
 
-    protected final int maxFramePayloadLength;
-    protected final URI uri;
+    private final int maxFramePayloadLength;
+    private final URI uri;
     private boolean isManualDisconnect = false;
-    protected Channel webSocketChannel;
+    private Channel webSocketChannel;
     private Duration retryDuration;
-    protected Duration connectionTimeout;
-    protected final NioEventLoopGroup eventLoopGroup;
-    protected Map<String, Subscription> channels = new ConcurrentHashMap<>();
+    private Duration connectionTimeout;
+    private final NioEventLoopGroup eventLoopGroup;
+    private Map<String, Subscription> channels = new ConcurrentHashMap<>();
     private boolean compressedMessages = false;
 
     public NettyStreamingService(String apiUrl) {
