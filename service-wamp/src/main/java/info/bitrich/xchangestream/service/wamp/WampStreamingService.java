@@ -7,6 +7,7 @@ import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.subjects.BehaviorSubject;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import ws.wamp.jawampa.PubSubData;
 import ws.wamp.jawampa.WampClient;
 import ws.wamp.jawampa.WampClient.State;
@@ -83,4 +84,6 @@ public class WampStreamingService {
         // WampClient was initiated with infinite reconnects attempts, so we can just always return 'true'
         return !((BehaviorSubject<State>) client.statusChanged()).hasCompleted();
     }
+
+    public void useCompressedMessages(boolean compressedMessages) { throw new NotImplementedException(); }
 }

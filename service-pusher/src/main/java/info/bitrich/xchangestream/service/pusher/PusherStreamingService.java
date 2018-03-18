@@ -11,6 +11,7 @@ import io.reactivex.Completable;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Collections;
 import java.util.List;
@@ -90,4 +91,6 @@ public class PusherStreamingService {
     public boolean isSocketOpen() {
         return pusher.getConnection().getState() == ConnectionState.CONNECTED;
     }
+
+    public void useCompressedMessages(boolean compressedMessages) { throw new NotImplementedException(); }
 }

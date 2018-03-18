@@ -65,7 +65,7 @@ public abstract class NettyStreamingService<T> {
     private Duration retryDuration;
     private Duration connectionTimeout;
     private final NioEventLoopGroup eventLoopGroup;
-    private Map<String, Subscription> channels = new ConcurrentHashMap<>();
+    protected Map<String, Subscription> channels = new ConcurrentHashMap<>();
     private boolean compressedMessages = false;
 
     public NettyStreamingService(String apiUrl) {
