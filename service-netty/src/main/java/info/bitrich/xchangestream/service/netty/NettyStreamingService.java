@@ -143,8 +143,12 @@ public abstract class NettyStreamingService<T> {
                                 List<ChannelHandler> handlers = new ArrayList<>(4);
                                 handlers.add(new HttpClientCodec());
                                 handlers.add(new HttpObjectAggregator(8192));
+                                
+                                if (clientExtensionHandler != null) {
+                                  handlers.add(clientExtensionHandler);
+                                }
+                                
                                 handlers.add(handler);
-                                if (clientExtensionHandler != null) handlers.add(clientExtensionHandler);
                                 p.addLast(handlers.toArray(new ChannelHandler[handlers.size()]));
                             }
                         });
@@ -152,7 +156,13 @@ public abstract class NettyStreamingService<T> {
                 b.connect(uri.getHost(), port).addListener((ChannelFuture future) -> {
                     webSocketChannel = future.channel();
                     if (future.isSuccess()) {
-                        handler.handshakeFuture().addListener(f -> completable.onComplete());
+                        handler.handshakeFuture().addListener(f -> {
+                            if (f.isSuccess()) {
+                                completable.onComplete();
+                            } else {
+                                completable.onError(f.cause());
+                            }
+                        });
                     } else {
                         completable.onError(future.cause());
                     }

@@ -60,7 +60,12 @@ public class BinanceStreamingExchange extends BinanceExchange implements Streami
     }
 
     private BinanceStreamingService createStreamingService(ProductSubscription subscription) {
-        String path = API_BASE_URI + "stream?streams=" + buildSubscriptionStreams(subscription);
+        String subs = buildSubscriptionStreams(subscription);
+        //Strip the start:
+        subs = subs .startsWith("/") ? subs .substring(1) : subs ;
+        
+      
+        String path = API_BASE_URI + "stream?streams=" + subs;
         return new BinanceStreamingService(path, subscription);
     }
 
