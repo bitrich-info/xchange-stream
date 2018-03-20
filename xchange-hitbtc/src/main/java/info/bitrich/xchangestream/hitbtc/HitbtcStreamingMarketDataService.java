@@ -1,6 +1,7 @@
 package info.bitrich.xchangestream.hitbtc;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import info.bitrich.xchangestream.hitbtc.dto.*;
@@ -34,8 +35,11 @@ public class HitbtcStreamingMarketDataService implements StreamingMarketDataServ
         String channelName = getChannelName("orderbook", pair);
         final ObjectMapper mapper = getObjectMapper();
 
-        return service.subscribeChannel(channelName)
-                .map(s -> mapper.readValue(s.toString(), HitbtcWebSocketOrderBookTransaction.class))
+        Observable<JsonNode> jsonNodeObservable = service.subscribeChannel(channelName);
+        return jsonNodeObservable
+                .map(s -> {
+                    return mapper.readValue(s.toString(), HitbtcWebSocketOrderBookTransaction.class);
+                })
                 .map(s -> {
                     HitbtcWebSocketOrderBook hitbtcOrderBook = s.toHitbtcOrderBook(orderbooks.getOrDefault(currencyPair, null));
                     orderbooks.put(currencyPair, hitbtcOrderBook);

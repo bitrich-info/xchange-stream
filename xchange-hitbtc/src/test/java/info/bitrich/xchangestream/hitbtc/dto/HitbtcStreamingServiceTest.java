@@ -14,33 +14,37 @@ import java.lang.reflect.Method;
 public class HitbtcStreamingServiceTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final HitbtcStreamingService streamingService = new HitbtcStreamingService("testUrl");
 
     @Test
     public void getChannelNameFromMessageTest() throws IOException, InvocationTargetException, IllegalAccessException {
 
-        String json1 = "{\"method\":\"aaa\"}";
-        String json2 = "{ \"method\": \"updateOrderbook\", \"params\": { \"symbol\": \"ETHBTC\" } }";
-        String json3 = "{ \"method\": \"snapshotOrderbook\", \"params\": { \"symbol\": \"ETHBTC\" } }";
-        String json4 = "{ \"method\": \"test\", \"params\": { \"symbol\": \"ETHBTC\" } }";
-        String json5 = "{ \"noMethod\": \"updateOrderbook\" } }";
 
-        HitbtcStreamingService hitbtcStreamingService = new HitbtcStreamingService("testUrl");
         Method method = MethodUtils.getMatchingMethod(HitbtcStreamingService.class, "getChannelNameFromMessage", JsonNode.class);
         method.setAccessible(true);
 
-        Assert.assertEquals("aaa", method.invoke(hitbtcStreamingService, objectMapper.readTree(json1)));
-        Assert.assertEquals("orderbook-ETHBTC", method.invoke(hitbtcStreamingService, objectMapper.readTree(json2)));
-        Assert.assertEquals("orderbook-ETHBTC", method.invoke(hitbtcStreamingService, objectMapper.readTree(json3)));
+        String json = "{\"method\":\"aaa\"}";
+        Assert.assertEquals("aaa", method.invoke(streamingService, objectMapper.readTree(json)));
 
-        Assert.assertEquals("test-ETHBTC", method.invoke(hitbtcStreamingService, objectMapper.readTree(json4)));
+        json = "{ \"method\": \"updateOrderbook\", \"params\": { \"symbol\": \"ETHBTC\" } }";
+        Assert.assertEquals("orderbook-ETHBTC", method.invoke(streamingService, objectMapper.readTree(json)));
+
+        json = "{ \"method\": \"snapshotOrderbook\", \"params\": { \"symbol\": \"ETHBTC\" } }";
+        Assert.assertEquals("orderbook-ETHBTC", method.invoke(streamingService, objectMapper.readTree(json)));
+
+        json = "{ \"method\": \"test\", \"params\": { \"symbol\": \"ETHBTC\" } }";
+        Assert.assertEquals("test-ETHBTC", method.invoke(streamingService, objectMapper.readTree(json)));
+
+        json = "{ \"noMethod\": \"updateOrderbook\" } }";
         Throwable exception = null;
         try {
-            method.invoke(hitbtcStreamingService, objectMapper.readTree(json5));
+            method.invoke(streamingService, objectMapper.readTree(json));
         } catch (InvocationTargetException e) {
             exception = e.getTargetException();
         }
-        Assert.assertNotNull(exception);
+        Assert.assertNotNull("Expected IOException because no method", exception);
         Assert.assertEquals(IOException.class, exception.getClass());
 
     }
+
 }

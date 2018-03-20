@@ -25,11 +25,12 @@ public class HitbtcStreamingService extends JsonNettyStreamingService {
     private static final String JSON_METHOD = "method";
     private static final String JSON_SYMBOL = "symbol";
     private static final String JSON_PARAMS = "params";
+    private static final String JSON_RESULT = "result";
 
     private static final String OP_SNAPSHOT = "snapshot";
     private static final String OP_UPDATE = "update";
 
-    private final Map<Integer, String> requests = new HashMap<>();
+    private final Map<Integer, HitbtcWebSocketSubscriptionMessage> requests = new HashMap<>();
 
     private static final String REQUEST_ID = "id";
 
@@ -65,16 +66,25 @@ public class HitbtcStreamingService extends JsonNettyStreamingService {
     @Override
     protected void handleMessage(JsonNode message) {
         if (message.has(REQUEST_ID)) {
-            int key = message.get(REQUEST_ID).asInt();
-            if (requests.containsKey(key)) {
-                requests.remove(key);
+            int requestId = message.get(REQUEST_ID).asInt();
+            if (requests.containsKey(requestId)) {
+                boolean result = message.get(JSON_RESULT).asBoolean();
+                HitbtcWebSocketSubscriptionMessage subscriptionMessage = requests.get(requestId);
+                if (!result) {
+                    LOG.error("Executing HitBTC method '{}' has been failed", subscriptionMessage.getMethod());
+                } else {
+                    LOG.info("Executing HitBTC method '{}' successfully completed", subscriptionMessage.getMethod());
+                }
+                requests.remove(requestId);
                 return;
+            } else {
+                LOG.error("Not requested result received with ID {}", requestId);
             }
         }
 
         String channel = getChannel(message);
         if (!channels.containsKey(channel)) {
-            LOG.error("The message has been received from disconnected channel '{}'. Skipped.", channel);
+            LOG.warn("The message has been received from disconnected channel '{}'. Skipped.", channel);
             return;
         }
 
@@ -85,7 +95,7 @@ public class HitbtcStreamingService extends JsonNettyStreamingService {
     @Override
     public String getSubscribeMessage(String channelName, Object... args) throws IOException {
         HitbtcWebSocketSubscriptionMessage subscribeMessage = generateSubscribeMessage(channelName, "subscribe");
-        requests.put(subscribeMessage.getId(), channelName);
+        requests.put(subscribeMessage.getId(), subscribeMessage);
 
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.writeValueAsString(subscribeMessage);
@@ -95,7 +105,7 @@ public class HitbtcStreamingService extends JsonNettyStreamingService {
     public String getUnsubscribeMessage(String channelName) throws IOException {
 
         HitbtcWebSocketSubscriptionMessage subscribeMessage = generateSubscribeMessage(channelName, "unsubscribe");
-        requests.put(subscribeMessage.getId(), channelName);
+        requests.put(subscribeMessage.getId(), subscribeMessage);
 
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.writeValueAsString(subscribeMessage);
