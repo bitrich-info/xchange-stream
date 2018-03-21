@@ -16,6 +16,7 @@ import org.knowm.xchange.hitbtc.v2.HitbtcAdapters;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by Pavel Chertalev on 15.03.2018.
@@ -37,9 +38,7 @@ public class HitbtcStreamingMarketDataService implements StreamingMarketDataServ
 
         Observable<JsonNode> jsonNodeObservable = service.subscribeChannel(channelName);
         return jsonNodeObservable
-                .map(s -> {
-                    return mapper.readValue(s.toString(), HitbtcWebSocketOrderBookTransaction.class);
-                })
+                .map(s -> mapper.readValue(s.toString(), HitbtcWebSocketOrderBookTransaction.class))
                 .map(s -> {
                     HitbtcWebSocketOrderBook hitbtcOrderBook = s.toHitbtcOrderBook(orderbooks.getOrDefault(currencyPair, null));
                     orderbooks.put(currencyPair, hitbtcOrderBook);
@@ -56,7 +55,9 @@ public class HitbtcStreamingMarketDataService implements StreamingMarketDataServ
         return service.subscribeChannel(channelName)
                 .map(s -> mapper.readValue(s.toString(), HitbtcWebSocketTradesTransaction.class))
                 .map(HitbtcWebSocketTradesTransaction::getParams)
+                .filter(Objects::nonNull)
                 .map(HitbtcWebSocketTradeParams::getData)
+                .filter(Objects::nonNull)
                 .map(Arrays::asList)
                 .flatMapIterable(s -> {
                     Trades adaptedTrades = HitbtcAdapters.adaptTrades(s, currencyPair);
