@@ -7,7 +7,6 @@ import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.subjects.BehaviorSubject;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import ws.wamp.jawampa.PubSubData;
 import ws.wamp.jawampa.WampClient;
 import ws.wamp.jawampa.WampClient.State;

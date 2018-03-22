@@ -7,7 +7,6 @@ import info.bitrich.xchangestream.service.netty.WebSocketClientHandler;
 import io.reactivex.Completable;
 import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.gdax.GDAXExchange;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * GDAX Streaming Exchange. Connects to live WebSocket feed.

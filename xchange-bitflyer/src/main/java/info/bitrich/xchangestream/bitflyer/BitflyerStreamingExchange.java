@@ -9,7 +9,6 @@ import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.bitflyer.BitflyerExchange;
 import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import si.mazi.rescu.SynchronizedValueFactory;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Created by Lukas Zaoralek on 14.11.17.

@@ -7,7 +7,6 @@ import info.bitrich.xchangestream.service.pusher.PusherStreamingService;
 import io.reactivex.Completable;
 import org.knowm.xchange.bitstamp.BitstampExchange;
 import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class BitstampStreamingExchange extends BitstampExchange implements StreamingExchange {
     private static final String API_KEY = "de504dc5763aeef9ff52";
