@@ -331,7 +331,5 @@ public abstract class NettyStreamingService<T> {
         return webSocketChannel.isOpen();
     }
 
-    public void useCompressedMessages(boolean compressedMessages) {
-        this.compressedMessages = compressedMessages;
-    }
+    public void useCompressedMessages(boolean compressedMessages) { this.compressedMessages = compressedMessages; }
 }

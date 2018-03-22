@@ -85,5 +85,5 @@ public class WampStreamingService {
         return !((BehaviorSubject<State>) client.statusChanged()).hasCompleted();
     }
 
-    public void useCompressedMessages(boolean compressedMessages) { throw new NotImplementedException(); }
+    public void useCompressedMessages(boolean compressedMessages) { throw new UnsupportedOperationException(); }
 }

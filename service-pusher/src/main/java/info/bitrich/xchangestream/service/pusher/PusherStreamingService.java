@@ -92,5 +92,5 @@ public class PusherStreamingService {
         return pusher.getConnection().getState() == ConnectionState.CONNECTED;
     }
 
-    public void useCompressedMessages(boolean compressedMessages) { throw new NotImplementedException(); }
+    public void useCompressedMessages(boolean compressedMessages) { throw new UnsupportedOperationException(); }
 }

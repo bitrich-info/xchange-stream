@@ -15,7 +15,7 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import java.lang.UnsupportedOperationException;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -108,5 +108,5 @@ public class PubnubStreamingService {
         return (pnStatusCategory == PNStatusCategory.PNConnectedCategory);
     }
 
-    public void useCompressedMessages(boolean compressedMessages) { throw new NotImplementedException(); }
+    public void useCompressedMessages(boolean compressedMessages) { throw new UnsupportedOperationException(); }
 }
