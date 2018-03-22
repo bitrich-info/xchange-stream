@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.netty.util.concurrent.Future;
+import io.reactivex.CompletableEmitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,7 +83,7 @@ public abstract class NettyStreamingService<T> {
             this.retryDuration = retryDuration;
             this.connectionTimeout = connectionTimeout;
             this.uri = new URI(apiUrl);
-            this.eventLoopGroup = new NioEventLoopGroup();
+            this.eventLoopGroup = new NioEventLoopGroup(2);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Error parsing URI " + apiUrl, e);
         }
@@ -123,45 +125,64 @@ public abstract class NettyStreamingService<T> {
                     sslCtx = null;
                 }
 
-                final WebSocketClientHandler handler = getWebSocketClientHandler(WebSocketClientHandshakerFactory.newHandshaker(
-                        uri, WebSocketVersion.V13, null, true, new DefaultHttpHeaders(), maxFramePayloadLength),
-                        this::messageHandler);
+                final WebSocketClientHandler handler = getWebSocketClientHandler(
+                        WebSocketClientHandshakerFactory.newHandshaker(uri, WebSocketVersion.V13, null, true, new DefaultHttpHeaders(), maxFramePayloadLength), this::messageHandler);
 
                 Bootstrap b = new Bootstrap();
                 b.group(eventLoopGroup)
-                        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, java.lang.Math.toIntExact(connectionTimeout.toMillis()))
-                        .channel(NioSocketChannel.class)
-                        .handler(new ChannelInitializer<SocketChannel>() {
-                            @Override
-                            protected void initChannel(SocketChannel ch) {
-                                ChannelPipeline p = ch.pipeline();
-                                if (sslCtx != null) {
-                                    p.addLast(sslCtx.newHandler(ch.alloc(), host, port));
-                                }
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, java.lang.Math.toIntExact(connectionTimeout.toMillis()))
+                .channel(NioSocketChannel.class)
+                .handler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    protected void initChannel(SocketChannel ch) {
+                        ChannelPipeline p = ch.pipeline();
+                        if (sslCtx != null) {
+                            p.addLast(sslCtx.newHandler(ch.alloc(), host, port));
+                        }
 
-                                WebSocketClientExtensionHandler clientExtensionHandler = getWebSocketClientExtensionHandler();
-                                List<ChannelHandler> handlers = new ArrayList<>(4);
-                                handlers.add(new HttpClientCodec());
-                                handlers.add(new HttpObjectAggregator(8192));
-                                handlers.add(handler);
-                                if (clientExtensionHandler != null) handlers.add(clientExtensionHandler);
-                                p.addLast(handlers.toArray(new ChannelHandler[handlers.size()]));
-                            }
-                        });
+                        WebSocketClientExtensionHandler clientExtensionHandler = getWebSocketClientExtensionHandler();
+                        List<ChannelHandler> handlers = new ArrayList<>(4);
+                        handlers.add(new HttpClientCodec());
+                        handlers.add(new HttpObjectAggregator(8192));
+                        if (clientExtensionHandler != null) {
+                            handlers.add(clientExtensionHandler);
+                        }
+                        handlers.add(handler);
+                        p.addLast(handlers.toArray(new ChannelHandler[handlers.size()]));
+                    }
+                });
 
                 b.connect(uri.getHost(), port).addListener((ChannelFuture future) -> {
                     webSocketChannel = future.channel();
                     if (future.isSuccess()) {
-                        handler.handshakeFuture().addListener(f -> completable.onComplete());
+                        handler.handshakeFuture().addListener(f -> {
+                            if (f.isSuccess()) {
+                                completable.onComplete();
+                            } else {
+                                handleError(completable, f.cause());
+                            }
+                        });
                     } else {
-                        completable.onError(future.cause());
+                        handleError(completable, future.cause());
                     }
 
                 });
-            } catch (Exception throwable) {
-                completable.onError(throwable);
+            }
+            catch (Exception throwable) {
+                handleError(completable, throwable);
             }
         });
+    }
+
+    protected void handleError(CompletableEmitter completable, Throwable t) {
+        isManualDisconnect = true;
+        ChannelFuture disconnect = webSocketChannel.disconnect();
+        disconnect.addListener(f -> {
+            if(f.isSuccess()) {
+                isManualDisconnect = false;
+            }
+        });
+        completable.onError(t);
     }
 
     public Completable disconnect() {
@@ -217,7 +238,7 @@ public abstract class NettyStreamingService<T> {
         final String channelId = getSubscriptionUniqueId(channelName, args);
         LOG.info("Subscribing to channel {}", channelId);
 
-        return Observable.<T>create(e -> {
+        return Observable.<T> create(e -> {
             if (webSocketChannel == null || !webSocketChannel.isOpen()) {
                 e.onError(new NotConnectedException());
             }
@@ -227,7 +248,8 @@ public abstract class NettyStreamingService<T> {
                 channels.put(channelId, newSubscription);
                 try {
                     sendMessage(getSubscribeMessage(channelName, args));
-                } catch (IOException throwable) {
+                }
+                catch (IOException throwable) {
                     e.onError(throwable);
                 }
             }
@@ -271,7 +293,6 @@ public abstract class NettyStreamingService<T> {
         handleChannelError(channel, t);
     }
 
-
     protected void handleChannelMessage(String channel, T message) {
         ObservableEmitter<T> emitter = channels.get(channel).emitter;
         if (emitter == null) {
@@ -296,8 +317,7 @@ public abstract class NettyStreamingService<T> {
         return WebSocketClientCompressionHandler.INSTANCE;
     }
 
-    protected WebSocketClientHandler getWebSocketClientHandler(WebSocketClientHandshaker handshaker,
-                                                               WebSocketClientHandler.WebSocketMessageHandler handler) {
+    protected WebSocketClientHandler getWebSocketClientHandler(WebSocketClientHandshaker handshaker, WebSocketClientHandler.WebSocketMessageHandler handler) {
         return new NettyWebSocketClientHandler(handshaker, handler);
     }
 
@@ -313,13 +333,10 @@ public abstract class NettyStreamingService<T> {
             } else {
                 super.channelInactive(ctx);
                 LOG.info("Reopening websocket because it was closed by the host");
-                final Completable c = connect()
-                        .doOnError(t -> LOG.warn("Problem with reconnect", t))
-                        .retryWhen(new RetryWithDelay(retryDuration.toMillis()))
-                        .doOnComplete(() -> {
-                            LOG.info("Resubscribing channels");
-                            resubscribeChannels();
-                        });
+                final Completable c = connect().doOnError(t -> LOG.warn("Problem with reconnect", t)).retryWhen(new RetryWithDelay(retryDuration.toMillis())).doOnComplete(() -> {
+                    LOG.info("Resubscribing channels");
+                    resubscribeChannels();
+                });
                 c.subscribe();
             }
         }
