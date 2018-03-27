@@ -9,39 +9,42 @@ import org.knowm.xchange.cexio.CexIOExchange;
 public class CexioStreamingExchange extends CexIOExchange implements StreamingExchange {
 
     private static final String API_URI = "wss://ws.cex.io/ws/";
-    private final CexioStreamingService streamingService;
+
+    private final CexioStreamingMarketDataService streamingMarketDataService;
+    private final CexioStreamingOrderDataService streamingOrderDataService;
 
     public CexioStreamingExchange() {
-        this.streamingService = new CexioStreamingService(API_URI);
+        this.streamingOrderDataService = new CexioStreamingOrderDataService(API_URI);
+        this.streamingMarketDataService = new CexioStreamingMarketDataService();
     }
 
     @Override
     public Completable connect(ProductSubscription... args) {
-        return streamingService.connect();
+        return streamingOrderDataService.connect();
     }
 
     @Override
     public Completable disconnect() {
-        return streamingService.disconnect();
+        return streamingOrderDataService.disconnect();
     }
 
     @Override
     public boolean isAlive() {
-        return streamingService.isSocketOpen();
+        return streamingOrderDataService.isSocketOpen();
     }
 
     @Override
     public StreamingMarketDataService getStreamingMarketDataService() {
-        return null;
+        return streamingMarketDataService;
     }
 
     public void setCredentials(String apiKey, String apiSecret) {
-        streamingService.setApiKey(apiKey);
-        streamingService.setApiSecret(apiSecret);
+        streamingOrderDataService.setApiKey(apiKey);
+        streamingOrderDataService.setApiSecret(apiSecret);
     }
 
-    public CexioStreamingService getStreamingService() {
-        return streamingService;
+    public CexioStreamingOrderDataService getStreamingOrderDataService() {
+        return streamingOrderDataService;
     }
 
 }

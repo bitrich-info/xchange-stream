@@ -3,6 +3,7 @@ package info.bitrich.xchangestream.cexio.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 public class CexioWebSocketOrder {
 
@@ -13,14 +14,14 @@ public class CexioWebSocketOrder {
     private final CexioWebSocketPair pair;
     private final BigDecimal price;
     private final BigDecimal amount;
-    private final long time;
+    private final Date time;
     private final String type;
     private final BigDecimal fee;
 
     public CexioWebSocketOrder(@JsonProperty("id") String id, @JsonProperty("remains") BigDecimal remains,
                                @JsonProperty("fremains") BigDecimal fremains, @JsonProperty("cancel") boolean cancel,
                                @JsonProperty("pair") CexioWebSocketPair pair, @JsonProperty("price") BigDecimal price,
-                               @JsonProperty("amount") BigDecimal amount, @JsonProperty("time") long time,
+                               @JsonProperty("amount") BigDecimal amount, @JsonProperty("time") Date time,
                                @JsonProperty("type") String type, @JsonProperty("fee") BigDecimal fee) {
         this.id = id;
         this.remains = remains;
@@ -62,7 +63,7 @@ public class CexioWebSocketOrder {
         return amount;
     }
 
-    public long getTime() {
+    public Date getTime() {
         return time;
     }
 

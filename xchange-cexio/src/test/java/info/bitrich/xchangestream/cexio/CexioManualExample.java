@@ -13,25 +13,25 @@ public class CexioManualExample {
     public static void main(String[] args) throws IOException {
         CexioStreamingExchange exchange = (CexioStreamingExchange) StreamingExchangeFactory.INSTANCE.createExchange(
                 CexioStreamingExchange.class.getName());
+
         CexioProperties properties = new CexioProperties();
         exchange.setCredentials(properties.getApiKey(), properties.getSecretKey());
+
         exchange.connect().blockingAwait();
 
-        exchange.getStreamingService().getOrderCancelled().subscribe(
-                order -> LOG.info("Cancelled: {}", order.getId()));
-
-        exchange.getStreamingService().getOrderFilledFull().subscribe(
-                order -> LOG.info("Full filled: {}", order));
-
-        exchange.getStreamingService().getOrderFilledPartially().subscribe(
-                order -> LOG.info("Partially filled: {}", order));
+        exchange.getStreamingOrderDataService().getOrderExecution()
+                .subscribe(
+                        order -> LOG.info("Order id={}, status={}, pair={}, remains={}",
+                                          order.getId(),
+                                          order.getStatus(),
+                                          order.getCurrencyPair(),
+                                          order.getRemainingAmount()),
+                        throwable -> LOG.error("ERROR in getting order data: ", throwable));
 
         try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.sleep(10_000);
+        } catch (InterruptedException ignored) {
         }
-
     }
 
 }

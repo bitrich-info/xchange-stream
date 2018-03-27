@@ -6,16 +6,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import info.bitrich.xchangestream.cexio.dto.*;
 import info.bitrich.xchangestream.service.netty.JsonNettyStreamingService;
 import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
+import io.reactivex.subjects.PublishSubject;
+import org.knowm.xchange.dto.Order;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 
-public class CexioStreamingService extends JsonNettyStreamingService {
+public class CexioStreamingOrderDataService extends JsonNettyStreamingService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CexioStreamingService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CexioStreamingOrderDataService.class);
 
     public static final String CONNECTED = "connected";
     public static final String AUTH = "auth";
@@ -25,11 +26,11 @@ public class CexioStreamingService extends JsonNettyStreamingService {
 
     private String apiKey;
     private String apiSecret;
-    private ObservableEmitter<CexioWebSocketOrder> emitterOrderFilledPartial;
-    private ObservableEmitter<CexioWebSocketOrder> emitterOrderFilledFully;
-    private ObservableEmitter<CexioWebSocketOrder> emitterOrderCancelled;
 
-    public CexioStreamingService(String apiUrl) {
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private PublishSubject<Order> subject = PublishSubject.create();
+
+    public CexioStreamingOrderDataService(String apiUrl) {
         super(apiUrl, Integer.MAX_VALUE);
     }
 
@@ -50,12 +51,12 @@ public class CexioStreamingService extends JsonNettyStreamingService {
 
     @Override
     public void messageHandler(String message) {
-        ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode;
         try {
             jsonNode = objectMapper.readTree(message);
         } catch (IOException e) {
             LOG.error("Error parsing incoming message to JSON: {}", message);
+            subject.onError(e);
             return;
         }
         handleMessage(jsonNode);
@@ -72,9 +73,8 @@ public class CexioStreamingService extends JsonNettyStreamingService {
                     auth();
                     break;
                 case AUTH:
-                    CexioWebSocketAuthResponse response =
-                            (CexioWebSocketAuthResponse)deserialize(message, CexioWebSocketAuthResponse.class);
-                    if ((response != null) && !response.isSuccess()) {
+                    CexioWebSocketAuthResponse response = deserialize(message, CexioWebSocketAuthResponse.class);
+                    if (response != null && !response.isSuccess()) {
                         LOG.error("Authentication error: {}", response.getData().getError());
                     }
                     break;
@@ -82,19 +82,17 @@ public class CexioStreamingService extends JsonNettyStreamingService {
                     pong();
                     break;
                 case ORDER:
-                    CexioWebSocketOrderMessage order =
-                            (CexioWebSocketOrderMessage)deserialize(message, CexioWebSocketOrderMessage.class);
+                    CexioWebSocketOrderMessage order = deserialize(message, CexioWebSocketOrderMessage.class);
                     if (order != null) {
                         if (order.getData().isCancel()) {
                             LOG.debug(String.format("Order is cancelled: %s", order.getData()));
-                            emitterOrderCancelled.onNext(order.getData());
                         } else if (order.getData().getRemains().compareTo(BigDecimal.ZERO) == 0) {
                             LOG.debug(String.format("Order is fully filled: %s", order.getData()));
-                            emitterOrderFilledFully.onNext(order.getData());
                         } else {
                             LOG.debug(String.format("Order is partially filled: %s", order.getData()));
-                            emitterOrderFilledPartial.onNext(order.getData());
                         }
+
+                        subject.onNext(CexioAdapters.adaptOrder(order.getData()));
                     }
                     break;
             }
@@ -117,7 +115,7 @@ public class CexioStreamingService extends JsonNettyStreamingService {
 
     private void sendMessage(Object message) {
         try {
-            sendMessage(new ObjectMapper().writeValueAsString(message));
+            sendMessage(objectMapper.writeValueAsString(message));
         } catch (JsonProcessingException e) {
             LOG.error("Error creating json message: {}", e.getMessage());
         }
@@ -131,26 +129,17 @@ public class CexioStreamingService extends JsonNettyStreamingService {
         this.apiSecret = apiSecret;
     }
 
-    private Object deserialize(JsonNode message, Class valueType) {
-        Object result = null;
+    private <T> T deserialize(JsonNode message, Class<T> valueType) {
+        T result = null;
         try {
-            result = new ObjectMapper().treeToValue(message, valueType);
+            result = objectMapper.treeToValue(message, valueType);
         } catch (JsonProcessingException e) {
             LOG.error("Json parsing error: {}", e.getMessage());
         }
         return result;
     }
 
-    public Observable<CexioWebSocketOrder> getOrderFilledPartially() {
-        return Observable.create(e -> emitterOrderFilledPartial = e);
+    public Observable<Order> getOrderExecution() {
+        return subject.share();
     }
-
-    public Observable<CexioWebSocketOrder> getOrderFilledFull() {
-        return Observable.create(e -> emitterOrderFilledFully = e);
-    }
-
-    public Observable<CexioWebSocketOrder> getOrderCancelled() {
-        return Observable.create(e -> emitterOrderCancelled = e);
-    }
-
 }
