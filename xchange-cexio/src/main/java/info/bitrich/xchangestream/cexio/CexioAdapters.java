@@ -54,7 +54,7 @@ public class CexioAdapters {
             return null;
         }
 
-        return amount.divide(new BigDecimal("10000000"), SCALE, RoundingMode.DOWN);
+        return amount.divide(new BigDecimal("100000000"), SCALE, RoundingMode.DOWN);
     }
 
     private static Order.OrderStatus getOrderStatus(CexioWebSocketOrder order) {

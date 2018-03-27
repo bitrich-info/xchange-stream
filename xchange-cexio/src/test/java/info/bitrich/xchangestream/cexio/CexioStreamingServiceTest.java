@@ -71,7 +71,7 @@ public class CexioStreamingServiceTest {
         CexioOrder expected = new CexioOrder(CurrencyPair.BTC_USD,
                                              "5891752542",
                                              Order.OrderStatus.PARTIALLY_FILLED,
-                                             new BigDecimal("0.02"));
+                                             new BigDecimal("0.002"));
         test.assertValue(expected);
     }
 
@@ -90,7 +90,7 @@ public class CexioStreamingServiceTest {
         CexioOrder expected = new CexioOrder(CurrencyPair.BTC_USD,
                                              "5891717811",
                                              Order.OrderStatus.CANCELED,
-                                             new BigDecimal("0.02"));
+                                             new BigDecimal("0.002"));
         test.assertValue(expected);
     }
 
