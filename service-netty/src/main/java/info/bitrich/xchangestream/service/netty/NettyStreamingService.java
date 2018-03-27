@@ -186,6 +186,9 @@ public abstract class NettyStreamingService<T> {
                     completable.onComplete();
                 });
             }
+            
+            // Shut down pool
+            eventLoopGroup.shutdownGracefully();
         });
     }
 
