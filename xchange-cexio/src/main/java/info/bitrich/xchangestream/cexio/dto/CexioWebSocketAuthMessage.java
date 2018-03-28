@@ -1,12 +1,12 @@
 package info.bitrich.xchangestream.cexio.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import info.bitrich.xchangestream.cexio.CexioStreamingOrderDataService;
+import info.bitrich.xchangestream.cexio.CexioStreamingRawService;
 
 public class CexioWebSocketAuthMessage {
 
     @JsonProperty("e")
-    private final String e = CexioStreamingOrderDataService.AUTH;
+    private final String e = CexioStreamingRawService.AUTH;
     private final CexioWebSocketAuth auth;
 
     public CexioWebSocketAuthMessage(@JsonProperty("auth") CexioWebSocketAuth auth) {

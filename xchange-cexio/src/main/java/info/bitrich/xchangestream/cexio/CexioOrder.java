@@ -18,14 +18,14 @@ public class CexioOrder extends LimitOrder {
                       BigDecimal limitPrice,
                       BigDecimal fee,
                       OrderStatus status) {
-        super(type, CexioAdapters.adaptAmount(originalAmount), currencyPair, id, timestamp, limitPrice,
+        super(type, originalAmount, currencyPair, id, timestamp, limitPrice,
               null, null, fee, status);
         this.remainingAmount = null;
     }
 
     public CexioOrder(CurrencyPair currencyPair, String id, OrderStatus status, BigDecimal remainingAmount) {
         this(null, currencyPair, null, id, null, null, null, status);
-        this.remainingAmount = CexioAdapters.adaptAmount(remainingAmount);
+        this.remainingAmount = remainingAmount;
     }
 
     @Override
@@ -35,5 +35,25 @@ public class CexioOrder extends LimitOrder {
         }
 
         return super.getRemainingAmount();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CexioOrder)) return false;
+        if (!super.equals(o)) return false;
+
+        CexioOrder that = (CexioOrder) o;
+
+        return remainingAmount != null
+                ? remainingAmount.compareTo(that.remainingAmount) == 0
+                : that.remainingAmount == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (remainingAmount != null ? remainingAmount.hashCode() : 0);
+        return result;
     }
 }

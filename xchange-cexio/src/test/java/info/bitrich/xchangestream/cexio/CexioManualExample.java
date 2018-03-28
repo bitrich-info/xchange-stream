@@ -19,13 +19,18 @@ public class CexioManualExample {
 
         exchange.connect().blockingAwait();
 
-        exchange.getStreamingOrderDataService().getOrderExecution()
+        exchange.getStreamingRawService().getOrderData()
                 .subscribe(
                         order -> LOG.info("Order id={}, status={}, pair={}, remains={}",
                                           order.getId(),
                                           order.getStatus(),
                                           order.getCurrencyPair(),
                                           order.getRemainingAmount()),
+                        throwable -> LOG.error("ERROR in getting order data: ", throwable));
+
+        exchange.getStreamingRawService().getTransactions()
+                .subscribe(
+                        transaction -> LOG.info("Transaction: {}", transaction),
                         throwable -> LOG.error("ERROR in getting order data: ", throwable));
 
         try {

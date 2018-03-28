@@ -2,6 +2,7 @@ package info.bitrich.xchangestream.cexio;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import info.bitrich.xchangestream.cexio.dto.CexioWebSocketTransaction;
 import io.reactivex.observers.TestObserver;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,6 +11,7 @@ import org.knowm.xchange.dto.Order;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Date;
 
 public class CexioStreamingServiceTest {
@@ -27,9 +29,9 @@ public class CexioStreamingServiceTest {
         JsonNode jsonNode = objectMapper.readTree(ClassLoader.getSystemClassLoader()
                                                              .getResourceAsStream("order-place.json"));
 
-        CexioStreamingOrderDataService service = cexioStreamingExchange.getStreamingOrderDataService();
+        CexioStreamingRawService service = cexioStreamingExchange.getStreamingRawService();
 
-        TestObserver<Order> test = service.getOrderExecution().test();
+        TestObserver<Order> test = service.getOrderData().test();
 
         service.handleMessage(jsonNode);
 
@@ -45,9 +47,9 @@ public class CexioStreamingServiceTest {
         JsonNode jsonNode = objectMapper.readTree(ClassLoader.getSystemClassLoader()
                                                              .getResourceAsStream("order-fill.json"));
 
-        CexioStreamingOrderDataService service = cexioStreamingExchange.getStreamingOrderDataService();
+        CexioStreamingRawService service = cexioStreamingExchange.getStreamingRawService();
 
-        TestObserver<Order> test = service.getOrderExecution().test();
+        TestObserver<Order> test = service.getOrderData().test();
 
         service.handleMessage(jsonNode);
 
@@ -62,9 +64,9 @@ public class CexioStreamingServiceTest {
         JsonNode jsonNode = objectMapper.readTree(ClassLoader.getSystemClassLoader()
                                                              .getResourceAsStream("order-partial-fill.json"));
 
-        CexioStreamingOrderDataService service = cexioStreamingExchange.getStreamingOrderDataService();
+        CexioStreamingRawService service = cexioStreamingExchange.getStreamingRawService();
 
-        TestObserver<Order> test = service.getOrderExecution().test();
+        TestObserver<Order> test = service.getOrderData().test();
 
         service.handleMessage(jsonNode);
 
@@ -81,9 +83,9 @@ public class CexioStreamingServiceTest {
         JsonNode jsonNode = objectMapper.readTree(ClassLoader.getSystemClassLoader()
                                                              .getResourceAsStream("order-cancel.json"));
 
-        CexioStreamingOrderDataService service = cexioStreamingExchange.getStreamingOrderDataService();
+        CexioStreamingRawService service = cexioStreamingExchange.getStreamingRawService();
 
-        TestObserver<Order> test = service.getOrderExecution().test();
+        TestObserver<Order> test = service.getOrderData().test();
 
         service.handleMessage(jsonNode);
 
@@ -96,12 +98,82 @@ public class CexioStreamingServiceTest {
 
     @Test
     public void testGetOrderExecution_invalidJson() throws Exception {
-        CexioStreamingOrderDataService service = cexioStreamingExchange.getStreamingOrderDataService();
+        CexioStreamingRawService service = cexioStreamingExchange.getStreamingRawService();
 
-        TestObserver<Order> test = service.getOrderExecution().test();
+        TestObserver<Order> test = service.getOrderData().test();
 
         service.messageHandler("wrong");
 
         test.assertError(IOException.class);
+    }
+
+    @Test
+    public void testGetTransaction_orderPlace() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode = objectMapper.readTree(ClassLoader.getSystemClassLoader()
+                                                             .getResourceAsStream("transaction-place.json"));
+
+        CexioStreamingRawService service = cexioStreamingExchange.getStreamingRawService();
+
+        TestObserver<CexioWebSocketTransaction> test = service.getTransactions().test();
+
+        service.handleMessage(jsonNode);
+
+        CexioWebSocketTransaction transaction = new CexioWebSocketTransaction(
+                "5915157030",
+                "order:5915157028:a:USD",
+                "user:up118134628:a:USD",
+                new BigDecimal("0.02"),
+                new BigDecimal("16.40"),
+                new BigDecimal("35.24"),
+                "up118134628",
+                "USD",
+                null,
+                new BigDecimal("-16.40"),
+                5915157028L,
+                null,
+                null,
+                null,
+                "buy",
+                Date.from(Instant.parse("2018-03-27T15:16:52.016Z")),
+                new BigDecimal("35.24"),
+                null);
+
+        test.assertValue(transaction);
+    }
+
+    @Test
+    public void testGetTransaction_orderExecute() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode = objectMapper.readTree(ClassLoader.getSystemClassLoader()
+                                                             .getResourceAsStream("transaction-exec.json"));
+
+        CexioStreamingRawService service = cexioStreamingExchange.getStreamingRawService();
+
+        TestObserver<CexioWebSocketTransaction> test = service.getTransactions().test();
+
+        service.handleMessage(jsonNode);
+
+        CexioWebSocketTransaction transaction = new CexioWebSocketTransaction(
+                "5918682827",
+                "order:5918682821:a:BTC",
+                "user:up118134628:a:BTC",
+                new BigDecimal("0.002"),
+                new BigDecimal("0"),
+                new BigDecimal("0.006"),
+                "up118134628",
+                "BTC",
+                "USD",
+                new BigDecimal("0.002"),
+                5918682821L,
+                5918682821L,
+                5918682779L,
+                new BigDecimal("8030"),
+                "buy",
+                Date.from(Instant.parse("2018-03-28T05:41:49.482Z")),
+                new BigDecimal("0.006"),
+                new BigDecimal("0.05"));
+
+        test.assertValue(transaction);
     }
 }

@@ -11,10 +11,10 @@ public class CexioStreamingExchange extends CexIOExchange implements StreamingEx
     private static final String API_URI = "wss://ws.cex.io/ws/";
 
     private final CexioStreamingMarketDataService streamingMarketDataService;
-    private final CexioStreamingOrderDataService streamingOrderDataService;
+    private final CexioStreamingRawService streamingOrderDataService;
 
     public CexioStreamingExchange() {
-        this.streamingOrderDataService = new CexioStreamingOrderDataService(API_URI);
+        this.streamingOrderDataService = new CexioStreamingRawService(API_URI);
         this.streamingMarketDataService = new CexioStreamingMarketDataService();
     }
 
@@ -43,7 +43,7 @@ public class CexioStreamingExchange extends CexIOExchange implements StreamingEx
         streamingOrderDataService.setApiSecret(apiSecret);
     }
 
-    public CexioStreamingOrderDataService getStreamingOrderDataService() {
+    public CexioStreamingRawService getStreamingRawService() {
         return streamingOrderDataService;
     }
 
