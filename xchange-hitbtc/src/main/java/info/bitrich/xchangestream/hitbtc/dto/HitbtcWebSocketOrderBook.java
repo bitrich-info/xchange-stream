@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static java.math.BigDecimal.ZERO;
 import static java.util.Collections.reverseOrder;
 
 /**
@@ -26,15 +27,11 @@ public class HitbtcWebSocketOrderBook {
         this.bids = new TreeMap<>(reverseOrder(BigDecimal::compareTo));
 
         for (HitbtcOrderLimit orderBookItem : orderbookTransaction.getParams().getAsk()) {
-            if (orderBookItem.getSize().signum() != 0) {
-                asks.put(orderBookItem.getPrice(), orderBookItem);
-            }
+            asks.put(orderBookItem.getPrice(), orderBookItem);
         }
 
         for (HitbtcOrderLimit orderBookItem : orderbookTransaction.getParams().getBid()) {
-            if (orderBookItem.getSize().signum() != 0) {
-                bids.put(orderBookItem.getPrice(), orderBookItem);
-            }
+            bids.put(orderBookItem.getPrice(), orderBookItem);
         }
 
         sequence = orderbookTransaction.getParams().getSequence();
@@ -53,7 +50,7 @@ public class HitbtcWebSocketOrderBook {
     }
 
     public void updateOrderBook(HitbtcWebSocketOrderBookTransaction orderBookTransaction) {
-        if (orderBookTransaction.getParams().getSequence() <= sequence) {
+        if (orderBookTransaction.getParams().getSequence() > sequence) {
             return;
         }
         updateOrderBookItems(orderBookTransaction.getParams().getAsk(), asks);
@@ -62,10 +59,10 @@ public class HitbtcWebSocketOrderBook {
     }
 
     private void updateOrderBookItems(HitbtcOrderLimit[] itemsToUpdate, Map<BigDecimal, HitbtcOrderLimit> localItems) {
-        for (HitbtcOrderLimit itemToUpdate : itemsToUpdate) {
-            localItems.remove(itemToUpdate.getPrice());
-            if (itemToUpdate.getSize().signum() != 0) {
-                localItems.put(itemToUpdate.getPrice(), itemToUpdate);
+        for (HitbtcOrderLimit askToUpdate : itemsToUpdate) {
+            localItems.remove(askToUpdate.getPrice());
+            if (!askToUpdate.getSize().equals(ZERO)) {
+                localItems.put(askToUpdate.getPrice(), askToUpdate);
             }
         }
     }

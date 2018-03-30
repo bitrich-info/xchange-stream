@@ -64,7 +64,4 @@ public class HitbtcStreamingExchange extends HitbtcExchange implements Streaming
     public StreamingMarketDataService getStreamingMarketDataService() {
         return streamingMarketDataService;
     }
-    
-    @Override
-    public void useCompressedMessages(boolean compressedMessages) { streamingService.useCompressedMessages(compressedMessages); }
 }
