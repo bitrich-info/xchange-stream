@@ -54,6 +54,7 @@ public class HitbtcStreamingMarketDataServiceTest {
 
         List<LimitOrder> asks = new ArrayList<>();
         asks.add(new LimitOrder(Order.OrderType.ASK, new BigDecimal("0.245"), CurrencyPair.BTC_EUR, null, null, new BigDecimal("0.054588")));
+        asks.add(new LimitOrder(Order.OrderType.ASK, new BigDecimal("0.000"), CurrencyPair.BTC_EUR, null, null, new BigDecimal("0.054590")));
         asks.add(new LimitOrder(Order.OrderType.ASK, new BigDecimal("2.784"), CurrencyPair.BTC_EUR, null, null, new BigDecimal("0.054591")));
 
         // Call get order book observable
