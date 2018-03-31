@@ -5,6 +5,7 @@ import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import io.reactivex.Completable;
 import org.knowm.xchange.ExchangeSpecification;
+import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import org.knowm.xchange.hitbtc.v2.HitbtcExchange;
 
 /**
@@ -53,4 +54,7 @@ public class HitbtcStreamingExchange extends HitbtcExchange implements Streaming
     public StreamingMarketDataService getStreamingMarketDataService() {
         return streamingMarketDataService;
     }
+
+    @Override
+    public void useCompressedMessages(boolean compressedMessages) { throw new NotYetImplementedForExchangeException(); }
 }
