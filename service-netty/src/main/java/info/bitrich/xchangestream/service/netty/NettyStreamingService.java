@@ -58,14 +58,15 @@ public abstract class NettyStreamingService<T> {
         }
     }
 
-    protected final int maxFramePayloadLength;
-    protected final URI uri;
+    private final int maxFramePayloadLength;
+    private final URI uri;
     private boolean isManualDisconnect = false;
-    protected Channel webSocketChannel;
+    private Channel webSocketChannel;
     private Duration retryDuration;
-    protected Duration connectionTimeout;
-    protected final NioEventLoopGroup eventLoopGroup;
+    private Duration connectionTimeout;
+    private final NioEventLoopGroup eventLoopGroup;
     protected Map<String, Subscription> channels = new ConcurrentHashMap<>();
+    private boolean compressedMessages = false;
 
     public NettyStreamingService(String apiUrl) {
         this(apiUrl, 65536);
@@ -142,9 +143,14 @@ public abstract class NettyStreamingService<T> {
                                 WebSocketClientExtensionHandler clientExtensionHandler = getWebSocketClientExtensionHandler();
                                 List<ChannelHandler> handlers = new ArrayList<>(4);
                                 handlers.add(new HttpClientCodec());
+                                if (compressedMessages) handlers.add(WebSocketClientCompressionHandler.INSTANCE);
                                 handlers.add(new HttpObjectAggregator(8192));
+                                
+                                if (clientExtensionHandler != null) {
+                                  handlers.add(clientExtensionHandler);
+                                }
+                                
                                 handlers.add(handler);
-                                if (clientExtensionHandler != null) handlers.add(clientExtensionHandler);
                                 p.addLast(handlers.toArray(new ChannelHandler[handlers.size()]));
                             }
                         });
@@ -152,7 +158,13 @@ public abstract class NettyStreamingService<T> {
                 b.connect(uri.getHost(), port).addListener((ChannelFuture future) -> {
                     webSocketChannel = future.channel();
                     if (future.isSuccess()) {
-                        handler.handshakeFuture().addListener(f -> completable.onComplete());
+                        handler.handshakeFuture().addListener(f -> {
+                            if (f.isSuccess()) {
+                                completable.onComplete();
+                            } else {
+                                completable.onError(f.cause());
+                            }
+                        });
                     } else {
                         completable.onError(future.cause());
                     }
@@ -328,4 +340,6 @@ public abstract class NettyStreamingService<T> {
     public boolean isSocketOpen() {
         return webSocketChannel.isOpen();
     }
+
+    public void useCompressedMessages(boolean compressedMessages) { this.compressedMessages = compressedMessages; }
 }
