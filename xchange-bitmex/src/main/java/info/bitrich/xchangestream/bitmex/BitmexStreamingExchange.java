@@ -3,9 +3,11 @@ package info.bitrich.xchangestream.bitmex;
 import info.bitrich.xchangestream.core.ProductSubscription;
 import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
+import info.bitrich.xchangestream.core.StreamingPrivateDataService;
 import io.reactivex.Completable;
 import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.bitmex.BitmexExchange;
+import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import si.mazi.rescu.SynchronizedValueFactory;
 
 /**
@@ -54,10 +56,17 @@ public class BitmexStreamingExchange extends BitmexExchange implements Streaming
     }
 
     @Override
+    public StreamingPrivateDataService getStreamingPrivateDataService() {
+        throw new NotYetImplementedForExchangeException();
+    }
+
+    @Override
     public boolean isAlive() {
         return streamingService.isSocketOpen();
     }
 
     @Override
-    public void useCompressedMessages(boolean compressedMessages) { streamingService.useCompressedMessages(compressedMessages); }
+    public void useCompressedMessages(boolean compressedMessages) {
+        streamingService.useCompressedMessages(compressedMessages);
+    }
 }

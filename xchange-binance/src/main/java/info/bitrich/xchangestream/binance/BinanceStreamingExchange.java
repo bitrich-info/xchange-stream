@@ -3,9 +3,11 @@ package info.bitrich.xchangestream.binance;
 import info.bitrich.xchangestream.core.ProductSubscription;
 import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
+import info.bitrich.xchangestream.core.StreamingPrivateDataService;
 import io.reactivex.Completable;
 import org.knowm.xchange.binance.BinanceExchange;
 import org.knowm.xchange.currency.CurrencyPair;
+import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -59,6 +61,11 @@ public class BinanceStreamingExchange extends BinanceExchange implements Streami
     @Override
     public StreamingMarketDataService getStreamingMarketDataService() {
         return streamingMarketDataService;
+    }
+
+    @Override
+    public StreamingPrivateDataService getStreamingPrivateDataService() {
+        throw new NotAvailableFromExchangeException();
     }
 
     private BinanceStreamingService createStreamingService(ProductSubscription subscription) {

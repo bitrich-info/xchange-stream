@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import info.bitrich.xchangestream.cexio.dto.*;
+import info.bitrich.xchangestream.core.StreamingPrivateDataService;
 import info.bitrich.xchangestream.service.netty.JsonNettyStreamingService;
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
@@ -13,9 +14,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class CexioStreamingRawService extends JsonNettyStreamingService {
+public class CexioStreamingPrivateDataRawService extends JsonNettyStreamingService
+        implements StreamingPrivateDataService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CexioStreamingRawService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CexioStreamingPrivateDataRawService.class);
 
     public static final String CONNECTED = "connected";
     public static final String AUTH = "auth";
@@ -31,13 +33,25 @@ public class CexioStreamingRawService extends JsonNettyStreamingService {
     private PublishSubject<Order> subjectOrder = PublishSubject.create();
     private PublishSubject<CexioWebSocketTransaction> subjectTransaction = PublishSubject.create();
 
-    public CexioStreamingRawService(String apiUrl) {
+    public CexioStreamingPrivateDataRawService(String apiUrl) {
         super(apiUrl, Integer.MAX_VALUE);
     }
 
     @Override
-    protected String getChannelNameFromMessage(JsonNode message) throws IOException {
-        return null;
+    public Observable<Order> getOrders() {
+        return subjectOrder.share();
+    }
+
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
+
+    public void setApiSecret(String apiSecret) {
+        this.apiSecret = apiSecret;
+    }
+
+    public Observable<CexioWebSocketTransaction> getTransactions() {
+        return subjectTransaction.share();
     }
 
     @Override
@@ -113,6 +127,11 @@ public class CexioStreamingRawService extends JsonNettyStreamingService {
         }
     }
 
+    @Override
+    protected String getChannelNameFromMessage(JsonNode message) throws IOException {
+        return null;
+    }
+
     private void auth() {
         long timestamp = System.currentTimeMillis() / 1000;
         CexioDigest cexioDigest = CexioDigest.createInstance(apiSecret);
@@ -135,23 +154,7 @@ public class CexioStreamingRawService extends JsonNettyStreamingService {
         }
     }
 
-    public void setApiKey(String apiKey) {
-        this.apiKey = apiKey;
-    }
-
-    public void setApiSecret(String apiSecret) {
-        this.apiSecret = apiSecret;
-    }
-
     private <T> T deserialize(JsonNode message, Class<T> valueType) throws JsonProcessingException {
         return objectMapper.treeToValue(message, valueType);
-    }
-
-    public Observable<Order> getOrderData() {
-        return subjectOrder.share();
-    }
-
-    public Observable<CexioWebSocketTransaction> getTransactions() {
-        return subjectTransaction.share();
     }
 }

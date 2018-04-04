@@ -3,6 +3,7 @@ package info.bitrich.xchangestream.wex;
 import info.bitrich.xchangestream.core.ProductSubscription;
 import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
+import info.bitrich.xchangestream.core.StreamingPrivateDataService;
 import info.bitrich.xchangestream.service.pusher.PusherStreamingService;
 import io.reactivex.Completable;
 import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
@@ -44,10 +45,17 @@ public class WexStreamingExchange extends WexExchange implements StreamingExchan
     }
 
     @Override
+    public StreamingPrivateDataService getStreamingPrivateDataService() {
+        throw new NotYetImplementedForExchangeException();
+    }
+
+    @Override
     public boolean isAlive() {
         return this.streamingService.isSocketOpen();
     }
 
     @Override
-    public void useCompressedMessages(boolean compressedMessages) { streamingService.useCompressedMessages(compressedMessages); }
+    public void useCompressedMessages(boolean compressedMessages) {
+        streamingService.useCompressedMessages(compressedMessages);
+    }
 }

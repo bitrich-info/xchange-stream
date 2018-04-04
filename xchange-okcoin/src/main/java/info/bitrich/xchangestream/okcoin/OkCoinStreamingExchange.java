@@ -3,7 +3,9 @@ package info.bitrich.xchangestream.okcoin;
 import info.bitrich.xchangestream.core.ProductSubscription;
 import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
+import info.bitrich.xchangestream.core.StreamingPrivateDataService;
 import io.reactivex.Completable;
+import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
 import org.knowm.xchange.okcoin.OkCoinExchange;
 
 public class OkCoinStreamingExchange extends OkCoinExchange implements StreamingExchange {
@@ -47,5 +49,12 @@ public class OkCoinStreamingExchange extends OkCoinExchange implements Streaming
     }
 
     @Override
-    public void useCompressedMessages(boolean compressedMessages) { streamingService.useCompressedMessages(compressedMessages); }
+    public StreamingPrivateDataService getStreamingPrivateDataService() {
+        throw new NotAvailableFromExchangeException();
+    }
+
+    @Override
+    public void useCompressedMessages(boolean compressedMessages) {
+        streamingService.useCompressedMessages(compressedMessages);
+    }
 }
