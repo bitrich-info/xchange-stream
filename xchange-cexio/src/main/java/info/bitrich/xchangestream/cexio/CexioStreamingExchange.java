@@ -6,6 +6,7 @@ import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import info.bitrich.xchangestream.core.StreamingPrivateDataService;
 import io.reactivex.Completable;
 import org.knowm.xchange.cexio.CexIOExchange;
+import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 
 public class CexioStreamingExchange extends CexIOExchange implements StreamingExchange {
 
