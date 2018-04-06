@@ -28,7 +28,7 @@ public class GDAXStreamingExchange extends GDAXExchange implements StreamingExch
     public Completable connect(ProductSubscription... args) {
         if (args == null || args.length == 0)
             throw new UnsupportedOperationException("The ProductSubscription must be defined!");
-        this.streamingService = new GDAXStreamingService(API_URI);
+        this.streamingService = new GDAXStreamingService(API_URI, this);
         this.streamingMarketDataService = new GDAXStreamingMarketDataService(this.streamingService);
         streamingService.subscribeMultipleCurrencyPairs(args);
 
