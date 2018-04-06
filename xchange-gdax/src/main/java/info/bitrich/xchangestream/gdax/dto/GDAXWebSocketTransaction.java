@@ -5,7 +5,6 @@ import org.knowm.xchange.gdax.dto.marketdata.GDAXProductBook;
 import org.knowm.xchange.gdax.dto.marketdata.GDAXProductStats;
 import org.knowm.xchange.gdax.dto.marketdata.GDAXProductTicker;
 import org.knowm.xchange.gdax.dto.marketdata.GDAXTrade;
-import org.knowm.xchange.gdax.dto.trade.GDAXFill;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
@@ -39,12 +38,7 @@ public class GDAXWebSocketTransaction {
     private final String reason;
     private final long tradeId;
     private final String makerOrderId;
-    private final String takerOrderId;
-    
-    private final String takerUserId;
-    private final String userId;
-    private final String takerProfileId;
-    private final String profileId;
+    private final String takenOrderId;
 
     public GDAXWebSocketTransaction(
             @JsonProperty("type") String type,
@@ -71,17 +65,13 @@ public class GDAXWebSocketTransaction {
             @JsonProperty("reason") String reason,
             @JsonProperty("trade_id") long tradeId,
             @JsonProperty("maker_order_id") String makerOrderId,
-            @JsonProperty("taker_order_id") String takerOrderId,
-            @JsonProperty("taker_user_id") String takerUserId,
-            @JsonProperty("user_id") String userId,
-            @JsonProperty("taker_profile_id") String takerProfileId,
-            @JsonProperty("profile_id") String profileId) {
+            @JsonProperty("taken_order_id") String takenOrderId) {
 
         this.remainingSize = remainingSize;
         this.reason = reason;
         this.tradeId = tradeId;
         this.makerOrderId = makerOrderId;
-        this.takerOrderId = takerOrderId;
+        this.takenOrderId = takenOrderId;
         this.type = type;
         this.orderId = orderId;
         this.orderType = orderType;
@@ -102,10 +92,6 @@ public class GDAXWebSocketTransaction {
         this.productId = productId;
         this.sequence = sequence;
         this.time = time;
-        this.takerUserId = takerUserId; 
-        this.userId = userId;
-        this.takerProfileId = takerProfileId;
-        this.profileId = profileId;
     }
 
     private String[][] GDAXOrderBookChanges(String side, String[][] changes, SortedMap<BigDecimal, String> sideEntries,
@@ -163,11 +149,6 @@ public class GDAXWebSocketTransaction {
 
     public GDAXTrade toGDAXTrade() {
         return new GDAXTrade(time, tradeId, price, size, side);
-    }
-
-    public GDAXFill toGDAXFill() {
-        boolean taker = userId != null && takerUserId != null && userId.equals(takerUserId);
-        return new GDAXFill(String.valueOf(tradeId), productId, price, size, taker ? takerOrderId : makerOrderId, time, null, null, true, side);
     }
 
     public String getType() {
@@ -254,31 +235,8 @@ public class GDAXWebSocketTransaction {
         return makerOrderId;
     }
 
-    /**
-     * @deprecated Use {@link #getTakerOrderId()}
-     */
     public String getTakenOrderId() {
-        return takerOrderId;
-    }
-    
-    public String getTakerOrderId() {
-        return takerOrderId;
-    }
-    
-    public String getTakerUserId() {
-		return takerUserId;
-	}
-
-	public String getUserId() {
-		return userId;
-	}
-
-	public String getTakerProfileId() {
-        return takerProfileId;
-	}
-
-	public String getProfileId() {
-		return profileId;
+        return takenOrderId;
     }
 
     @Override
@@ -301,14 +259,6 @@ public class GDAXWebSocketTransaction {
         sb.append(", productId='").append(productId).append('\'');
         sb.append(", sequence=").append(sequence);
         sb.append(", time='").append(time).append('\'');
-        if ( userId != null )
-        	sb.append(", userId='").append(userId).append('\'');
-        if ( profileId != null )
-        	sb.append(", profileId='").append(profileId).append('\'');
-        if ( takerUserId != null )
-        	sb.append(", takerUserId='").append(takerUserId).append('\'');
-        if ( takerProfileId != null )
-        	sb.append(", takerProfileId='").append(takerProfileId).append('\'');
         sb.append('}');
         return sb.toString();
     }
