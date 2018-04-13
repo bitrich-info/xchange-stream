@@ -50,7 +50,7 @@ public class HitbtcWebSocketOrderBook {
     }
 
     public void updateOrderBook(HitbtcWebSocketOrderBookTransaction orderBookTransaction) {
-        if (orderBookTransaction.getParams().getSequence() > sequence) {
+        if (orderBookTransaction.getParams().getSequence() <= sequence) {
             return;
         }
         updateOrderBookItems(orderBookTransaction.getParams().getAsk(), asks);
