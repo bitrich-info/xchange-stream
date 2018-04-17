@@ -64,7 +64,7 @@ public class CexioAdapters {
             status = Order.OrderStatus.CANCELED;
         } else if (order.getRemains().compareTo(BigDecimal.ZERO) == 0) {
             status = Order.OrderStatus.FILLED;
-        } else if (order.getRemains().compareTo(BigDecimal.ZERO) != 0) {
+        } else if (order.getRemains().compareTo(order.getAmount()) != 0) {
             status = Order.OrderStatus.PARTIALLY_FILLED;
         } else {
             status = Order.OrderStatus.NEW;
