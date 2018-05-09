@@ -1,16 +1,20 @@
 package info.bitrich.xchangestream.bitmex;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import info.bitrich.xchangestream.bitmex.dto.BitmexWebSocketSubscriptionMessage;
 import info.bitrich.xchangestream.bitmex.dto.BitmexWebSocketTransaction;
 import info.bitrich.xchangestream.service.netty.JsonNettyStreamingService;
 import io.reactivex.Observable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * Created by Lukas Zaoralek on 13.11.17.
@@ -24,7 +28,7 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
-    @Override
+	 @Override
     protected void handleMessage(JsonNode message) {
         if (message.has("info") || message.has("success")) {
             return;

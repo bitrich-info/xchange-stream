@@ -1,26 +1,5 @@
 package info.bitrich.xchangestream.service.netty;
 
-import info.bitrich.xchangestream.service.exception.NotConnectedException;
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.netty.handler.codec.http.HttpClientCodec;
-import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.websocketx.*;
-import io.netty.handler.codec.http.websocketx.extensions.WebSocketClientExtensionHandler;
-import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler;
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.reactivex.Completable;
-import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -29,6 +8,38 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import info.bitrich.xchangestream.service.exception.NotConnectedException;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.http.DefaultHttpHeaders;
+import io.netty.handler.codec.http.HttpClientCodec;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker;
+import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory;
+import io.netty.handler.codec.http.websocketx.WebSocketFrame;
+import io.netty.handler.codec.http.websocketx.WebSocketVersion;
+import io.netty.handler.codec.http.websocketx.extensions.WebSocketClientExtensionHandler;
+import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.reactivex.Completable;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
 
 public abstract class NettyStreamingService<T> {
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
@@ -55,6 +66,7 @@ public abstract class NettyStreamingService<T> {
     private Duration connectionTimeout;
     private final NioEventLoopGroup eventLoopGroup;
     protected Map<String, Subscription> channels = new ConcurrentHashMap<>();
+    private boolean compressedMessages = false;
 
     public NettyStreamingService(String apiUrl) {
         this(apiUrl, 65536);
@@ -131,9 +143,14 @@ public abstract class NettyStreamingService<T> {
                                 WebSocketClientExtensionHandler clientExtensionHandler = getWebSocketClientExtensionHandler();
                                 List<ChannelHandler> handlers = new ArrayList<>(4);
                                 handlers.add(new HttpClientCodec());
+                                if (compressedMessages) handlers.add(WebSocketClientCompressionHandler.INSTANCE);
                                 handlers.add(new HttpObjectAggregator(8192));
+                                
+                                if (clientExtensionHandler != null) {
+                                  handlers.add(clientExtensionHandler);
+                                }
+                                
                                 handlers.add(handler);
-                                if (clientExtensionHandler != null) handlers.add(clientExtensionHandler);
                                 p.addLast(handlers.toArray(new ChannelHandler[handlers.size()]));
                             }
                         });
@@ -141,7 +158,13 @@ public abstract class NettyStreamingService<T> {
                 b.connect(uri.getHost(), port).addListener((ChannelFuture future) -> {
                     webSocketChannel = future.channel();
                     if (future.isSuccess()) {
-                        handler.handshakeFuture().addListener(f -> completable.onComplete());
+                        handler.handshakeFuture().addListener(f -> {
+                            if (f.isSuccess()) {
+                                completable.onComplete();
+                            } else {
+                                completable.onError(f.cause());
+                            }
+                        });
                     } else {
                         completable.onError(future.cause());
                     }
@@ -221,7 +244,7 @@ public abstract class NettyStreamingService<T> {
                 }
             }
         }).doOnDispose(() -> {
-            if (!channels.containsKey(channelId)) {
+            if (channels.containsKey(channelId)) {
                 sendMessage(getUnsubscribeMessage(channelId));
                 channels.remove(channelId);
             }
@@ -317,4 +340,6 @@ public abstract class NettyStreamingService<T> {
     public boolean isSocketOpen() {
         return webSocketChannel.isOpen();
     }
+
+    public void useCompressedMessages(boolean compressedMessages) { this.compressedMessages = compressedMessages; }
 }
