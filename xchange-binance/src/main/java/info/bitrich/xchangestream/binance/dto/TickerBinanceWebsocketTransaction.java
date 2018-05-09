@@ -59,7 +59,7 @@ public class TickerBinanceWebsocketTransaction extends ProductBinanceWebSocketTr
                 firstId,
                 lastId,
                 count,
-                BinanceAdapters.toSymbol(currencyPair));
+                symbol);
         ticker.setCurrencyPair(currencyPair);
     }
 
