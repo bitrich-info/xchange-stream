@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.gdax.dto.account.GDAXWebsocketAuthData;
-import org.knowm.xchange.gdax.service.GDAXAccountServiceRaw;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,13 +28,13 @@ public class GDAXStreamingService extends JsonNettyStreamingService {
     private static final String SHARE_CHANNEL_NAME = "ALL";
     private final Map<String, Observable<JsonNode>> subscriptions = new HashMap<>();
     private ProductSubscription product = null;
-    GDAXStreamingExchange exchange;
+    private GDAXWebsocketAuthData authData = null;
 
     private WebSocketClientHandler.WebSocketMessageHandler channelInactiveHandler = null;
 
-    public GDAXStreamingService(String apiUrl, GDAXStreamingExchange exchange) {
+    public GDAXStreamingService(String apiUrl,GDAXWebsocketAuthData authData) {
         super(apiUrl, Integer.MAX_VALUE);
-        this.exchange = exchange;
+        this.authData = authData;
     }
 
     public ProductSubscription getProduct() {
@@ -73,12 +71,6 @@ public class GDAXStreamingService extends JsonNettyStreamingService {
 
     @Override
     public String getSubscribeMessage(String channelName, Object... args) throws IOException {
-        	ExchangeSpecification exchangeSpec = exchange.getExchangeSpecification();
-        GDAXWebsocketAuthData authData = null;
-        if ( exchangeSpec.getApiKey() != null ) {
-            GDAXAccountServiceRaw rawAccountService = (GDAXAccountServiceRaw) exchange.getAccountService();
-            authData = rawAccountService.getWebsocketAuthData();
-        }
         GDAXWebSocketSubscriptionMessage subscribeMessage = new GDAXWebSocketSubscriptionMessage(SUBSCRIBE, product, authData);
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.writeValueAsString(subscribeMessage);
@@ -86,12 +78,6 @@ public class GDAXStreamingService extends JsonNettyStreamingService {
 
     @Override
     public String getUnsubscribeMessage(String channelName) throws IOException {
-        	ExchangeSpecification exchangeSpec = exchange.getExchangeSpecification();
-        GDAXWebsocketAuthData authData = null;
-        if ( exchangeSpec.getApiKey() != null ) {
-            GDAXAccountServiceRaw rawAccountService = (GDAXAccountServiceRaw) exchange.getAccountService();
-            authData = rawAccountService.getWebsocketAuthData();
-        }
         GDAXWebSocketSubscriptionMessage subscribeMessage =
                 new GDAXWebSocketSubscriptionMessage(UNSUBSCRIBE, new String[]{"level2", "matches", "ticker"}, authData);
         ObjectMapper objectMapper = new ObjectMapper();
