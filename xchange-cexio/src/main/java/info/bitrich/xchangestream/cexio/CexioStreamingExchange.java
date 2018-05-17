@@ -48,9 +48,4 @@ public class CexioStreamingExchange extends CexIOExchange implements StreamingEx
     public void useCompressedMessages(boolean compressedMessages) {
         streamingPrivateDataService.useCompressedMessages(compressedMessages);
     }
-
-//    public void setCredentials(String apiKey, String apiSecret) {
-//        streamingPrivateDataService.setApiKey(apiKey);
-//        streamingPrivateDataService.setApiSecret(apiSecret);
-//    }
 }
