@@ -2,6 +2,7 @@ package info.bitrich.xchangestream.cexio;
 
 import info.bitrich.xchangestream.core.StreamingExchangeFactory;
 import info.bitrich.xchangestream.core.StreamingPrivateDataService;
+import org.knowm.xchange.ExchangeSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,12 @@ public class CexioManualExample {
                 CexioStreamingExchange.class.getName());
 
         CexioProperties properties = new CexioProperties();
-        exchange.setCredentials(properties.getApiKey(), properties.getSecretKey());
+
+        ExchangeSpecification specification = exchange.getDefaultExchangeSpecification();
+        specification.setApiKey(properties.getApiKey());
+        specification.setSecretKey(properties.getSecretKey());
+
+        exchange.applySpecification(specification);
 
         exchange.connect().blockingAwait();
 

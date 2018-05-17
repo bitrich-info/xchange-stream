@@ -6,7 +6,6 @@ import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import info.bitrich.xchangestream.core.StreamingPrivateDataService;
 import io.reactivex.Completable;
 import org.knowm.xchange.cexio.CexIOExchange;
-import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 
 public class CexioStreamingExchange extends CexIOExchange implements StreamingExchange {
 
@@ -16,7 +15,7 @@ public class CexioStreamingExchange extends CexIOExchange implements StreamingEx
     private final CexioStreamingPrivateDataRawService streamingPrivateDataService;
 
     public CexioStreamingExchange() {
-        this.streamingPrivateDataService = new CexioStreamingPrivateDataRawService(API_URI);
+        this.streamingPrivateDataService = new CexioStreamingPrivateDataRawService(this, API_URI);
         this.streamingMarketDataService = new CexioStreamingMarketDataService();
     }
 
@@ -50,8 +49,8 @@ public class CexioStreamingExchange extends CexIOExchange implements StreamingEx
         streamingPrivateDataService.useCompressedMessages(compressedMessages);
     }
 
-    public void setCredentials(String apiKey, String apiSecret) {
-        streamingPrivateDataService.setApiKey(apiKey);
-        streamingPrivateDataService.setApiSecret(apiSecret);
-    }
+//    public void setCredentials(String apiKey, String apiSecret) {
+//        streamingPrivateDataService.setApiKey(apiKey);
+//        streamingPrivateDataService.setApiSecret(apiSecret);
+//    }
 }

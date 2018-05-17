@@ -4,10 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import info.bitrich.xchangestream.cexio.dto.*;
+import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingPrivateDataService;
 import info.bitrich.xchangestream.service.netty.JsonNettyStreamingService;
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
+import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.dto.Order;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,28 +28,20 @@ public class CexioStreamingPrivateDataRawService extends JsonNettyStreamingServi
     public static final String ORDER = "order";
     public static final String TRANSACTION = "tx";
 
-    private String apiKey;
-    private String apiSecret;
-
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final StreamingExchange streamingExchange;
+
     private PublishSubject<Order> subjectOrder = PublishSubject.create();
     private PublishSubject<CexioWebSocketTransaction> subjectTransaction = PublishSubject.create();
 
-    public CexioStreamingPrivateDataRawService(String apiUrl) {
+    public CexioStreamingPrivateDataRawService(StreamingExchange streamingExchange, String apiUrl) {
         super(apiUrl, Integer.MAX_VALUE);
+        this.streamingExchange = streamingExchange;
     }
 
     @Override
     public Observable<Order> getOrders() {
         return subjectOrder.share();
-    }
-
-    public void setApiKey(String apiKey) {
-        this.apiKey = apiKey;
-    }
-
-    public void setApiSecret(String apiSecret) {
-        this.apiSecret = apiSecret;
     }
 
     public Observable<CexioWebSocketTransaction> getTransactions() {
@@ -134,10 +128,12 @@ public class CexioStreamingPrivateDataRawService extends JsonNettyStreamingServi
 
     private void auth() {
         long timestamp = System.currentTimeMillis() / 1000;
-        CexioDigest cexioDigest = CexioDigest.createInstance(apiSecret);
-        String signature = cexioDigest.createSignature(timestamp, apiKey);
+        ExchangeSpecification specification = streamingExchange.getExchangeSpecification();
+
+        CexioDigest cexioDigest = CexioDigest.createInstance(specification.getSecretKey());
+        String signature = cexioDigest.createSignature(timestamp, specification.getApiKey());
         CexioWebSocketAuthMessage message = new CexioWebSocketAuthMessage(
-                new CexioWebSocketAuth(apiKey, signature, timestamp));
+                new CexioWebSocketAuth(specification.getApiKey(), signature, timestamp));
         sendMessage(message);
     }
 
