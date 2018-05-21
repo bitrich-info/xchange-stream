@@ -23,6 +23,7 @@ public class OkCoinStreamingExchange extends OkCoinExchange implements Streaming
     @Override
     protected void initServices() {
         super.initServices();
+        streamingService.setExchangeSpecification(this.getExchangeSpecification());
         streamingMarketDataService = new OkCoinStreamingMarketDataService(streamingService);
     }
 
