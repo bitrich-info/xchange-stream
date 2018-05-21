@@ -87,6 +87,7 @@ public class BitmexOrder extends BitmexMarketDataEvent {
             order = new MarketOrder.Builder(side.equals("Buy") ? Order.OrderType.BID : Order.OrderType.ASK, BitmexUtils.translateBitmexCurrencyPair(symbol));
         } else {
             order = new LimitOrder.Builder(side.equals("Buy") ? Order.OrderType.BID : Order.OrderType.ASK, BitmexUtils.translateBitmexCurrencyPair(symbol));
+            ((LimitOrder.Builder)order).limitPrice(price);
         }
         order.id(orderID)
                 .averagePrice(avgPx)
