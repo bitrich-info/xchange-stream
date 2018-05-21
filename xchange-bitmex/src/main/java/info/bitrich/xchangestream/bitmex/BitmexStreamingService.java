@@ -7,6 +7,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.reactivex.Completable;
 import io.reactivex.CompletableSource;
 import org.knowm.xchange.ExchangeSpecification;
+import io.netty.handler.codec.http.websocketx.extensions.WebSocketClientExtensionHandler;
+import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,6 +85,11 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
         }
 
         super.handleMessage(message);
+    }
+
+    @Override
+    protected WebSocketClientExtensionHandler getWebSocketClientExtensionHandler() {
+        return null;
     }
 
     public Observable<BitmexWebSocketTransaction> subscribeBitmexChannel(String channelName) {
