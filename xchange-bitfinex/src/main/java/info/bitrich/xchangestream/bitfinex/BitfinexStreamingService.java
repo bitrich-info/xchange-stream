@@ -103,10 +103,10 @@ public class BitfinexStreamingService extends JsonNettyStreamingService {
 
     @Override
     protected String getChannelNameFromMessage(JsonNode message) throws IOException {
-        String chanId;
+        String chanId = null;
         if (message.has(CHANNEL_ID)) {
             chanId = message.get(CHANNEL_ID).asText();
-        } else {
+        } else if  (message.get(0) != null) {
             chanId = message.get(0).asText();
         }
 
