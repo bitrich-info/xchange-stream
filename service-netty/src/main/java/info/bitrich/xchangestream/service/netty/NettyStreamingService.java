@@ -299,7 +299,7 @@ public abstract class NettyStreamingService<T> {
             LOG.error("Unexpected channel's error: {}, {}.", channel, t);
             return;
         }
-        ObservableEmitter<T> emitter = channels.get(channel).emitter;
+    	ObservableEmitter<T> emitter = channels.get(channel) == null ? null : channels.get(channel).emitter;
         if (emitter == null) {
             LOG.debug("No subscriber for channel {}.", channel);
             return;
