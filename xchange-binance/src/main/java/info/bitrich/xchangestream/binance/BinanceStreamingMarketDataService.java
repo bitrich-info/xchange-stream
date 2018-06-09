@@ -141,7 +141,7 @@ public class BinanceStreamingMarketDataService implements StreamingMarketDataSer
 
                     OrderBook currentOrderBook = orderbooks.computeIfAbsent(currencyPair, pair -> {
                       try {
-                        return marketDataService.getOrderBook(pair);
+                        return marketDataService.getOrderBook(pair, 1000);
                       } catch (IOException e) {
                         LOG.error("Failed to fetch initial order book for " + pair);
                         return new OrderBook(null, new ArrayList<>(), new ArrayList<>());
