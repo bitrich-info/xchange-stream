@@ -3,9 +3,12 @@ package info.bitrich.xchangestream.bitfinex;
 import info.bitrich.xchangestream.core.ProductSubscription;
 import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
+import info.bitrich.xchangestream.core.StreamingPrivateDataService;
+
 import io.reactivex.Completable;
 import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.bitfinex.v1.BitfinexExchange;
+import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 
 /**
  * Created by Lukas Zaoralek on 7.11.17.
@@ -55,6 +58,12 @@ public class BitfinexStreamingExchange extends BitfinexExchange implements Strea
     }
 
     @Override
-    public void useCompressedMessages(boolean compressedMessages) { streamingService.useCompressedMessages(compressedMessages); }
+    public StreamingPrivateDataService getStreamingPrivateDataService() {
+        throw new NotYetImplementedForExchangeException();
+    }
 
+    @Override
+    public void useCompressedMessages(boolean compressedMessages) {
+        streamingService.useCompressedMessages(compressedMessages);
+    }
 }

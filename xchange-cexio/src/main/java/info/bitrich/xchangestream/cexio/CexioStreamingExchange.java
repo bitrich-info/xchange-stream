@@ -3,35 +3,35 @@ package info.bitrich.xchangestream.cexio;
 import info.bitrich.xchangestream.core.ProductSubscription;
 import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
+import info.bitrich.xchangestream.core.StreamingPrivateDataService;
 import io.reactivex.Completable;
 import org.knowm.xchange.cexio.CexIOExchange;
-import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 
 public class CexioStreamingExchange extends CexIOExchange implements StreamingExchange {
 
     private static final String API_URI = "wss://ws.cex.io/ws/";
 
     private final CexioStreamingMarketDataService streamingMarketDataService;
-    private final CexioStreamingRawService streamingOrderDataService;
+    private final CexioStreamingPrivateDataRawService streamingPrivateDataService;
 
     public CexioStreamingExchange() {
-        this.streamingOrderDataService = new CexioStreamingRawService(API_URI);
+        this.streamingPrivateDataService = new CexioStreamingPrivateDataRawService(this, API_URI);
         this.streamingMarketDataService = new CexioStreamingMarketDataService();
     }
 
     @Override
     public Completable connect(ProductSubscription... args) {
-        return streamingOrderDataService.connect();
+        return streamingPrivateDataService.connect();
     }
 
     @Override
     public Completable disconnect() {
-        return streamingOrderDataService.disconnect();
+        return streamingPrivateDataService.disconnect();
     }
 
     @Override
     public boolean isAlive() {
-        return streamingOrderDataService.isSocketOpen();
+        return streamingPrivateDataService.isSocketOpen();
     }
 
     @Override
@@ -40,17 +40,12 @@ public class CexioStreamingExchange extends CexIOExchange implements StreamingEx
     }
 
     @Override
+    public StreamingPrivateDataService getStreamingPrivateDataService() {
+        return streamingPrivateDataService;
+    }
+
+    @Override
     public void useCompressedMessages(boolean compressedMessages) {
-        throw new NotYetImplementedForExchangeException();
+        streamingPrivateDataService.useCompressedMessages(compressedMessages);
     }
-
-    public void setCredentials(String apiKey, String apiSecret) {
-        streamingOrderDataService.setApiKey(apiKey);
-        streamingOrderDataService.setApiSecret(apiSecret);
-    }
-
-    public CexioStreamingRawService getStreamingRawService() {
-        return streamingOrderDataService;
-    }
-
 }

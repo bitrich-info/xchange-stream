@@ -10,7 +10,7 @@ import java.math.RoundingMode;
 
 public class CexioAdapters {
 
-    private static final int PRECISION = 3;
+    private static final int PRECISION = 8;
     private static final BigDecimal SATOSHI_SCALE = new BigDecimal("100000000");
 
     static Order adaptOrder(CexioWebSocketOrder order) {
@@ -64,10 +64,10 @@ public class CexioAdapters {
             status = Order.OrderStatus.CANCELED;
         } else if (order.getRemains().compareTo(BigDecimal.ZERO) == 0) {
             status = Order.OrderStatus.FILLED;
-        } else if (order.getType() != null) {
-            status = Order.OrderStatus.NEW;
-        } else {
+        } else if (order.getRemains().compareTo(order.getAmount()) != 0) {
             status = Order.OrderStatus.PARTIALLY_FILLED;
+        } else {
+            status = Order.OrderStatus.NEW;
         }
         return status;
     }

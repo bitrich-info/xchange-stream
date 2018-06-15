@@ -1,6 +1,8 @@
 package info.bitrich.xchangestream.cexio;
 
 import info.bitrich.xchangestream.core.StreamingExchangeFactory;
+import info.bitrich.xchangestream.core.StreamingPrivateDataService;
+import org.knowm.xchange.ExchangeSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,11 +17,18 @@ public class CexioManualExample {
                 CexioStreamingExchange.class.getName());
 
         CexioProperties properties = new CexioProperties();
-        exchange.setCredentials(properties.getApiKey(), properties.getSecretKey());
+
+        ExchangeSpecification specification = exchange.getDefaultExchangeSpecification();
+        specification.setApiKey(properties.getApiKey());
+        specification.setSecretKey(properties.getSecretKey());
+
+        exchange.applySpecification(specification);
 
         exchange.connect().blockingAwait();
 
-        exchange.getStreamingRawService().getOrderData()
+        StreamingPrivateDataService streamingPrivateDataService = exchange.getStreamingPrivateDataService();
+
+        streamingPrivateDataService.getOrders()
                 .subscribe(
                         order -> LOG.info("Order id={}, status={}, pair={}, remains={}",
                                           order.getId(),
@@ -28,7 +37,10 @@ public class CexioManualExample {
                                           order.getRemainingAmount()),
                         throwable -> LOG.error("ERROR in getting order data: ", throwable));
 
-        exchange.getStreamingRawService().getTransactions()
+        CexioStreamingPrivateDataRawService streamingPrivateDataRawService =
+                (CexioStreamingPrivateDataRawService) streamingPrivateDataService;
+
+        streamingPrivateDataRawService.getTransactions()
                 .subscribe(
                         transaction -> LOG.info("Transaction: {}", transaction),
                         throwable -> LOG.error("ERROR in getting order data: ", throwable));

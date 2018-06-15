@@ -1,12 +1,12 @@
 package info.bitrich.xchangestream.cexio.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import info.bitrich.xchangestream.cexio.CexioStreamingRawService;
+import info.bitrich.xchangestream.cexio.CexioStreamingPrivateDataRawService;
 
 public class CexioWebSocketPongMessage {
 
     @JsonProperty("e")
-    private final String e = CexioStreamingRawService.PONG;
+    private final String e = CexioStreamingPrivateDataRawService.PONG;
 
     public CexioWebSocketPongMessage() {}
 
