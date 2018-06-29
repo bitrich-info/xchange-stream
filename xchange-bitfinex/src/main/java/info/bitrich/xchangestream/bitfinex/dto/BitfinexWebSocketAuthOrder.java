@@ -95,4 +95,72 @@ public class BitfinexWebSocketAuthOrder {
 
         return Objects.hash(id, groupId, cid, symbol, mtsCreate, mtsUpdate, amount, amountOrig, type, typePrev, orderStatus, price, priceAvg, priceTrailing, priceAuxLimit, placedId, flags);
     }
+
+    public long getId() {
+        return id;
+    }
+
+    public long getGroupId() {
+        return groupId;
+    }
+
+    public long getCid() {
+        return cid;
+    }
+
+    public String getSymbol() {
+        return symbol;
+    }
+
+    public long getMtsCreate() {
+        return mtsCreate;
+    }
+
+    public long getMtsUpdate() {
+        return mtsUpdate;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public BigDecimal getAmountOrig() {
+        return amountOrig;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getTypePrev() {
+        return typePrev;
+    }
+
+    public String getOrderStatus() {
+        return orderStatus;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public BigDecimal getPriceAvg() {
+        return priceAvg;
+    }
+
+    public BigDecimal getPriceTrailing() {
+        return priceTrailing;
+    }
+
+    public BigDecimal getPriceAuxLimit() {
+        return priceAuxLimit;
+    }
+
+    public long getPlacedId() {
+        return placedId;
+    }
+
+    public int getFlags() {
+        return flags;
+    }
 }
