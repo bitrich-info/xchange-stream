@@ -16,6 +16,14 @@ public class BitfinexWebSocketAuthTrade extends BitfinexWebSocketAuthenticatedPr
         this.feeCurrency = feeCurrency;
     }
 
+    public BigDecimal getFee() {
+        return fee;
+    }
+
+    public String getFeeCurrency() {
+        return feeCurrency;
+    }
+
     @Override
     public String toString() {
         return "BitfinexWebSocketAuthenticatedTrade{" +
