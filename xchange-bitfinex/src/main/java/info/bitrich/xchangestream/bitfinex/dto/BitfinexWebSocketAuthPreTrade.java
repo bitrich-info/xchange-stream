@@ -3,7 +3,7 @@ package info.bitrich.xchangestream.bitfinex.dto;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-public class BitfinexWebSocketAuthenticatedPreTrade {
+public class BitfinexWebSocketAuthPreTrade {
     private long id;
     private String pair;
     private long mtsCreate;
@@ -14,7 +14,7 @@ public class BitfinexWebSocketAuthenticatedPreTrade {
     private BigDecimal orderPrice;
     private int maker;
 
-    public BitfinexWebSocketAuthenticatedPreTrade(long id, String pair, long mtsCreate, long orderId,
+    public BitfinexWebSocketAuthPreTrade(long id, String pair, long mtsCreate, long orderId,
                                                   BigDecimal execAmount, BigDecimal execPrice,
                                                   String orderType, BigDecimal orderPrice, int maker) {
         this.id = id;
@@ -66,7 +66,7 @@ public class BitfinexWebSocketAuthenticatedPreTrade {
 
     @Override
     public String toString() {
-        return "BitfinexWebSocketAuthenticatedPreTrade{" +
+        return "BitfinexWebSocketAuthPreTrade{" +
             "id=" + id +
             ", pair='" + pair + '\'' +
             ", mtsCreate=" + mtsCreate +
@@ -82,8 +82,8 @@ public class BitfinexWebSocketAuthenticatedPreTrade {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof BitfinexWebSocketAuthenticatedPreTrade)) return false;
-        BitfinexWebSocketAuthenticatedPreTrade that = (BitfinexWebSocketAuthenticatedPreTrade) o;
+        if (!(o instanceof BitfinexWebSocketAuthPreTrade)) return false;
+        BitfinexWebSocketAuthPreTrade that = (BitfinexWebSocketAuthPreTrade) o;
         return getId() == that.getId() &&
             getMtsCreate() == that.getMtsCreate() &&
             getOrderId() == that.getOrderId() &&

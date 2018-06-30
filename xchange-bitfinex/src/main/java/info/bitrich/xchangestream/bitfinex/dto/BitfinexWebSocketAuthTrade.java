@@ -3,7 +3,7 @@ package info.bitrich.xchangestream.bitfinex.dto;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-public class BitfinexWebSocketAuthTrade extends BitfinexWebSocketAuthenticatedPreTrade {
+public class BitfinexWebSocketAuthTrade extends BitfinexWebSocketAuthPreTrade {
     private BigDecimal fee;
     private String feeCurrency;
 

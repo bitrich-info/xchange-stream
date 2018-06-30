@@ -26,6 +26,10 @@ public class BitfinexManualAuthExample {
             t -> LOG.info("AUTH ORDER: {}", t),
             throwable -> LOG.error("ERROR: ", throwable)
         );
+        exchange.getStreamingAuthenticatedDataService().getAuthenticatedBalances().subscribe(
+            t -> LOG.info("AUTH BALANCE: {}", t),
+            throwable -> LOG.error("ERROR: ", throwable)
+        );
         try {
             Thread.sleep(10000);
         } catch (InterruptedException e) {

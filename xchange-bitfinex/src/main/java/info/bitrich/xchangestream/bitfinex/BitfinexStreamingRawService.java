@@ -5,8 +5,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import info.bitrich.xchangestream.bitfinex.dto.BitfinexAuthRequestStatus;
 import info.bitrich.xchangestream.bitfinex.dto.BitfinexWebSocketAuth;
+import info.bitrich.xchangestream.bitfinex.dto.BitfinexWebSocketAuthBalance;
 import info.bitrich.xchangestream.bitfinex.dto.BitfinexWebSocketAuthOrder;
-import info.bitrich.xchangestream.bitfinex.dto.BitfinexWebSocketAuthenticatedPreTrade;
+import info.bitrich.xchangestream.bitfinex.dto.BitfinexWebSocketAuthPreTrade;
 import info.bitrich.xchangestream.bitfinex.dto.BitfinexWebSocketAuthTrade;
 import info.bitrich.xchangestream.service.netty.JsonNettyStreamingService;
 import io.reactivex.Observable;
@@ -36,9 +37,10 @@ public class BitfinexStreamingRawService extends JsonNettyStreamingService {
     private String apiKey;
     private String apiSecret;
 
-    private PublishSubject<BitfinexWebSocketAuthenticatedPreTrade> subjectPreTrade = PublishSubject.create();
+    private PublishSubject<BitfinexWebSocketAuthPreTrade> subjectPreTrade = PublishSubject.create();
     private PublishSubject<BitfinexWebSocketAuthTrade> subjectTrade = PublishSubject.create();
     private PublishSubject<BitfinexWebSocketAuthOrder> subjectOrder = PublishSubject.create();
+    private PublishSubject<BitfinexWebSocketAuthBalance> subjectBalance = PublishSubject.create();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public BitfinexStreamingRawService(String apiUrl) {
@@ -107,6 +109,13 @@ public class BitfinexStreamingRawService extends JsonNettyStreamingService {
                 case "ou":
                 case "oc":
                     updateOrder(object);
+                    break;
+                case "ws":
+                    updateBalances(object);
+                    break;
+                case "wu":
+                    updateBalance(object);
+                    break;
             }
         }
     }
@@ -125,7 +134,8 @@ public class BitfinexStreamingRawService extends JsonNettyStreamingService {
         String orderType = preTrade.get(6).textValue();
         BigDecimal orderPrice = preTrade.get(7).decimalValue();
         int maker = preTrade.get(8).intValue();
-        BitfinexWebSocketAuthenticatedPreTrade preTradeObject = new BitfinexWebSocketAuthenticatedPreTrade(id, pair, mtsCreate, orderId, execAmount, execPrice, orderType, orderPrice, maker);
+        BitfinexWebSocketAuthPreTrade preTradeObject = new BitfinexWebSocketAuthPreTrade(id, pair, mtsCreate, orderId,
+                execAmount, execPrice, orderType, orderPrice, maker);
         LOG.debug("New pre trade: {}", preTradeObject);
         subjectPreTrade.onNext(preTradeObject);
     }
@@ -156,20 +166,57 @@ public class BitfinexStreamingRawService extends JsonNettyStreamingService {
     private void addOrder(JsonNode orders) {
         for (final JsonNode order : orders) {
             BitfinexWebSocketAuthOrder orderObject = createOrderObject(order);
-            LOG.debug("New order: {}", orderObject);
-            subjectOrder.onNext(orderObject);
+            if (orderObject != null) {
+                LOG.debug("New order: {}", orderObject);
+                subjectOrder.onNext(orderObject);
+            }
         }
     }
 
     private void updateOrder(JsonNode order) {
         BitfinexWebSocketAuthOrder orderObject = createOrderObject(order);
-        LOG.debug("Updated order: {}", order.toString());
-        subjectOrder.onNext(orderObject);
+        if (orderObject != null) {
+            LOG.debug("Updated order: {}", orderObject);
+            subjectOrder.onNext(orderObject);
+        }
+    }
+
+    private void updateBalance(JsonNode balance) {
+        BitfinexWebSocketAuthBalance balanceObject = createBalanceObject(balance);
+        if (balanceObject != null) {
+            LOG.debug("Balance: {}", balanceObject);
+            subjectBalance.onNext(balanceObject);
+        }
+    }
+
+    private void updateBalances(JsonNode balances) {
+        for (final JsonNode balance : balances) {
+            BitfinexWebSocketAuthBalance balanceObject = createBalanceObject(balance);
+            if (balanceObject != null) {
+                LOG.debug("Balance: {}", balanceObject);
+                subjectBalance.onNext(balanceObject);
+            }
+        }
+    }
+
+    private BitfinexWebSocketAuthBalance createBalanceObject(JsonNode balance) {
+        if (balance.size() != 5) {
+            LOG.error("createBalanceObject unexpected record size={}, record={}", balance.size(), balance.toString());
+            return null;
+        }
+
+        String walletType = balance.get(0).textValue();
+        String currency = balance.get(1).textValue();
+        BigDecimal balanceValue = balance.get(2).decimalValue();
+        BigDecimal unsettledInterest = balance.get(3).decimalValue();
+        BigDecimal balanceAvailable = balance.get(4).asText().equals("null") ? null : balance.get(4).decimalValue();
+
+        return new BitfinexWebSocketAuthBalance(walletType, currency, balanceValue, unsettledInterest, balanceAvailable);
     }
 
     private BitfinexWebSocketAuthOrder createOrderObject(JsonNode order) {
         if (order.size() != 32) {
-            LOG.error("addOrder unexpected record size={}, record={}", order.size(), order.toString());
+            LOG.error("createOrderObject unexpected record size={}, record={}", order.size(), order.toString());
             return null;
         }
 
@@ -189,7 +236,6 @@ public class BitfinexStreamingRawService extends JsonNettyStreamingService {
         BigDecimal priceAvg = order.get(17).decimalValue();
         BigDecimal priceTrailing = order.get(18).decimalValue();
         BigDecimal priceAuxLimit = order.get(19).decimalValue();
-
         long placedId = order.get(25).longValue();
 
         return new BitfinexWebSocketAuthOrder(
@@ -240,11 +286,15 @@ public class BitfinexStreamingRawService extends JsonNettyStreamingService {
         return subjectOrder.share();
     }
 
-    public Observable<BitfinexWebSocketAuthenticatedPreTrade> getAuthenticatedPreTrades() {
+    public Observable<BitfinexWebSocketAuthPreTrade> getAuthenticatedPreTrades() {
         return subjectPreTrade.share();
     }
 
     public Observable<BitfinexWebSocketAuthTrade> getAuthenticatedTrades() {
         return subjectTrade.share();
+    }
+
+    public Observable<BitfinexWebSocketAuthBalance> getAuthenticatedBalances() {
+        return subjectBalance.share();
     }
 }

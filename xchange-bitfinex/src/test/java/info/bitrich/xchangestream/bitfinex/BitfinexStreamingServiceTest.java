@@ -2,13 +2,18 @@ package info.bitrich.xchangestream.bitfinex;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import info.bitrich.xchangestream.bitfinex.dto.BitfinexWebSocketAuthBalance;
 import info.bitrich.xchangestream.bitfinex.dto.BitfinexWebSocketAuthOrder;
-import info.bitrich.xchangestream.bitfinex.dto.BitfinexWebSocketAuthenticatedPreTrade;
+import info.bitrich.xchangestream.bitfinex.dto.BitfinexWebSocketAuthPreTrade;
 import info.bitrich.xchangestream.bitfinex.dto.BitfinexWebSocketAuthTrade;
 import io.reactivex.observers.TestObserver;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
 import java.math.BigDecimal;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class BitfinexStreamingServiceTest {
 
@@ -56,12 +61,12 @@ public class BitfinexStreamingServiceTest {
 
         JsonNode jsonNode = objectMapper.readTree(ClassLoader.getSystemClassLoader().getResourceAsStream("preTrade.json"));
 
-        TestObserver<BitfinexWebSocketAuthenticatedPreTrade> test = service.getAuthenticatedPreTrades().test();
+        TestObserver<BitfinexWebSocketAuthPreTrade> test = service.getAuthenticatedPreTrades().test();
 
         service.handleMessage(jsonNode);
 
-        BitfinexWebSocketAuthenticatedPreTrade expected =
-            new BitfinexWebSocketAuthenticatedPreTrade(
+        BitfinexWebSocketAuthPreTrade expected =
+            new BitfinexWebSocketAuthPreTrade(
                 262861164L,
                 "tETHUSD",
                 1530187145559L,
@@ -97,5 +102,53 @@ public class BitfinexStreamingServiceTest {
                 new BigDecimal("-0.0104592"),
                 "USD");
         test.assertValue(expected);
+    }
+
+    @Test
+    public void testGetBalances() throws Exception {
+        JsonNode jsonNode = objectMapper.readTree(ClassLoader.getSystemClassLoader().getResourceAsStream("balances.json"));
+
+        TestObserver<BitfinexWebSocketAuthBalance> test = service.getAuthenticatedBalances().test();
+
+        service.handleMessage(jsonNode);
+
+        BitfinexWebSocketAuthBalance expected =
+                new BitfinexWebSocketAuthBalance(
+                        "exchange",
+                        "ETH",
+                        new BigDecimal("0.38772"),
+                        BigDecimal.ZERO,
+                        null
+                );
+
+        BitfinexWebSocketAuthBalance expected1 =
+                new BitfinexWebSocketAuthBalance(
+                        "exchange",
+                        "USD",
+                        new BigDecimal("69.4747619"),
+                        BigDecimal.ZERO,
+                        null
+                );
+        test.assertNoErrors();
+        test.assertValueCount(2);
+        assertThat(test.values().contains(expected));
+        assertThat(test.values().contains(expected1));
+    }
+
+    @Test
+    public void testGetBalance() throws IOException {
+        JsonNode jsonNode = objectMapper.readTree(ClassLoader.getSystemClassLoader().getResourceAsStream("balance.json"));
+        TestObserver<BitfinexWebSocketAuthBalance> test = service.getAuthenticatedBalances().test();
+        service.handleMessage(jsonNode);
+
+        BitfinexWebSocketAuthBalance balance = new BitfinexWebSocketAuthBalance(
+                "exchange",
+                "USD",
+                new BigDecimal("78.5441867"),
+                BigDecimal.ZERO,
+                null
+        );
+
+        test.assertValue(balance);
     }
 }
