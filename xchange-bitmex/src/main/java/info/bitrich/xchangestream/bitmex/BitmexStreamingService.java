@@ -52,7 +52,7 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
     private long dmsCancelTime;
     private Disposable heartbeatDisposable;
 
-    public static final int DMS_CANCEL_ALL_IN = 6000;
+    public static final int DMS_CANCEL_ALL_IN = 60000;
     public static final int DMS_RESUBSCRIBE = 15000;
 
     public BitmexStreamingService(String apiUrl, String apiKey, String secretKey) {
