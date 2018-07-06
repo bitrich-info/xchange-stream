@@ -1,5 +1,6 @@
 package info.bitrich.xchangestream.bitmex;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import info.bitrich.xchangestream.bitmex.dto.BitmexMarketDataEvent;
 import info.bitrich.xchangestream.bitmex.dto.BitmexWebSocketSubscriptionMessage;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.ZoneOffset;
+import java.util.Objects;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -27,17 +29,31 @@ import java.util.concurrent.TimeUnit;
 public class BitmexStreamingService extends JsonNettyStreamingService {
     private static final Logger LOG = LoggerFactory.getLogger(BitmexStreamingService.class);
 
-
     private final String apiKey;
     private final String secretKey;
 
-    public static final int DMS_CANCEL_ALL_IN = 60000;
-    public static final int DMS_RESUBSCRIBE = 15000;
+    /**
+     * Heartbeat
+     */
+    private static final String PING = "ping";
+    private static final String PONG = "pong";
+
+    private static final int HEARTBEAT_DELAY = 5000;
+    private long lastMsgTime = 0;
+    private long lastPingTime = 0;
+    private long lastPongTime = 0;
+
     /**
      * deadman's cancel time
      */
+    private boolean dmsEnabled = false;
+    private long lastDmsTime = 0;
+
     private long dmsCancelTime;
-    private Disposable dmsDisposable;
+    private Disposable heartbeatDisposable;
+
+    public static final int DMS_CANCEL_ALL_IN = 6000;
+    public static final int DMS_RESUBSCRIBE = 15000;
 
     public BitmexStreamingService(String apiUrl, String apiKey, String secretKey) {
         super(apiUrl, Integer.MAX_VALUE);
@@ -45,8 +61,19 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
         this.secretKey = secretKey;
     }
 
-	 @Override
+    @Override
+    public void messageHandler(String message) {
+        lastMsgTime = currentTime();
+        if (Objects.equals(message, PONG)) {
+            handlePong();
+            return;
+        }
+        super.messageHandler(message);
+    }
+
+    @Override
     protected void handleMessage(JsonNode message) {
+        LOG.info("got new msg = {}", message);
          if (message.has("info") || message.has("success")) {
              return;
          }
@@ -69,9 +96,7 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
             String cancelTime = message.get("cancelTime").asText();
             if (cancelTime.equals("0")) {
                 LOG.info("Dead man's switch disabled");
-                dmsDisposable.dispose();
-                dmsDisposable = null;
-                dmsCancelTime=0;
+                dmsCancelTime = 0;
             } else {
                 SimpleDateFormat sdf = new SimpleDateFormat(BitmexMarketDataEvent.BITMEX_TIMESTAMP_FORMAT);
                 sdf.setTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC));
@@ -135,25 +160,18 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
         return objectMapper.writeValueAsString(subscribeMessage);
     }
 
-    public void enableDeadMansSwitch(long rate, long timeout) throws IOException  {
-        if (dmsDisposable != null) {
-            LOG.warn("You already have Dead Man's switch enabled. Doing nothing");
-            return;
+    public void enableDeadMansSwitch() {
+        if (heartbeatDisposable != null) {
+            dmsEnabled = true;
+        } else {
+            LOG.warn("Heartbeat not enabled.");
         }
-        final BitmexWebSocketSubscriptionMessage subscriptionMessage = new BitmexWebSocketSubscriptionMessage("cancelAllAfter", new Object[]{DMS_CANCEL_ALL_IN});
-        String message = objectMapper.writeValueAsString(subscriptionMessage);
-        dmsDisposable = Schedulers.single().schedulePeriodicallyDirect(new Runnable() {
-            @Override
-            public void run() {
-                sendMessage(message);
-            }
-        }, 0, DMS_RESUBSCRIBE, TimeUnit.MILLISECONDS);
-        Schedulers.single().start();
     }
 
     public void disableDeadMansSwitch() throws IOException  {
         final BitmexWebSocketSubscriptionMessage subscriptionMessage = new BitmexWebSocketSubscriptionMessage("cancelAllAfter", new Object[]{0});
         String message = objectMapper.writeValueAsString(subscriptionMessage);
+        dmsEnabled = false;
         sendMessage(message);
     }
 
@@ -161,4 +179,62 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
         return dmsCancelTime > 0 && System.currentTimeMillis() < dmsCancelTime;
     }
 
+    public void enableHeartbeat(boolean withDms) {
+        if (heartbeatDisposable != null) {
+            LOG.warn("You already started heartbeat service.");
+            return;
+        }
+        dmsEnabled = withDms;
+        heartbeatDisposable = Schedulers.single().schedulePeriodicallyDirect(this::ping, 0, HEARTBEAT_DELAY, TimeUnit.MILLISECONDS);
+        Schedulers.single().start();
+    }
+
+    public void disableHeartbeat() throws IOException {
+        heartbeatDisposable.dispose();
+        heartbeatDisposable = null;
+        disableDeadMansSwitch();
+        LOG.info("Stopping heartbeat");
+    }
+
+    private void ping() {
+        LOG.info("ping(), {}, {}, {}", lastMsgTime, lastPingTime, lastPongTime);
+        if (lastPingTime != 0 && (lastPongTime == 0 || lastPongTime - lastPingTime >= HEARTBEAT_DELAY)) {
+            LOG.error("Did not get pong messages in time");
+        }
+        if (lastMsgTime - lastPingTime >= HEARTBEAT_DELAY || lastPingTime >= lastMsgTime) {
+            lastPongTime = 0;
+            LOG.info("Sending ping message");
+            sendMessage(PING);
+        }
+        lastPingTime = currentTime();
+
+        if (dmsEnabled) {
+            sendDmsMessage();
+        }
+    }
+
+    private void sendDmsMessage() {
+        long time = currentTime();
+        if (time - lastDmsTime >= DMS_RESUBSCRIBE) {
+            final BitmexWebSocketSubscriptionMessage subscriptionMessage = new BitmexWebSocketSubscriptionMessage("cancelAllAfter", new Object[]{DMS_CANCEL_ALL_IN});
+            String message = null;
+            try {
+                message = objectMapper.writeValueAsString(subscriptionMessage);
+            } catch (JsonProcessingException e) {
+                LOG.error(e.getMessage(), e);
+            }
+            LOG.info("sending dms {}", message);
+            sendMessage(message);
+            lastDmsTime = time;
+        }
+    }
+
+    private void handlePong() {
+        lastPongTime = currentTime();
+        LOG.info("Got pong message");
+    }
+
+    private long currentTime() {
+        return System.currentTimeMillis();
+    }
 }
