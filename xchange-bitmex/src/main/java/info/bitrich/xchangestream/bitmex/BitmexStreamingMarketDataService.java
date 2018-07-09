@@ -1,6 +1,5 @@
 package info.bitrich.xchangestream.bitmex;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import info.bitrich.xchangestream.bitmex.dto.*;
@@ -117,16 +116,16 @@ public class BitmexStreamingMarketDataService implements StreamingMarketDataServ
         });
     }
 
+    public void enableDeadManSwitch() throws IOException {
+        streamingService.enableDeadManSwitch();
+    }
+
     /**
      * @param rate    in milliseconds to send updated
      * @param timeout milliseconds from now after which orders will be cancelled
      */
-    public void enableDeadManSwitch() throws IOException {
-        enableDeadManSwitch(BitmexStreamingService.DMS_RESUBSCRIBE, BitmexStreamingService.DMS_CANCEL_ALL_IN);
-    }
-
     public void enableDeadManSwitch(long rate, long timeout) throws IOException {
-        streamingService.enableDeadMansSwitch();
+        streamingService.enableDeadMansSwitch(rate, timeout);
     }
 
     public void enableHeartbeat(boolean withDms) {
@@ -143,9 +142,5 @@ public class BitmexStreamingMarketDataService implements StreamingMarketDataServ
 
     public void disableDeadMansSwitch() throws IOException {
         streamingService.disableDeadMansSwitch();
-    }
-
-    public void ping() {
-        streamingService.enableHeartbeat(false);
     }
 }
