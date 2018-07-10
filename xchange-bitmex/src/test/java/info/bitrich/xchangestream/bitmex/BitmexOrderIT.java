@@ -229,10 +229,7 @@ public class BitmexOrderIT {
         scheduler.shutdown();
     }
 
-    @Test(expected = AssertionError.class)
-    public void shouldCancelOrderOnShortDms() throws IOException {
-        streamingMarketDataService.enableDeadManSwitch(15000, 1000);
-
+    private String tryTriggerTestExecution() {
         final String clOrdId = generateOrderId();
         final ScheduledExecutorService scheduler = delayedOrder(clOrdId,
                 testBidPrice.add(priceShift.multiply(new BigDecimal("2"))), "10", Order.OrderType.ASK);
@@ -240,6 +237,14 @@ public class BitmexOrderIT {
         expectNoExecution(execution -> Objects.equals(execution.getClOrdID(), clOrdId)
                 && Objects.equals(execution.getExecType(), "Canceled"));
         scheduler.shutdown();
+        return clOrdId;
+    }
+
+    @Test(expected = AssertionError.class)
+    public void shouldCancelOrderOnShortDms() throws IOException {
+        streamingMarketDataService.enableDeadManSwitch(15000, 1000);
+
+        tryTriggerTestExecution();
 
         streamingMarketDataService.disableDeadMansSwitch();
     }
@@ -248,13 +253,7 @@ public class BitmexOrderIT {
     public void shouldCancelOrderOnShortDmsWithHeartbeat() throws IOException {
         streamingMarketDataService.enableHeartbeat(true, 15000, 1000);
 
-        final String clOrdId = generateOrderId();
-        final ScheduledExecutorService scheduler = delayedOrder(clOrdId,
-                testBidPrice.add(priceShift.multiply(new BigDecimal("2"))), "10", Order.OrderType.ASK);
-
-        expectNoExecution(execution -> Objects.equals(execution.getClOrdID(), clOrdId)
-                && Objects.equals(execution.getExecType(), "Canceled"));
-        scheduler.shutdown();
+        tryTriggerTestExecution();
 
         streamingMarketDataService.disableHeartbeat();
     }
@@ -263,15 +262,7 @@ public class BitmexOrderIT {
     public void shouldNotCancelOrderOnHeartbeatWithDms() throws IOException {
         streamingMarketDataService.enableHeartbeat(true);
 
-        final String clOrdId = generateOrderId();
-        final ScheduledExecutorService scheduler = delayedOrder(clOrdId,
-                testBidPrice.add(priceShift.multiply(new BigDecimal("2"))), "10", Order.OrderType.ASK);
-
-        expectNoExecution(execution -> Objects.equals(execution.getClOrdID(), clOrdId)
-                && Objects.equals(execution.getExecType(), "Canceled"));
-        scheduler.shutdown();
-
-        streamingMarketDataService.disableHeartbeat();
+        String clOrdId = tryTriggerTestExecution();
 
         cancelLimitOrder(clOrdId);
     }
