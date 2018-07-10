@@ -47,7 +47,7 @@ public class BitmexHeartbeat {
         lastMsgTime = currentTime();
         if (Objects.equals(message, PONG)) {
             lastPongTime = currentTime();
-            LOG.info("Got pong message");
+            LOG.debug("Got pong message");
             return true;
         }
         return false;
@@ -72,13 +72,13 @@ public class BitmexHeartbeat {
     }
 
     private void ping() {
-        LOG.info("ping(), {}, {}, {}", lastMsgTime, lastPingTime, lastPongTime);
+        LOG.debug("ping(), {}, {}, {}", lastMsgTime, lastPingTime, lastPongTime);
         if (lastPingTime != 0 && (lastPongTime == 0 || lastPongTime - lastPingTime >= HEARTBEAT_DELAY)) {
             LOG.error("Did not get pong messages in time");
         }
         if (lastMsgTime - lastPingTime >= HEARTBEAT_DELAY || lastPingTime >= lastMsgTime) {
             lastPongTime = 0;
-            LOG.info("Sending ping message");
+            LOG.debug("Sending ping message");
             service.sendMessage(PING);
         }
         lastPingTime = currentTime();

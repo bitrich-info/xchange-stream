@@ -23,10 +23,9 @@ import static info.bitrich.xchangestream.util.TimeUtil.currentTime;
  */
 public class BitmexDms {
     private static final Logger LOG = LoggerFactory.getLogger(BitmexDms.class);
-
-    private static final int DMS_CANCEL_ALL_IN = 60000;
-    private static final int DMS_RESUBSCRIBE = 15000;
     private final BitmexStreamingService service;
+    private long cancelAllIn = 60000;
+    private long resubscribe = 15000;
     private long lastDmsTime = 0;
     private long dmsCancelTime;
 
@@ -58,7 +57,7 @@ public class BitmexDms {
     }
 
     public void enableDeadMansSwitch() throws JsonProcessingException {
-        this.enableDeadMansSwitch(DMS_RESUBSCRIBE, DMS_CANCEL_ALL_IN);
+        this.enableDeadMansSwitch(15000, 60000);
     }
 
     public void enableDeadMansSwitch(long rate, long timeout) throws JsonProcessingException {
@@ -66,6 +65,8 @@ public class BitmexDms {
             LOG.warn("You already have Dead Man's switch enabled. Doing nothing");
             return;
         }
+        this.resubscribe = rate;
+        this.cancelAllIn = timeout;
         String message = dmsMessage(timeout);
         dmsDisposable = Schedulers.single().schedulePeriodicallyDirect(() -> service.sendMessage(message), 0, rate, TimeUnit.MILLISECONDS);
         Schedulers.single().start();
@@ -82,15 +83,15 @@ public class BitmexDms {
 
     public void sendDmsMessage() {
         long time = currentTime();
-        if (time - lastDmsTime >= DMS_RESUBSCRIBE) {
+        if (time - lastDmsTime >= resubscribe) {
             String message = null;
             try {
-                message = dmsMessage(DMS_CANCEL_ALL_IN);
+                message = dmsMessage(cancelAllIn);
             } catch (JsonProcessingException e) {
                 LOG.error(e.getMessage(), e);
             }
             service.sendMessage(message);
-            LOG.info("sending dms {}", message);
+            LOG.debug("sending dms {}", message);
             lastDmsTime = time;
         }
     }
@@ -100,4 +101,8 @@ public class BitmexDms {
         return service.writeValueAsString(subscriptionMessage);
     }
 
+    public void setRateTimeout(long rate, long timeout) {
+        this.resubscribe = rate;
+        this.cancelAllIn = timeout;
+    }
 }

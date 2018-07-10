@@ -3,6 +3,7 @@ package info.bitrich.xchangestream.bitmex;
 import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.util.LocalExchangeConfig;
 import info.bitrich.xchangestream.util.PropsLoader;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.knowm.xchange.ExchangeFactory;
 import org.knowm.xchange.ExchangeSpecification;
@@ -29,12 +30,13 @@ public class BitmexHeartbeatTest {
     private static final Logger logger = LoggerFactory.getLogger(BitmexHeartbeatTest.class);
 
     @Test
+    @Ignore
     public void test () throws IOException, InterruptedException {
         LocalExchangeConfig localConfig = PropsLoader.loadKeys(
                 "bitmex.secret.keys", "bitmex.secret.keys.origin", "bitmex");
 
         BitmexStreamingExchange exchange =
-                (BitmexStreamingExchange) ExchangeFactory.INSTANCE.createExchange(BitmexStreamingExchange.class);
+                ExchangeFactory.INSTANCE.createExchange(BitmexStreamingExchange.class);
         ExchangeSpecification defaultExchangeSpecification = exchange.getDefaultExchangeSpecification();
 
         defaultExchangeSpecification.setExchangeSpecificParametersItem("Use_Sandbox", true);

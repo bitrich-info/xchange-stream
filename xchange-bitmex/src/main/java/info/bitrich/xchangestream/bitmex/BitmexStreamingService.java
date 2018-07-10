@@ -114,6 +114,13 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
         heartbeat.enableHeartbeat();
     }
 
+    public void enableHeartbeat(boolean withDms, long rate, long timeout) {
+        if (withDms) {
+            dms.setRateTimeout(rate, timeout);
+        }
+        enableHeartbeat(withDms);
+    }
+
     public void disableHeartbeat() throws IOException {
         dms.disableDeadMansSwitch();
         heartbeat.disableHeartbeat();
@@ -135,4 +142,6 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
     public void enableDeadManSwitch() throws IOException {
         dms.enableDeadMansSwitch();
     }
+
+
 }

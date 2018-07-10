@@ -1,6 +1,8 @@
 package info.bitrich.xchangestream.bitmex;
 
 import info.bitrich.xchangestream.core.StreamingExchange;
+import info.bitrich.xchangestream.util.LocalExchangeConfig;
+import info.bitrich.xchangestream.util.PropsLoader;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.knowm.xchange.ExchangeFactory;
@@ -16,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import static org.knowm.xchange.bitmex.BitmexPrompt.PERPETUAL;
 
@@ -29,6 +30,8 @@ public class BitmexDeadManSwitchTest {
     @Test
     @Ignore
     public void testDeadmanSwitch() throws Exception {
+        LocalExchangeConfig localConfig = PropsLoader.loadKeys(
+                "bitmex.secret.keys", "bitmex.secret.keys.origin", "bitmex");
         CertHelper.trustAllCerts();
         BitmexStreamingExchange exchange =
                 (BitmexStreamingExchange) ExchangeFactory.INSTANCE.createExchange(BitmexStreamingExchange.class);
@@ -36,8 +39,8 @@ public class BitmexDeadManSwitchTest {
 
         defaultExchangeSpecification.setExchangeSpecificParametersItem("Use_Sandbox", true);
 
-        defaultExchangeSpecification.setApiKey("7DurJLSKTVQK384sqmCNrhIC");
-        defaultExchangeSpecification.setSecretKey("8kSyRTMLipxumy1K6cYL0mtP6RmFdStRTPEdi6y026zbvKOL");
+        defaultExchangeSpecification.setApiKey(localConfig.getApiKey());
+        defaultExchangeSpecification.setSecretKey(localConfig.getSecretKey());
 
         defaultExchangeSpecification.setShouldLoadRemoteMetaData(true);
 //        defaultExchangeSpecification.setProxyHost("localhost");

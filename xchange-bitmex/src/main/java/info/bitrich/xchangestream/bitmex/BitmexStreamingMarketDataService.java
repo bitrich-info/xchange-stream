@@ -132,6 +132,10 @@ public class BitmexStreamingMarketDataService implements StreamingMarketDataServ
         streamingService.enableHeartbeat(withDms);
     }
 
+    public void enableHeartbeat(boolean withDms, long rate, long timeout) {
+        streamingService.enableHeartbeat(withDms, rate, timeout);
+    }
+
     public void disableHeartbeat() throws IOException {
         streamingService.disableHeartbeat();
     }
