@@ -3,6 +3,7 @@ package info.bitrich.xchangestream.bitmex.dto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import info.bitrich.xchangestream.bitmex.BitmexStreamingService;
+import info.bitrich.xchangestream.service.netty.StreamingObjectMapperHelper;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import org.slf4j.Logger;
@@ -44,6 +45,10 @@ public class BitmexDms {
             String cancelTime = message.get("cancelTime").asText();
             if (cancelTime.equals("0")) {
                 LOG.info("Dead man's switch disabled");
+                if (dmsDisposable != null) {
+                    dmsDisposable.dispose();
+                    dmsDisposable = null;
+                }
                 dmsCancelTime = 0;
             } else {
                 SimpleDateFormat sdf = new SimpleDateFormat(BitmexMarketDataEvent.BITMEX_TIMESTAMP_FORMAT);
@@ -84,21 +89,21 @@ public class BitmexDms {
     public void sendDmsMessage() {
         long time = currentTime();
         if (time - lastDmsTime >= resubscribe) {
-            String message = null;
+            String message;
             try {
                 message = dmsMessage(cancelAllIn);
+                service.sendMessage(message);
+                LOG.debug("sending dms {}", message);
+                lastDmsTime = time;
             } catch (JsonProcessingException e) {
                 LOG.error(e.getMessage(), e);
             }
-            service.sendMessage(message);
-            LOG.debug("sending dms {}", message);
-            lastDmsTime = time;
         }
     }
 
     private String dmsMessage(long dmsCancelAllIn) throws JsonProcessingException {
         final BitmexWebSocketSubscriptionMessage subscriptionMessage = new BitmexWebSocketSubscriptionMessage("cancelAllAfter", new Object[]{dmsCancelAllIn});
-        return service.writeValueAsString(subscriptionMessage);
+        return StreamingObjectMapperHelper.getObjectMapper().writeValueAsString(subscriptionMessage);
     }
 
     public void setRateTimeout(long rate, long timeout) {
