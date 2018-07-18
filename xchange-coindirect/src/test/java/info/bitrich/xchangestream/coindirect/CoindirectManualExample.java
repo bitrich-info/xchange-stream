@@ -1,5 +1,6 @@
 package info.bitrich.xchangestream.coindirect;
 
+import info.bitrich.xchangestream.coindirect.service.CoindirectStreamingMarketDataService;
 import info.bitrich.xchangestream.core.ProductSubscription;
 import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingExchangeFactory;
@@ -18,13 +19,11 @@ public class CoindirectManualExample {
 
 
         ExchangeSpecification exchangeSpecification = new ExchangeSpecification(CoindirectStreamingExchange.class);
-        /* Use if you want to use authenticated endpoints */
-//        exchangeSpecification.setApiKey("key-here");
-//        exchangeSpecification.setSecretKey("secret-here");
+//        exchangeSpecification.setApiKey("your-api-key"); // use this if you want to access account data streams
+//        exchangeSpecification.setSecretKey("your-api-secret");
 
         StreamingExchange exchange = StreamingExchangeFactory.INSTANCE.createExchange(exchangeSpecification);
         exchange.connect(productSubscription).blockingAwait();
-
 
 
         exchange.getStreamingMarketDataService().getOrderBook(CurrencyPair.BTC_ZAR).subscribe(orderBook -> {
@@ -36,11 +35,18 @@ public class CoindirectManualExample {
             LOG.info("{} OrderBook is now {}", CurrencyPair.ETH_BTC, orderBook);
 
         }, throwable -> LOG.error("ERROR in getting order book: ", throwable));
-        
-        exchange.getStreamingMarketDataService().getTicker(CurrencyPair.BTC_ZAR).subscribe(ticker -> {
-            LOG.info("TICKER: {}", ticker);
-        }, throwable -> LOG.error("ERROR in getting ticker: ", throwable));
 
+        CoindirectStreamingMarketDataService coindirectStreamingMarketDataService = (CoindirectStreamingMarketDataService) exchange.getStreamingMarketDataService();
+
+        coindirectStreamingMarketDataService.getAccountTrades().subscribe(trade -> {
+            LOG.info("Got trade {}", trade);
+        });
+
+//
+//        exchange.getStreamingMarketDataService().getTicker(CurrencyPair.BTC_ZAR).subscribe(ticker -> {
+//            LOG.info("TICKER: {}", ticker);
+//        }, throwable -> LOG.error("ERROR in getting ticker: ", throwable));
+//
         exchange.getStreamingMarketDataService().getTrades(CurrencyPair.ETH_BTC)
                 .subscribe(trade -> {
                     LOG.info("TRADE: {}", trade);

@@ -2,6 +2,8 @@ package info.bitrich.xchangestream.coindirect.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import info.bitrich.xchangestream.coindirect.CoindirectStreamingService;
+import info.bitrich.xchangestream.coindirect.dto.CoindirectAccountOrderEvent;
+import info.bitrich.xchangestream.coindirect.dto.CoindirectEvent;
 import info.bitrich.xchangestream.coindirect.dto.CoindirectOrderBookEvent;
 import info.bitrich.xchangestream.coindirect.dto.CoindirectTradeEvent;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
@@ -117,5 +119,26 @@ public class CoindirectStreamingMarketDataService implements StreamingMarketData
             CoindirectTradeEvent coindirectTradeEvent = objectMapper.readValue(s, CoindirectTradeEvent.class);
             return new Trade(Order.OrderType.BID, coindirectTradeEvent.amount, currencyPair, coindirectTradeEvent.price, new Date(coindirectTradeEvent.timestamp), null);
         });
+    }
+
+    public Observable<Trade> getAccountTrades() {
+        try {
+            CoindirectAccountChannel coindirectAccountChannel = getCoindirectAccountServiceRaw().getAccountChannel();
+
+
+            String channelName = coindirectAccountChannel.value;
+            return service.subscribeChannel(channelName).map(s -> {
+                CoindirectEvent coindirectEvent = objectMapper.readValue(s, CoindirectEvent.class);
+
+                if(coindirectEvent.event.equals("orderMatched")) {
+                    CoindirectAccountOrderEvent coindirectAccountOrderEvent = objectMapper.readValue(s, CoindirectAccountOrderEvent.class);
+                    return new Trade(CoindirectAdapters.convert(coindirectAccountOrderEvent.data.side), coindirectAccountOrderEvent.data.amount, CoindirectAdapters.toCurrencyPair(coindirectAccountOrderEvent.data.symbol), coindirectAccountOrderEvent.data.price, new Date(coindirectAccountOrderEvent.data.timestamp), coindirectAccountOrderEvent.data.uuid);
+                } else {
+                    return new Trade.Builder().build();
+                }
+            });
+        } catch(IOException e) {
+            return null;
+        }
     }
 }
