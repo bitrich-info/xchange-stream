@@ -6,6 +6,7 @@ import info.bitrich.xchangestream.core.StreamingExchangeFactory;
 import info.bitrich.xchangestream.util.LocalExchangeConfig;
 import info.bitrich.xchangestream.util.PropsLoader;
 import io.reactivex.Observable;
+import io.reactivex.functions.Predicate;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -40,10 +41,9 @@ public class BitmexOrderIT {
     private static final Logger LOG = LoggerFactory.getLogger(BitmexTest.class);
 
     private static final BigDecimal priceShift = new BigDecimal("50");
-
+    private BitmexStreamingMarketDataService streamingMarketDataService;
     private BigDecimal testAskPrice;
     private BigDecimal testBidPrice;
-
     private BitmexTradeService tradeService;
     private StreamingExchange exchange;
 
@@ -59,6 +59,9 @@ public class BitmexOrderIT {
 
         BitmexMarketDataService marketDataService =
                 (BitmexMarketDataService) exchange.getMarketDataService();
+
+        streamingMarketDataService =
+                (BitmexStreamingMarketDataService) exchange.getStreamingMarketDataService();
 
         OrderBook orderBook = marketDataService.getOrderBook(xbtUsd, PERPETUAL);
         List<LimitOrder> asks = orderBook.getAsks();
@@ -195,27 +198,72 @@ public class BitmexOrderIT {
         Assert.assertEquals(BitmexPrivateOrder.OrderStatus.Filled, order.getOrderStatus());
     }
 
-    @Test(expected = AssertionError.class)
-    public void shouldGetExecutionOnFill() {
-        final String clOrdId = generateOrderId();
+    private ScheduledExecutorService delayedOrder(String clOrdId, BigDecimal price, String size, Order.OrderType side) {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         scheduler.schedule(() -> {
             try {
-                placeLimitOrder(clOrdId,
-                        testBidPrice.add(priceShift.multiply(new BigDecimal("2"))),
-                        "10", Order.OrderType.BID);
+                placeLimitOrder(clOrdId, price, size, side);
             } catch (Exception e) {
                 LOG.error(e.getMessage(), e);
             }
         }, 1, TimeUnit.SECONDS);
+        return scheduler;
+    }
 
+    private void expectNoExecution(Predicate<BitmexExecution> valuePredicate) {
         Observable<BitmexExecution> executionObservable = ((BitmexStreamingMarketDataService)
                 exchange.getStreamingMarketDataService()).getExecutions("XBTUSD");
         executionObservable.test()
                 .awaitCount(5)
-                .assertNever(execution -> Objects.equals(execution.getClOrdID(), clOrdId))
+                .assertNever(valuePredicate)
                 .dispose();
+    }
 
+    @Test(expected = AssertionError.class)
+    public void shouldGetExecutionOnFill() {
+        final String clOrdId = generateOrderId();
+        final ScheduledExecutorService scheduler = delayedOrder(clOrdId,
+                testBidPrice.add(priceShift.multiply(new BigDecimal("2"))), "10", Order.OrderType.BID);
+
+        expectNoExecution(execution -> Objects.equals(execution.getClOrdID(), clOrdId));
         scheduler.shutdown();
+    }
+
+    private String tryTriggerTestExecution() {
+        final String clOrdId = generateOrderId();
+        final ScheduledExecutorService scheduler = delayedOrder(clOrdId,
+                testBidPrice.add(priceShift.multiply(new BigDecimal("2"))), "10", Order.OrderType.ASK);
+
+        expectNoExecution(execution -> Objects.equals(execution.getClOrdID(), clOrdId)
+                && Objects.equals(execution.getExecType(), "Canceled"));
+        scheduler.shutdown();
+        return clOrdId;
+    }
+
+    @Test(expected = AssertionError.class)
+    public void shouldCancelOrderOnShortDms() throws IOException {
+        streamingMarketDataService.enableDeadManSwitch(15000, 1000);
+
+        tryTriggerTestExecution();
+
+        streamingMarketDataService.disableDeadMansSwitch();
+    }
+
+    @Test(expected = AssertionError.class)
+    public void shouldCancelOrderOnShortDmsWithHeartbeat() throws IOException {
+        streamingMarketDataService.enableHeartbeat(true, 15000, 1000);
+
+        tryTriggerTestExecution();
+
+        streamingMarketDataService.disableHeartbeat();
+    }
+
+    @Test
+    public void shouldNotCancelOrderOnHeartbeatWithDms() throws IOException {
+        streamingMarketDataService.enableHeartbeat(true);
+
+        String clOrdId = tryTriggerTestExecution();
+
+        cancelLimitOrder(clOrdId);
     }
 }

@@ -13,28 +13,30 @@ import org.knowm.xchange.bitmex.service.BitmexMarketDataService;
 import org.knowm.xchange.bitmex.service.BitmexTradeService;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.marketdata.OrderBook;
-import org.knowm.xchange.utils.CertHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 
 import static org.knowm.xchange.bitmex.BitmexPrompt.PERPETUAL;
 
 /**
- * @author Nikita Belenkiy on 18/05/2018.
+ * @author Foat Akhmadeev
+ * 03/07/2018
  */
-public class BitmexDeadManSwitchTest {
-    private static final Logger logger = LoggerFactory.getLogger(BitmexDeadManSwitchTest.class);
+public class BitmexHeartbeatTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(BitmexHeartbeatTest.class);
 
     @Test
     @Ignore
-    public void testDeadmanSwitch() throws Exception {
+    public void test () throws IOException, InterruptedException {
         LocalExchangeConfig localConfig = PropsLoader.loadKeys(
                 "bitmex.secret.keys", "bitmex.secret.keys.origin", "bitmex");
-        CertHelper.trustAllCerts();
+
         BitmexStreamingExchange exchange =
-                (BitmexStreamingExchange) ExchangeFactory.INSTANCE.createExchange(BitmexStreamingExchange.class);
+                ExchangeFactory.INSTANCE.createExchange(BitmexStreamingExchange.class);
         ExchangeSpecification defaultExchangeSpecification = exchange.getDefaultExchangeSpecification();
 
         defaultExchangeSpecification.setExchangeSpecificParametersItem("Use_Sandbox", true);
@@ -43,15 +45,9 @@ public class BitmexDeadManSwitchTest {
         defaultExchangeSpecification.setSecretKey(localConfig.getSecretKey());
 
         defaultExchangeSpecification.setShouldLoadRemoteMetaData(true);
-//        defaultExchangeSpecification.setProxyHost("localhost");
-//        defaultExchangeSpecification.setProxyPort(9999);
-
-//        defaultExchangeSpecification.setExchangeSpecificParametersItem(StreamingExchange.SOCKS_PROXY_HOST, "localhost");
-//        defaultExchangeSpecification.setExchangeSpecificParametersItem(StreamingExchange.SOCKS_PROXY_PORT, 8889);
 
         defaultExchangeSpecification.setExchangeSpecificParametersItem(StreamingExchange.USE_SANDBOX, true);
         defaultExchangeSpecification.setExchangeSpecificParametersItem(StreamingExchange.ACCEPT_ALL_CERITICATES, true);
-//        defaultExchangeSpecification.setExchangeSpecificParametersItem(StreamingExchange.ENABLE_LOGGING_HANDLER, true);
 
         exchange.applySpecification(defaultExchangeSpecification);
         exchange.connect().blockingAwait();
@@ -69,14 +65,10 @@ public class BitmexDeadManSwitchTest {
         });
 
         OrderBook orderBook = marketDataService.getOrderBook(CurrencyPair.XBT_USD, PERPETUAL);
-        //    OrderBook orderBook = marketDataService.getOrderBook(new CurrencyPair(Currency.ADA,
-        // Currency.BTC), BitmexPrompt.QUARTERLY);
-        //    OrderBook orderBook = marketDataService.getOrderBook(new CurrencyPair(Currency.BTC,
-        // Currency.USD), BitmexPrompt.BIQUARTERLY);
 
         System.out.println("orderBook = " + orderBook);
 
-        streamingMarketDataService.enableDeadManSwitch(10000,30000);
+        streamingMarketDataService.enableHeartbeat(true);
 
         String nosOrdId = System.currentTimeMillis() + "";
         BigDecimal originalOrderSize = new BigDecimal("300");

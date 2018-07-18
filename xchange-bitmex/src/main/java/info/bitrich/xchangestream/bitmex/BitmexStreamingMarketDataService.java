@@ -116,16 +116,28 @@ public class BitmexStreamingMarketDataService implements StreamingMarketDataServ
         });
     }
 
+    public void enableDeadManSwitch() throws IOException {
+        streamingService.enableDeadManSwitch();
+    }
+
     /**
      * @param rate    in milliseconds to send updated
      * @param timeout milliseconds from now after which orders will be cancelled
      */
-    public void enableDeadManSwitch() throws IOException {
-        enableDeadManSwitch(BitmexStreamingService.DMS_RESUBSCRIBE, BitmexStreamingService.DMS_CANCEL_ALL_IN);
-    }
-
     public void enableDeadManSwitch(long rate, long timeout) throws IOException {
         streamingService.enableDeadMansSwitch(rate, timeout);
+    }
+
+    public void enableHeartbeat(boolean withDms) {
+        streamingService.enableHeartbeat(withDms);
+    }
+
+    public void enableHeartbeat(boolean withDms, long rate, long timeout) {
+        streamingService.enableHeartbeat(withDms, rate, timeout);
+    }
+
+    public void disableHeartbeat() throws IOException {
+        streamingService.disableHeartbeat();
     }
 
     public boolean isDeadManSwitchEnabled() throws IOException {
