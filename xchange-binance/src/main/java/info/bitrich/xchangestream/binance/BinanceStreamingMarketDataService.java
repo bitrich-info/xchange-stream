@@ -9,6 +9,7 @@ import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import info.bitrich.xchangestream.service.netty.StreamingObjectMapperHelper;
 import io.reactivex.Observable;
 import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
 import org.knowm.xchange.binance.BinanceAdapters;
 import org.knowm.xchange.binance.dto.marketdata.BinanceOrderbook;
 import org.knowm.xchange.binance.dto.marketdata.BinanceTicker24h;
@@ -32,6 +33,7 @@ import static info.bitrich.xchangestream.binance.dto.BaseBinanceWebSocketTransac
 
 public class BinanceStreamingMarketDataService implements StreamingMarketDataService {
     private static final Logger LOG = LoggerFactory.getLogger(BinanceStreamingMarketDataService.class);
+    private static final Logger GAP_LOGGER = LoggerFactory.getLogger("GAP_LOGGER");
     private static final OrderBook EMPTY_ORDER_BOOK = new OrderBook(null, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     private final BinanceStreamingService service;
     private final BinanceMarketDataService marketDataService;
@@ -121,8 +123,6 @@ public class BinanceStreamingMarketDataService implements StreamingMarketDataSer
                 .map(transaction -> transaction.getData().getTicker());
     }
 
-    private long lastUpdateId;
-    private BinanceOrderbook initialSnapshot;
     private TreeSet<DepthBinanceWebSocketTransaction> cachedTransactionData = new TreeSet<>(new Comparator<DepthBinanceWebSocketTransaction>() {
         @Override
         public int compare(DepthBinanceWebSocketTransaction o1, DepthBinanceWebSocketTransaction o2) {
@@ -131,47 +131,65 @@ public class BinanceStreamingMarketDataService implements StreamingMarketDataSer
     });
 
     private Observable<OrderBook> orderBookStream(CurrencyPair currencyPair) {
+
+
         return service.subscribeChannel(channelFromCurrency(currencyPair, "depth"))
                 .map((JsonNode s) -> depthTransaction(s.toString()))
                 .filter(transaction ->
                         transaction.getData().getCurrencyPair().equals(currencyPair) &&
                                 transaction.getData().getEventType() == DEPTH_UPDATE)
-                .map(transaction -> {
-                    DepthBinanceWebSocketTransaction depth = transaction.getData();
-                    if (lastUpdateId > 0 && depth.getFirstUpdateId() != lastUpdateId + 1) {
-                        LOG.error("Binance GAP detected {} {}. Recovering is not implemented", lastUpdateId, depth.getFirstUpdateId());
-                    }
-                    lastUpdateId = depth.getOrderBook().lastUpdateId;
-                    OrderBook currentOrderBook = orderbooks.get(currencyPair);
-                    if (currentOrderBook == null) {
-                        cachedTransactionData.add(depth);
-
-                        if (initialSnapshot == null) {
-                            initialSnapshot = marketDataService.getBinanceOrderbook(currencyPair, 100);
-                        }
-                        long lastUpdateId = initialSnapshot.lastUpdateId;
-                        if (lastUpdateId + 1 < cachedTransactionData.first().getFirstUpdateId()) {
+                .map(new Function<BinanceWebsocketTransaction<DepthBinanceWebSocketTransaction>, OrderBook>() {
+                    private long lastUpdateId;
+                    private BinanceOrderbook initialSnapshot;
+                    private boolean recovering;
+                    @Override
+                    public OrderBook apply(BinanceWebsocketTransaction<DepthBinanceWebSocketTransaction> transaction) throws Exception {
+                        DepthBinanceWebSocketTransaction depth = transaction.getData();
+                        GAP_LOGGER.debug("{} firstUpdateID={} lastUpdateId={}", currencyPair, depth.getFirstUpdateId(), depth.getOrderBook().lastUpdateId);
+                        if (lastUpdateId > 0 && depth.getFirstUpdateId() != lastUpdateId + 1) {
+                            recovering = true;
+                            LOG.error("Binance GAP detected {} {}. Recovering...", currencyPair, lastUpdateId, depth.getFirstUpdateId());
+                            lastUpdateId = 0;
                             initialSnapshot = null;
+                            cachedTransactionData.clear();
+                            orderbooks.remove(currencyPair);
+                        }
+                        lastUpdateId = depth.getOrderBook().lastUpdateId;
+
+                        OrderBook currentOrderBook = orderbooks.get(currencyPair);
+                        if (currentOrderBook == null) {
+                            cachedTransactionData.add(depth);
+
+                            if (initialSnapshot == null) {
+                                initialSnapshot = marketDataService.getBinanceOrderbook(currencyPair, 100);
+                            }
+                            long lastUpdateId = initialSnapshot.lastUpdateId;
+                            if (lastUpdateId + 1 < cachedTransactionData.first().getFirstUpdateId()) {
+                                initialSnapshot = null;
+                                return EMPTY_ORDER_BOOK;
+                            }
+                            for (DepthBinanceWebSocketTransaction cachedTransactionData : cachedTransactionData) {
+                                if (cachedTransactionData.getFirstUpdateId() <= lastUpdateId + 1 && lastUpdateId + 1 <= cachedTransactionData.getOrderBook().lastUpdateId) {
+                                    SortedSet<DepthBinanceWebSocketTransaction> depthBinanceWebSocketTransactions = BinanceStreamingMarketDataService.this.cachedTransactionData.tailSet(cachedTransactionData);
+                                    currentOrderBook = convertBook(currencyPair, initialSnapshot);
+                                    for (DepthBinanceWebSocketTransaction depthBinanceWebSocketTransaction : depthBinanceWebSocketTransactions) {
+                                        BinanceStreamingMarketDataService.this.applyBookUpdate(currencyPair, depthBinanceWebSocketTransaction, currentOrderBook);
+                                    }
+                                    initialSnapshot = null;
+                                    BinanceStreamingMarketDataService.this.cachedTransactionData.clear();
+                                    orderbooks.put(currencyPair, currentOrderBook);
+                                    if (recovering) {
+                                        recovering = false;
+                                        LOG.warn("Binance Successfully recovered {}", currencyPair);
+                                    }
+                                    return currentOrderBook;
+                                }
+                            }
                             return EMPTY_ORDER_BOOK;
                         }
-                        for (DepthBinanceWebSocketTransaction cachedTransactionData : cachedTransactionData) {
-                            if (cachedTransactionData.getFirstUpdateId() <= lastUpdateId + 1 && lastUpdateId + 1 <=cachedTransactionData.getOrderBook().lastUpdateId) {
-                                SortedSet<DepthBinanceWebSocketTransaction> depthBinanceWebSocketTransactions = this.cachedTransactionData.tailSet(cachedTransactionData);
-                                currentOrderBook = convertBook(currencyPair, initialSnapshot);
-                                for (DepthBinanceWebSocketTransaction depthBinanceWebSocketTransaction : depthBinanceWebSocketTransactions) {
-                                    applyBookUpdate(currencyPair, depthBinanceWebSocketTransaction, currentOrderBook);
-                                }
-                                initialSnapshot = null;
-                                this.cachedTransactionData.clear();
-                                orderbooks.put(currencyPair, currentOrderBook);
-                                return currentOrderBook;
-                            }
-                        }
-                        return EMPTY_ORDER_BOOK;
+                        BinanceStreamingMarketDataService.this.applyBookUpdate(currencyPair, depth, currentOrderBook);
+                        return currentOrderBook;
                     }
-
-                    applyBookUpdate(currencyPair, depth, currentOrderBook);
-                    return currentOrderBook;
                 });
     }
 
