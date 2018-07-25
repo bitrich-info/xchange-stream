@@ -98,6 +98,7 @@ Exchange | order books | trades | tickers
 **Bitflyer** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:
 **BitMEX** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:
 **Bitstamp** | :heavy_check_mark: | :heavy_check_mark: | :x:
+**Coindirect** | :heavy_check_mark: | :heavy_check_mark: | :construction:
 **Coinmate** | :heavy_check_mark: | :heavy_check_mark: | :x:
 **OKCoin** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:
 **OKEx** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:
