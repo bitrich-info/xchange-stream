@@ -43,11 +43,11 @@ public class BitmexDeadManSwitchTest {
         defaultExchangeSpecification.setSecretKey(localConfig.getSecretKey());
 
         defaultExchangeSpecification.setShouldLoadRemoteMetaData(true);
-//        defaultExchangeSpecification.setProxyHost("localhost");
-//        defaultExchangeSpecification.setProxyPort(9999);
+        defaultExchangeSpecification.setProxyHost("localhost");
+        defaultExchangeSpecification.setProxyPort(9999);
 
-//        defaultExchangeSpecification.setExchangeSpecificParametersItem(StreamingExchange.SOCKS_PROXY_HOST, "localhost");
-//        defaultExchangeSpecification.setExchangeSpecificParametersItem(StreamingExchange.SOCKS_PROXY_PORT, 8889);
+        defaultExchangeSpecification.setExchangeSpecificParametersItem(StreamingExchange.SOCKS_PROXY_HOST, "localhost");
+        defaultExchangeSpecification.setExchangeSpecificParametersItem(StreamingExchange.SOCKS_PROXY_PORT, 8889);
 
         defaultExchangeSpecification.setExchangeSpecificParametersItem(StreamingExchange.USE_SANDBOX, true);
         defaultExchangeSpecification.setExchangeSpecificParametersItem(StreamingExchange.ACCEPT_ALL_CERITICATES, true);
@@ -67,6 +67,9 @@ public class BitmexDeadManSwitchTest {
         streamingMarketDataService.getExecutions("XBTUSD").subscribe(bitmexExecution -> {
             logger.info("!!!!EXECUTION!!!! = {}", bitmexExecution);
         });
+        streamingMarketDataService.getOrderBook( CurrencyPair.XBT_USD, PERPETUAL).subscribe(bitmexExecution -> {
+            logger.info("!!!!OB!!!! = {}", bitmexExecution);
+        });
 
         OrderBook orderBook = marketDataService.getOrderBook(CurrencyPair.XBT_USD, PERPETUAL);
         //    OrderBook orderBook = marketDataService.getOrderBook(new CurrencyPair(Currency.ADA,
@@ -84,7 +87,7 @@ public class BitmexDeadManSwitchTest {
         BigDecimal price = orderBook.getBids().get(0).getLimitPrice().add(new BigDecimal("100"));
         BitmexPrivateOrder xbtusd = tradeService.placeLimitOrder("XBTUSD", originalOrderSize, price, BitmexSide.SELL, nosOrdId, null);
         logger.info("!!!!!PRIVATE_ORDER!!!! {}",xbtusd);
-        Thread.sleep(100000);
+        Thread.sleep(100000000);
         System.out.println();
         System.out.println();
 

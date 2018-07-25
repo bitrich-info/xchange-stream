@@ -36,9 +36,9 @@ public class BitmexDms {
         this.service = bitmexStreamingService;
     }
 
-    public void handleMessage(JsonNode message) {
+    public boolean handleMessage(JsonNode message) {
         if (!message.has("now") || !message.has("cancelTime")) {
-            return;
+            return false;
         }
         //handle dead man's switch confirmation
         try {
@@ -59,6 +59,7 @@ public class BitmexDms {
         } catch (ParseException e) {
             LOG.error("Error parsing deadman's confirmation ");
         }
+        return true;
     }
 
     public void enableDeadMansSwitch() throws JsonProcessingException {

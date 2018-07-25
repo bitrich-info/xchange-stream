@@ -1,6 +1,8 @@
 package info.bitrich.xchangestream.bitmex;
 
 import info.bitrich.xchangestream.core.StreamingExchange;
+import info.bitrich.xchangestream.util.LocalExchangeConfig;
+import info.bitrich.xchangestream.util.PropsLoader;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.knowm.xchange.ExchangeFactory;
@@ -30,14 +32,16 @@ public class BitmexOrderReplaceTest {
     @Ignore
     public void testOrderReplace() throws Exception {
         CertHelper.trustAllCerts();
+        LocalExchangeConfig localConfig = PropsLoader.loadKeys(
+                "bitmex.secret.keys", "bitmex.secret.keys.origin", "bitmex");
         BitmexStreamingExchange exchange =
                 (BitmexStreamingExchange) ExchangeFactory.INSTANCE.createExchange(BitmexStreamingExchange.class);
         ExchangeSpecification defaultExchangeSpecification = exchange.getDefaultExchangeSpecification();
 
         defaultExchangeSpecification.setExchangeSpecificParametersItem("Use_Sandbox", true);
 
-        defaultExchangeSpecification.setApiKey("QW8Ao_gx38e-8KFvDkFn-Ym4");
-        defaultExchangeSpecification.setSecretKey("tn7rpzvOXSKThZD0f-xXehtydt4OTHZVf42gCCyxPixiiVOb");
+        defaultExchangeSpecification.setApiKey(localConfig.getApiKey());
+        defaultExchangeSpecification.setSecretKey(localConfig.getSecretKey());
 
         defaultExchangeSpecification.setShouldLoadRemoteMetaData(true);
         defaultExchangeSpecification.setProxyHost("localhost");
