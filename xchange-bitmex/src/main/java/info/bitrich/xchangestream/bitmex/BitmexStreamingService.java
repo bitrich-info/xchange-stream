@@ -82,7 +82,7 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
         String stringToDigest = "GET/realtime" + expires;
         String signature = bitmexDigester.digestString(stringToDigest);
 
-        customHeaders.add("api-nonce", expires);
+        customHeaders.add("api-expires", expires);
         customHeaders.add("api-key", apiKey);
         customHeaders.add("api-signature", signature);
         return customHeaders;
