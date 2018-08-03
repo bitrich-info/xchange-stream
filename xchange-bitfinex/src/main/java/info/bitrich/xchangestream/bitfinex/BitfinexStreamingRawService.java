@@ -121,7 +121,7 @@ public class BitfinexStreamingRawService extends JsonNettyStreamingService {
     }
 
     private void addPreTrade(JsonNode preTrade) {
-        if (preTrade.size() != 9) {
+        if (preTrade.size() < 12) {
             LOG.error("addPreTrade unexpected record size={}, record={}", preTrade.size(), preTrade.toString());
             return;
         }
@@ -141,7 +141,7 @@ public class BitfinexStreamingRawService extends JsonNettyStreamingService {
     }
 
     private void addTrade(JsonNode trade) {
-        if (trade.size() != 11) {
+        if (trade.size() < 11) {
             LOG.error("addTrade unexpected record size={}, record={}", trade.size(), trade.toString());
             return;
         }
@@ -200,7 +200,7 @@ public class BitfinexStreamingRawService extends JsonNettyStreamingService {
     }
 
     private BitfinexWebSocketAuthBalance createBalanceObject(JsonNode balance) {
-        if (balance.size() != 5) {
+        if (balance.size() < 5) {
             LOG.error("createBalanceObject unexpected record size={}, record={}", balance.size(), balance.toString());
             return null;
         }
@@ -215,7 +215,7 @@ public class BitfinexStreamingRawService extends JsonNettyStreamingService {
     }
 
     private BitfinexWebSocketAuthOrder createOrderObject(JsonNode order) {
-        if (order.size() != 32) {
+        if (order.size() < 32) {
             LOG.error("createOrderObject unexpected record size={}, record={}", order.size(), order.toString());
             return null;
         }
