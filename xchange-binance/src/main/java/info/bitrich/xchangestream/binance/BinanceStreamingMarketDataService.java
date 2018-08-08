@@ -1,56 +1,53 @@
 package info.bitrich.xchangestream.binance;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import info.bitrich.xchangestream.binance.dto.BinanceRawTrade;
-import info.bitrich.xchangestream.binance.dto.BinanceWebsocketTransaction;
-import info.bitrich.xchangestream.binance.dto.DepthBinanceWebSocketTransaction;
-import info.bitrich.xchangestream.binance.dto.TickerBinanceWebsocketTransaction;
-import info.bitrich.xchangestream.binance.dto.TradeBinanceWebsocketTransaction;
+import info.bitrich.xchangestream.binance.dto.*;
 import info.bitrich.xchangestream.core.ProductSubscription;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
+import info.bitrich.xchangestream.service.netty.StreamingObjectMapperHelper;
 import io.reactivex.Observable;
 import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
 import org.knowm.xchange.binance.BinanceAdapters;
 import org.knowm.xchange.binance.dto.marketdata.BinanceOrderbook;
 import org.knowm.xchange.binance.dto.marketdata.BinanceTicker24h;
+import org.knowm.xchange.binance.service.BinanceMarketDataService;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.Order.OrderType;
 import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.dto.marketdata.OrderBookUpdate;
 import org.knowm.xchange.dto.marketdata.Ticker;
 import org.knowm.xchange.dto.marketdata.Trade;
+import org.knowm.xchange.dto.trade.LimitOrder;
 import org.knowm.xchange.exceptions.ExchangeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
-import static info.bitrich.xchangestream.binance.dto.BaseBinanceWebSocketTransaction.BinanceWebSocketTypes.DEPTH_UPDATE;
-import static info.bitrich.xchangestream.binance.dto.BaseBinanceWebSocketTransaction.BinanceWebSocketTypes.TICKER_24_HR;
-import static info.bitrich.xchangestream.binance.dto.BaseBinanceWebSocketTransaction.BinanceWebSocketTypes.TRADE;
+import static info.bitrich.xchangestream.binance.dto.BaseBinanceWebSocketTransaction.BinanceWebSocketTypes.*;
 
 public class BinanceStreamingMarketDataService implements StreamingMarketDataService {
     private static final Logger LOG = LoggerFactory.getLogger(BinanceStreamingMarketDataService.class);
-
+    private static final Logger GAP_LOGGER = LoggerFactory.getLogger("GAP_LOGGER");
+    private static final OrderBook EMPTY_ORDER_BOOK = new OrderBook(null, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     private final BinanceStreamingService service;
+    private final BinanceMarketDataService marketDataService;
     private final Map<CurrencyPair, OrderBook> orderbooks = new HashMap<>();
 
     private final Map<CurrencyPair, Observable<BinanceTicker24h>> tickerSubscriptions = new HashMap<>();
     private final Map<CurrencyPair, Observable<OrderBook>> orderbookSubscriptions = new HashMap<>();
     private final Map<CurrencyPair, Observable<BinanceRawTrade>> tradeSubscriptions = new HashMap<>();
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
 
 
-    public BinanceStreamingMarketDataService(BinanceStreamingService service) {
+    public BinanceStreamingMarketDataService(BinanceStreamingService service, BinanceMarketDataService marketDataService) {
         this.service = service;
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.marketDataService = marketDataService;
     }
 
     @Override
@@ -126,35 +123,105 @@ public class BinanceStreamingMarketDataService implements StreamingMarketDataSer
                 .map(transaction -> transaction.getData().getTicker());
     }
 
+    private TreeSet<DepthBinanceWebSocketTransaction> cachedTransactionData = new TreeSet<>(new Comparator<DepthBinanceWebSocketTransaction>() {
+        @Override
+        public int compare(DepthBinanceWebSocketTransaction o1, DepthBinanceWebSocketTransaction o2) {
+            return Long.compare(o1.getFirstUpdateId(), o2.getFirstUpdateId());
+        }
+    });
+
     private Observable<OrderBook> orderBookStream(CurrencyPair currencyPair) {
+
+
         return service.subscribeChannel(channelFromCurrency(currencyPair, "depth"))
                 .map((JsonNode s) -> depthTransaction(s.toString()))
                 .filter(transaction ->
                         transaction.getData().getCurrencyPair().equals(currencyPair) &&
                                 transaction.getData().getEventType() == DEPTH_UPDATE)
-                .map(transaction -> {
-                    DepthBinanceWebSocketTransaction depth = transaction.getData();
+                .map(new Function<BinanceWebsocketTransaction<DepthBinanceWebSocketTransaction>, OrderBook>() {
+                    private long lastUpdateId;
+                    private BinanceOrderbook initialSnapshot;
+                    private boolean recovering;
+                    @Override
+                    public OrderBook apply(BinanceWebsocketTransaction<DepthBinanceWebSocketTransaction> transaction) throws Exception {
+                        DepthBinanceWebSocketTransaction depth = transaction.getData();
+                        GAP_LOGGER.debug("{} firstUpdateID={} lastUpdateId={}", currencyPair, depth.getFirstUpdateId(), depth.getOrderBook().lastUpdateId);
+                        if (lastUpdateId > 0 && depth.getFirstUpdateId() != lastUpdateId + 1) {
+                            recovering = true;
+                            LOG.error("Binance GAP detected {} {}. Recovering...", currencyPair, lastUpdateId, depth.getFirstUpdateId());
+                            lastUpdateId = 0;
+                            initialSnapshot = null;
+                            cachedTransactionData.clear();
+                            orderbooks.remove(currencyPair);
+                        }
+                        lastUpdateId = depth.getOrderBook().lastUpdateId;
 
-                    OrderBook currentOrderBook = orderbooks.computeIfAbsent(currencyPair, orderBook ->
-                            new OrderBook(null, new ArrayList<>(), new ArrayList<>()));
+                        OrderBook currentOrderBook = orderbooks.get(currencyPair);
+                        if (currentOrderBook == null) {
+                            cachedTransactionData.add(depth);
 
-                    BinanceOrderbook ob = depth.getOrderBook();
-                    ob.bids.forEach((key, value) -> currentOrderBook.update(new OrderBookUpdate(
-                            OrderType.BID,
-                            null,
-                            currencyPair,
-                            key,
-                            depth.getEventTime(),
-                            value)));
-                    ob.asks.forEach((key, value) -> currentOrderBook.update(new OrderBookUpdate(
-                            OrderType.ASK,
-                            null,
-                            currencyPair,
-                            key,
-                            depth.getEventTime(),
-                            value)));
-                    return currentOrderBook;
+                            if (initialSnapshot == null) {
+                                initialSnapshot = marketDataService.getBinanceOrderbook(currencyPair, 100);
+                            }
+                            long lastUpdateId = initialSnapshot.lastUpdateId;
+                            if (lastUpdateId + 1 < cachedTransactionData.first().getFirstUpdateId()) {
+                                initialSnapshot = null;
+                                return EMPTY_ORDER_BOOK;
+                            }
+                            for (DepthBinanceWebSocketTransaction cachedTransactionData : cachedTransactionData) {
+                                if (cachedTransactionData.getFirstUpdateId() <= lastUpdateId + 1 && lastUpdateId + 1 <= cachedTransactionData.getOrderBook().lastUpdateId) {
+                                    SortedSet<DepthBinanceWebSocketTransaction> depthBinanceWebSocketTransactions = BinanceStreamingMarketDataService.this.cachedTransactionData.tailSet(cachedTransactionData);
+                                    currentOrderBook = convertBook(currencyPair, initialSnapshot);
+                                    for (DepthBinanceWebSocketTransaction depthBinanceWebSocketTransaction : depthBinanceWebSocketTransactions) {
+                                        BinanceStreamingMarketDataService.this.applyBookUpdate(currencyPair, depthBinanceWebSocketTransaction, currentOrderBook);
+                                    }
+                                    initialSnapshot = null;
+                                    BinanceStreamingMarketDataService.this.cachedTransactionData.clear();
+                                    orderbooks.put(currencyPair, currentOrderBook);
+                                    if (recovering) {
+                                        recovering = false;
+                                        LOG.warn("Binance Successfully recovered {}", currencyPair);
+                                    }
+                                    return currentOrderBook;
+                                }
+                            }
+                            return EMPTY_ORDER_BOOK;
+                        }
+                        BinanceStreamingMarketDataService.this.applyBookUpdate(currencyPair, depth, currentOrderBook);
+                        return currentOrderBook;
+                    }
                 });
+    }
+
+    /**
+     * todo move this code to xchange project
+     */
+    private static OrderBook convertBook(CurrencyPair pair, BinanceOrderbook binanceOrderBook) {
+        List<LimitOrder> bids =
+                binanceOrderBook.bids
+                        .entrySet()
+                        .stream()
+                        .map(e -> new LimitOrder(OrderType.BID, e.getValue(), pair, null, null, e.getKey()))
+                        .collect(Collectors.toList());
+        List<LimitOrder> asks =
+                binanceOrderBook.asks
+                        .entrySet()
+                        .stream()
+                        .map(e -> new LimitOrder(OrderType.ASK, e.getValue(), pair, null, null, e.getKey()))
+                        .collect(Collectors.toList());
+        return new OrderBook(null, asks, bids);
+    }
+
+
+    private void applyBookUpdate(CurrencyPair currencyPair, DepthBinanceWebSocketTransaction depth, OrderBook currentOrderBook) {
+        BinanceOrderbook ob = depth.getOrderBook();
+        ob.bids.forEach((key, value) -> currentOrderBook.update(new OrderBookUpdate(
+                OrderType.BID, null, currencyPair, key, depth.getEventTime(), value)));
+        ob.asks.forEach((key, value) -> currentOrderBook.update(new OrderBookUpdate(
+                OrderType.ASK, null, currencyPair,
+                key, depth.getEventTime(), value)));
+
+
     }
 
     private Observable<BinanceRawTrade> rawTradeStream(CurrencyPair currencyPair) {

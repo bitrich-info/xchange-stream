@@ -4,7 +4,10 @@ import info.bitrich.xchangestream.core.ProductSubscription;
 import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import io.reactivex.Completable;
+import io.reactivex.Observable;
 import org.knowm.xchange.binance.BinanceExchange;
+import org.knowm.xchange.binance.service.BinanceMarketDataService;
+import org.knowm.xchange.binance.service.BinanceMarketDataServiceRaw;
 import org.knowm.xchange.currency.CurrencyPair;
 
 import java.util.List;
@@ -38,7 +41,8 @@ public class BinanceStreamingExchange extends BinanceExchange implements Streami
 
         ProductSubscription subscriptions = args[0];
         streamingService = createStreamingService(subscriptions);
-        streamingMarketDataService = new BinanceStreamingMarketDataService(streamingService);
+        applyStreamingSpecification(getExchangeSpecification(), streamingService);
+        streamingMarketDataService = new BinanceStreamingMarketDataService(streamingService, (BinanceMarketDataService) marketDataService);
         return streamingService.connect()
                 .doOnComplete(() -> streamingMarketDataService.openSubscriptions(subscriptions));
     }
@@ -54,6 +58,16 @@ public class BinanceStreamingExchange extends BinanceExchange implements Streami
     @Override
     public boolean isAlive() {
         return streamingService!= null && streamingService.isSocketOpen();
+    }
+
+    @Override
+    public Observable<Throwable> reconnectFailure() {
+        return streamingService.subscribeReconnectFailure();
+    }
+
+    @Override
+    public Observable<Object> connectionSuccess() {
+        return streamingService.subscribeConnectionSuccess();
     }
 
     @Override

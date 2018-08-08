@@ -7,6 +7,7 @@ import org.knowm.xchange.dto.Order;
 import org.knowm.xchange.dto.trade.LimitOrder;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 /**
  * Created by Lukas Zaoralek on 13.11.17.
@@ -70,5 +71,31 @@ public class BitmexLimitOrder extends BitmexMarketDataEvent {
         CurrencyPair pair = getCurrencyPair();
         Order.OrderType orderType = getOrderSide();
         return new LimitOrder(orderType, size, pair, id, null, price);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BitmexLimitOrder)) return false;
+        BitmexLimitOrder that = (BitmexLimitOrder) o;
+        return Objects.equals(id, that.id) &&
+                Objects.equals(side, that.side) &&
+                Objects.equals(price, that.price) &&
+                Objects.equals(size, that.size);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, side, price, size);
+    }
+
+    @Override
+    public String toString() {
+        return "BitmexLimitOrder{" +
+                "id='" + id + '\'' +
+                ", side='" + side + '\'' +
+                ", price=" + price +
+                ", size=" + size +
+                "} " + super.toString();
     }
 }

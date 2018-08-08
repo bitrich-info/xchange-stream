@@ -2,8 +2,10 @@ package info.bitrich.xchangestream.binance;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import info.bitrich.xchangestream.binance.netty.WebSocketClientCompressionAllowClientNoContextHandler;
 import info.bitrich.xchangestream.core.ProductSubscription;
 import info.bitrich.xchangestream.service.netty.JsonNettyStreamingService;
+import io.netty.handler.codec.http.websocketx.extensions.WebSocketClientExtensionHandler;
 import io.reactivex.Observable;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
@@ -67,5 +69,8 @@ public class BinanceStreamingService extends JsonNettyStreamingService {
         return productSubscription;
     }
 
-
+    @Override
+    protected WebSocketClientExtensionHandler getWebSocketClientExtensionHandler() {
+        return WebSocketClientCompressionAllowClientNoContextHandler.INSTANCE;
+    }
 }
