@@ -46,4 +46,12 @@ public class BitmexMarketDataEvent {
         }
         return date;
     }
+
+    @Override
+    public String toString() {
+        return "BitmexMarketDataEvent{" +
+                "timestamp='" + timestamp + '\'' +
+                ", symbol='" + symbol + '\'' +
+                '}';
+    }
 }
