@@ -13,7 +13,6 @@ public class BitfinexManualAuthExample {
         exchange.setCredentials("API-KEY", "API-SECRET");
 
         exchange.connectToAuthenticated().blockingAwait();
-        exchange.authenticate();
         exchange.getStreamingAuthenticatedDataService().getAuthenticatedTrades().subscribe(
             t -> LOG.info("AUTH TRADE: {}", t),
             throwable -> LOG.error("ERROR: ", throwable)

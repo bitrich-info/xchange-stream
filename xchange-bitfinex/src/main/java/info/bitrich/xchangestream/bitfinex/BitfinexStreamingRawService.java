@@ -87,6 +87,9 @@ public class BitfinexStreamingRawService extends JsonNettyStreamingService {
         }
 
         JsonNode event = message.get(EVENT);
+        if (event != null && event.textValue().equalsIgnoreCase("info"))
+            auth();
+
         if (event != null && event.textValue().equals(AUTH) && message.get(STATUS).textValue().equals(BitfinexAuthRequestStatus.FAILED.name())) {
             LOG.error("Authentication error: {}", message.get(MESSAGE));
             return;
@@ -157,7 +160,7 @@ public class BitfinexStreamingRawService extends JsonNettyStreamingService {
         BigDecimal fee = trade.get(9).decimalValue();
         String currency = trade.get(10).textValue();
         BitfinexWebSocketAuthTrade tradeObject = new BitfinexWebSocketAuthTrade(
-            id, pair, mtsCreate, orderId, execAmount, execPrice, orderType, orderPrice, maker, fee, currency
+                id, pair, mtsCreate, orderId, execAmount, execPrice, orderType, orderPrice, maker, fee, currency
         );
         LOG.debug("New trade: {}", tradeObject);
         subjectTrade.onNext(tradeObject);
@@ -239,9 +242,9 @@ public class BitfinexStreamingRawService extends JsonNettyStreamingService {
         long placedId = order.get(25).longValue();
 
         return new BitfinexWebSocketAuthOrder(
-            id, groupId, cid, symbol, mtsCreate, mtsUpdate, amount, amountOrig,
-            type, typePrev, orderStatus, price, priceAvg, priceTrailing,
-            priceAuxLimit, placedId, flags
+                id, groupId, cid, symbol, mtsCreate, mtsUpdate, amount, amountOrig,
+                type, typePrev, orderStatus, price, priceAvg, priceTrailing,
+                priceAuxLimit, placedId, flags
         );
     }
 
@@ -260,7 +263,7 @@ public class BitfinexStreamingRawService extends JsonNettyStreamingService {
             return;
         }
         BitfinexWebSocketAuth message = new BitfinexWebSocketAuth(
-            apiKey, payload, String.valueOf(nonce), signature.toLowerCase()
+                apiKey, payload, String.valueOf(nonce), signature.toLowerCase()
         );
         sendMessage(message);
     }
