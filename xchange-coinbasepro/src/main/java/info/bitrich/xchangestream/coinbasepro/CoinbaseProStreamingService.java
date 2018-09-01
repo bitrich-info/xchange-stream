@@ -26,6 +26,7 @@ public class CoinbaseProStreamingService extends JsonNettyStreamingService {
     private static final String SUBSCRIBE = "subscribe";
     private static final String UNSUBSCRIBE = "unsubscribe";
     private static final String SHARE_CHANNEL_NAME = "ALL";
+
     private final Map<String, Observable<JsonNode>> subscriptions = new HashMap<>();
     private ProductSubscription product = null;
     private final Supplier<CoinbaseProWebsocketAuthData> authData;
@@ -56,7 +57,6 @@ public class CoinbaseProStreamingService extends JsonNettyStreamingService {
     @Override
     public Observable<JsonNode> subscribeChannel(String channelName, Object... args) {
         channelName = SHARE_CHANNEL_NAME;
-
         if (!channels.containsKey(channelName) && !subscriptions.containsKey(channelName)) {
             subscriptions.put(channelName, super.subscribeChannel(channelName, args));
         }
