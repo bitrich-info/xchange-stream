@@ -13,10 +13,8 @@ import org.knowm.xchange.dto.marketdata.Trade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by Lukas Zaoralek on 13.11.17.
@@ -26,7 +24,7 @@ public class BitmexStreamingMarketDataService implements StreamingMarketDataServ
 
     private final BitmexStreamingService streamingService;
 
-    private final SortedMap<CurrencyPair, BitmexOrderbook> orderbooks = new TreeMap<>();
+    private final Map<CurrencyPair, BitmexOrderbook> orderbooks = new ConcurrentHashMap<>();
 
     public BitmexStreamingMarketDataService(BitmexStreamingService streamingService) {
         this.streamingService = streamingService;

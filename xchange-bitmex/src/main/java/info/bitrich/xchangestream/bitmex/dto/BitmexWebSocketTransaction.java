@@ -30,7 +30,7 @@ public class BitmexWebSocketTransaction {
         for (int i = 0; i < data.size(); i++) {
             JsonNode jsonLevel = data.get(i);
             try {
-                levels[i] = mapper.readValue(jsonLevel.toString(), BitmexLimitOrder.class);
+                levels[i] = mapper.readValue(jsonLevel.toString(), BitmexLimitOrder.class); //TODO: no need toString
             } catch (IOException e) {
                 e.printStackTrace();
             }
