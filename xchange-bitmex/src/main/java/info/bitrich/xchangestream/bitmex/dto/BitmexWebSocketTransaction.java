@@ -14,7 +14,8 @@ public class BitmexWebSocketTransaction {
     private final String table;
     private final String action;
     private final JsonNode data;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     public BitmexWebSocketTransaction(@JsonProperty("table") String table,
                                       @JsonProperty("action") String action,
@@ -22,7 +23,6 @@ public class BitmexWebSocketTransaction {
         this.table = table;
         this.action = action;
         this.data = data;
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     public BitmexLimitOrder[] toBitmexOrderbookLevels() {
@@ -30,7 +30,7 @@ public class BitmexWebSocketTransaction {
         for (int i = 0; i < data.size(); i++) {
             JsonNode jsonLevel = data.get(i);
             try {
-                levels[i] = mapper.readValue(jsonLevel.toString(), BitmexLimitOrder.class); //TODO: no need toString
+                levels[i] = mapper.treeToValue(jsonLevel, BitmexLimitOrder.class);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -47,7 +47,7 @@ public class BitmexWebSocketTransaction {
     public BitmexTicker toBitmexTicker() {
         BitmexTicker bitmexTicker = null;
         try {
-            bitmexTicker = mapper.readValue(data.get(0).toString(), BitmexTicker.class);
+            bitmexTicker = mapper.treeToValue(data.get(0), BitmexTicker.class);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -59,7 +59,7 @@ public class BitmexWebSocketTransaction {
         for (int i = 0; i < data.size(); i++) {
             JsonNode jsonTrade = data.get(i);
             try {
-                trades[i] = mapper.readValue(jsonTrade.toString(), BitmexTrade.class);
+                trades[i] = mapper.treeToValue(jsonTrade, BitmexTrade.class);
             } catch (IOException e) {
                 e.printStackTrace();
             }

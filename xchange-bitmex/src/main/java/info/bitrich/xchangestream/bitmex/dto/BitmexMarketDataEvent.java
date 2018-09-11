@@ -11,6 +11,8 @@ import java.util.Date;
  * Created by Lukas Zaoralek on 13.11.17.
  */
 public class BitmexMarketDataEvent {
+    private static final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
     protected String timestamp;
     protected String symbol;
 
@@ -34,8 +36,6 @@ public class BitmexMarketDataEvent {
     }
 
     public Date getDate() {
-        SimpleDateFormat formatter;
-        formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
         Date date = null;
         try {
             date = formatter.parse(timestamp);

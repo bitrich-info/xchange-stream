@@ -3,26 +3,22 @@ package info.bitrich.xchangestream.bitmex.dto;
 import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.dto.trade.LimitOrder;
 
-import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static info.bitrich.xchangestream.bitmex.dto.BitmexLimitOrder.ASK_SIDE;
-import static info.bitrich.xchangestream.bitmex.dto.BitmexLimitOrder.BID_SIDE;
 
 /**
  * Created by Lukas Zaoralek on 13.11.17.
  */
 public class BitmexOrderbook {
-    private Map<BigDecimal, BitmexLimitOrder> asks;
-    private Map<BigDecimal, BitmexLimitOrder> bids;
-
-    private Map<String, BigDecimal> askIds;
-    private Map<String, BigDecimal> bidIds;
+    private Map<String, BitmexLimitOrder> asks;
+    private Map<String, BitmexLimitOrder> bids;
 
     public BitmexOrderbook() {
-        this.askIds = new HashMap<>();
-        this.bidIds = new HashMap<>();
         this.asks = new ConcurrentHashMap<>();
         this.bids = new ConcurrentHashMap<>();
     }
@@ -34,10 +30,8 @@ public class BitmexOrderbook {
 
     private void createFromLevels(BitmexLimitOrder[] levels) {
         for (BitmexLimitOrder level : levels) {
-            Map<BigDecimal, BitmexLimitOrder> orderBookSide = level.getSide().equals(ASK_SIDE) ? asks : bids;
-            Map<String, BigDecimal> orderBookSideIds = level.getSide().equals(ASK_SIDE) ? askIds : bidIds;
-            orderBookSide.put(level.getPrice(), level);
-            orderBookSideIds.put(level.getId(), level.getPrice());
+            Map<String, BitmexLimitOrder> orderBookSide = level.getSide().equals(ASK_SIDE) ? asks : bids;
+            orderBookSide.put(level.getId(), level);
         }
     }
 
@@ -48,62 +42,41 @@ public class BitmexOrderbook {
     }
 
     private void updateLevel(BitmexLimitOrder level, String action) {
-        Map<BigDecimal, BitmexLimitOrder> orderBookSide = level.getSide().equals(ASK_SIDE) ? asks : bids;
-        Map<String, BigDecimal> orderBookSideIds = level.getSide().equals(ASK_SIDE) ? askIds : bidIds;
+        Map<String, BitmexLimitOrder> orderBookSide = level.getSide().equals(ASK_SIDE) ? asks : bids;
+        String id = level.getId();
 
         if (action.equals("insert")) {
-            orderBookSide.put(level.getPrice(), level);
-            orderBookSideIds.put(level.getId(), level.getPrice());
-        } else if (action.equals("delete") || action.equals("update")) {
-            boolean shouldDelete = action.equals("delete");
-            String id = level.getId();
-            BigDecimal price = orderBookSideIds.get(id);
-            orderBookSide.remove(price);
-            orderBookSideIds.remove(id);
-            if (!shouldDelete) {
-                BitmexLimitOrder modifiedLevel = new BitmexLimitOrder(level.getSymbol(), level.getId(), level.getSide(), price,
-                        level.getSize()); // Original level doesn't have price! see bitmex doc
-                orderBookSide.put(price, modifiedLevel);
-                orderBookSideIds.put(id, price);
+            orderBookSide.put(id, level);
+        } else if (action.equals("delete")) {
+            orderBookSide.remove(id);
+        } else if (action.equals("update")) {
+            BitmexLimitOrder existing = orderBookSide.get(id);
+            if (existing != null) {
+                BitmexLimitOrder modified = new BitmexLimitOrder(level.getSymbol(), id, level.getSide(),
+                        existing.getPrice(), level.getSize()); // update action's data doesn't have price
+                orderBookSide.put(id, modified);
             }
         }
     }
 
-    private BitmexLimitOrder[] getLevels(String side) {
-        Map<BigDecimal, BitmexLimitOrder> orderBookSide = side.equals(ASK_SIDE) ? asks : bids;
-        return orderBookSide.values().toArray(new BitmexLimitOrder[orderBookSide.size()]);
-    }
-
-    private BitmexLimitOrder[] getAsks() {
-        return getLevels(ASK_SIDE);
-    }
-
-    private BitmexLimitOrder[] getBids() {
-        return getLevels(BID_SIDE);
-    }
-
-    private static List<LimitOrder> toLimitOrders(BitmexLimitOrder[] levels) {
-        if (levels == null || levels.length == 0) return Collections.emptyList();
-
-        List<LimitOrder> limitOrders = new ArrayList<>(levels.length);
-        for (BitmexLimitOrder level : levels) {
-            LimitOrder limitOrder = level.toLimitOrder();
-            limitOrders.add(limitOrder);
+    private List<LimitOrder> toLimitOrders(Map<String, BitmexLimitOrder> orderMap) {
+        if (orderMap == null || orderMap.size() == 0) {
+            return Collections.emptyList();
         }
-
+        int length = orderMap.size();
+        List<LimitOrder> limitOrders = new ArrayList<>(length);
+        BitmexLimitOrder[] levelOrders = orderMap.values().toArray(new BitmexLimitOrder[length]);
+        for (BitmexLimitOrder level: levelOrders) {
+            limitOrders.add(level.toLimitOrder());
+        }
+        Collections.sort(limitOrders);
         return limitOrders;
     }
 
     public OrderBook toOrderbook() {
-        List<LimitOrder> orderbookAsks = toLimitOrders(getAsks());
-        List<LimitOrder> orderbookBids = toLimitOrders(getBids());
+        List<LimitOrder> orderbookAsks = toLimitOrders(asks);
+        List<LimitOrder> orderbookBids = toLimitOrders(bids);
         return new OrderBook(null, orderbookAsks, orderbookBids);
     }
 
-    public OrderBook toOrderbook(int maxDepth) {
-        asks.values();
-        List<LimitOrder> orderbookAsks = toLimitOrders(getAsks());
-        List<LimitOrder> orderbookBids = toLimitOrders(getBids());
-        return new OrderBook(null, orderbookAsks, orderbookBids);
-    }
 }
