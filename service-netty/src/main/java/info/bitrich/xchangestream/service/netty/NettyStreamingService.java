@@ -288,11 +288,6 @@ public abstract class NettyStreamingService<T> {
 
 
     protected void handleChannelMessage(String channel, T message) {
-    	if (channels.get(channel) == null) {
-            LOG.debug("Channel {} doesn't exist.", channel);
-            return;
-        }
-    	
         ObservableEmitter<T> emitter = channels.get(channel).emitter;
         if (emitter == null) {
             LOG.debug("No subscriber for channel {}.", channel);
