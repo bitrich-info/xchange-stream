@@ -23,6 +23,7 @@ import org.knowm.xchange.dto.marketdata.OrderBookUpdate;
 import org.knowm.xchange.dto.marketdata.Ticker;
 import org.knowm.xchange.dto.marketdata.Trade;
 import org.knowm.xchange.exceptions.ExchangeException;
+import org.knowm.xchange.service.marketdata.MarketDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +41,8 @@ public class BinanceStreamingMarketDataService implements StreamingMarketDataSer
     private static final Logger LOG = LoggerFactory.getLogger(BinanceStreamingMarketDataService.class);
 
     private final BinanceStreamingService service;
+    private final MarketDataService marketDataService;
+
     private final Map<CurrencyPair, OrderBook> orderbooks = new HashMap<>();
 
     private final Map<CurrencyPair, Observable<BinanceTicker24h>> tickerSubscriptions = new HashMap<>();
@@ -48,8 +51,9 @@ public class BinanceStreamingMarketDataService implements StreamingMarketDataSer
     private final ObjectMapper mapper = new ObjectMapper();
 
 
-    public BinanceStreamingMarketDataService(BinanceStreamingService service) {
+    public BinanceStreamingMarketDataService(BinanceStreamingService service, MarketDataService marketDataService) {
         this.service = service;
+        this.marketDataService = marketDataService;
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
@@ -135,8 +139,14 @@ public class BinanceStreamingMarketDataService implements StreamingMarketDataSer
                 .map(transaction -> {
                     DepthBinanceWebSocketTransaction depth = transaction.getData();
 
-                    OrderBook currentOrderBook = orderbooks.computeIfAbsent(currencyPair, orderBook ->
-                            new OrderBook(null, new ArrayList<>(), new ArrayList<>()));
+                    OrderBook currentOrderBook = orderbooks.computeIfAbsent(currencyPair, pair -> {
+                      try {
+                        return marketDataService.getOrderBook(pair, 1000);
+                      } catch (IOException e) {
+                        LOG.error("Failed to fetch initial order book for " + pair);
+                        return new OrderBook(null, new ArrayList<>(), new ArrayList<>());
+                      }
+                    });
 
                     BinanceOrderbook ob = depth.getOrderBook();
                     ob.bids.forEach((key, value) -> currentOrderBook.update(new OrderBookUpdate(
