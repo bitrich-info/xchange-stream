@@ -80,7 +80,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             handler.onMessage(textFrame.text());
         } else if (frame instanceof PingWebSocketFrame) {
             LOG.debug("WebSocket Client received ping");
-            ch.writeAndFlush(new PongWebSocketFrame());
+            ch.writeAndFlush(new PongWebSocketFrame(frame.content().retain()));
         } else if (frame instanceof PongWebSocketFrame) {
             LOG.debug("WebSocket Client received pong");
         } else if (frame instanceof CloseWebSocketFrame) {
