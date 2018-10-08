@@ -27,19 +27,24 @@ public class PoloniexOrderbook {
         BigDecimal price = modifiedEvent.getPrice();
         BigDecimal volume = modifiedEvent.getVolume();
 
-        side.remove(price);
-        if (volume.compareTo(zero) != 0) {
-            side.put(price, volume);
+        synchronized(side) {
+            side.remove(price);
+            if (volume.compareTo(zero) != 0) {
+                side.put(price, volume);
+            }
         }
     }
 
     private List<List<BigDecimal>> toPoloniexDepthLevels(SortedMap<BigDecimal, BigDecimal> side) {
         List<List<BigDecimal>> poloniexDepthSide = new ArrayList<>(side.size());
-        for (Map.Entry<BigDecimal, BigDecimal> level : side.entrySet()) {
-            List<BigDecimal> poloniexLevel = new ArrayList<>(2);
-            poloniexLevel.add(level.getKey());
-            poloniexLevel.add(level.getValue());
-            poloniexDepthSide.add(poloniexLevel);
+        
+        synchronized(side) {
+            for (Map.Entry<BigDecimal, BigDecimal> level : side.entrySet()) {
+                List<BigDecimal> poloniexLevel = new ArrayList<>(2);
+                poloniexLevel.add(level.getKey());
+                poloniexLevel.add(level.getValue());
+                poloniexDepthSide.add(poloniexLevel);
+            }
         }
 
         return poloniexDepthSide;
