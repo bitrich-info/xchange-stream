@@ -90,7 +90,7 @@ public class BinanceStreamingMarketDataService implements StreamingMarketDataSer
                         currencyPair,
                         rawTrade.getPrice(),
                         new Date(rawTrade.getTimestamp()),
-                        String.valueOf(rawTrade.getTradeId())
+                        rawTrade.getTradeId()
                 ));
     }
 
