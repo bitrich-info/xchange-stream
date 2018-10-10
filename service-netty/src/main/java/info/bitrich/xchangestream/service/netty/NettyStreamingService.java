@@ -9,7 +9,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
+import io.reactivex.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,9 +40,6 @@ import io.netty.handler.codec.http.websocketx.extensions.WebSocketClientExtensio
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
-import io.reactivex.Completable;
-import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
 
 public abstract class NettyStreamingService<T> {
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
@@ -68,7 +67,10 @@ public abstract class NettyStreamingService<T> {
     private final NioEventLoopGroup eventLoopGroup;
     protected Map<String, Subscription> channels = new ConcurrentHashMap<>();
     private boolean compressedMessages = false;
-    private List<ObservableEmitter<Throwable>> reconnFailEmitters = new LinkedList<>();
+    private final AtomicReference<ObservableEmitter<Throwable>> reconnectFailuresEmitter = new AtomicReference<>();
+    private final Observable<Throwable> reconnectFailures = Observable.create(
+            (ObservableEmitter<Throwable> e) -> reconnectFailuresEmitter.set(e.serialize())
+    ).share();
 
     public NettyStreamingService(String apiUrl) {
         this(apiUrl, 65536);
@@ -228,7 +230,7 @@ public abstract class NettyStreamingService<T> {
     }
 
     public Observable<Throwable> subscribeReconnectFailure() {
-        return Observable.<Throwable>create(observableEmitter -> reconnFailEmitters.add(observableEmitter));
+        return reconnectFailures;
     }
 
     public Observable<T> subscribeChannel(String channelName, Object... args) {
@@ -334,7 +336,9 @@ public abstract class NettyStreamingService<T> {
                 final Completable c = connect()
                         .doOnError(t -> {
                             LOG.warn("Problem with reconnect", t);
-                            reconnFailEmitters.stream().forEach(emitter -> emitter.onNext(t));
+                            if (reconnectFailuresEmitter.get() != null) {
+                                reconnectFailuresEmitter.get().onNext(t);
+                            }
                         })
                         .retryWhen(new RetryWithDelay(retryDuration.toMillis()))
                         .doOnComplete(() -> {

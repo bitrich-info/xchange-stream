@@ -33,6 +33,8 @@ public interface StreamingExchange extends Exchange {
      * When this happens, it usually indicates that the server or the network is down.
      *
      * @return Observable with the exception during reconnection.
+     *
+     * Note that any NettyStreamingService backed exchanges can easily implement this method just by calling subscribeReconnectFailure()
      */
     default Observable<Throwable> reconnectFailure() {
         throw new NotYetImplementedForExchangeException();
