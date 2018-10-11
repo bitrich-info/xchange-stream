@@ -14,7 +14,7 @@ import org.knowm.xchange.gdax.service.GDAXAccountServiceRaw;
  * GDAX Streaming Exchange. Connects to live WebSocket feed.
  */
 public class GDAXStreamingExchange extends GDAXExchange implements StreamingExchange {
-    private static final String API_URI = "wss://ws-feed.gdax.com";
+    //private static final String API_URI = "wss://ws-feed.gdax.com";
 
     private GDAXStreamingService streamingService;
     private GDAXStreamingMarketDataService streamingMarketDataService;
@@ -31,7 +31,7 @@ public class GDAXStreamingExchange extends GDAXExchange implements StreamingExch
         if (args == null || args.length == 0)
             throw new UnsupportedOperationException("The ProductSubscription must be defined!");
         ExchangeSpecification exchangeSpec = getExchangeSpecification();
-        this.streamingService = new GDAXStreamingService(API_URI, () -> authData(exchangeSpec));
+        this.streamingService = new GDAXStreamingService(exchangeSpec.getSslUri(), () -> authData(exchangeSpec));
         this.streamingMarketDataService = new GDAXStreamingMarketDataService(this.streamingService);
         streamingService.subscribeMultipleCurrencyPairs(args);
 
@@ -64,6 +64,9 @@ public class GDAXStreamingExchange extends GDAXExchange implements StreamingExch
     @Override
     public ExchangeSpecification getDefaultExchangeSpecification() {
         ExchangeSpecification spec = super.getDefaultExchangeSpecification();
+        exchangeSpecification.setSslUri( "wss://ws-feed.gdax.com" );
+        exchangeSpecification.setPlainTextUri( "wss://ws-feed.gdax.com" );
+        exchangeSpecification.setHost( "ws-feed.gdax.com" );
         spec.setShouldLoadRemoteMetaData(false);
 
         return spec;
