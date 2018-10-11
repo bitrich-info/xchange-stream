@@ -32,7 +32,7 @@ public class GDAXStreamingExchange extends GDAXExchange implements StreamingExch
     if (args == null || args.length == 0)
       throw new UnsupportedOperationException( "The ProductSubscription must be defined!" );
     ExchangeSpecification exchangeSpec = getExchangeSpecification();
-    this.streamingService = new GDAXStreamingService( exchangeSpec.getSslUri(), () -> authData( exchangeSpec ) );
+    this.streamingService = new GDAXStreamingService( exchangeSpec.getPlainTextUri(), () -> authData( exchangeSpec ) );
     this.streamingMarketDataService = new GDAXStreamingMarketDataService( this.streamingService );
     streamingService.subscribeMultipleCurrencyPairs( args );
 
@@ -64,7 +64,6 @@ public class GDAXStreamingExchange extends GDAXExchange implements StreamingExch
   @Override
   public ExchangeSpecification getDefaultExchangeSpecification() {
     ExchangeSpecification spec = super.getDefaultExchangeSpecification();
-    spec.setSslUri( "wss://ws-feed.gdax.com" );
     spec.setPlainTextUri( "wss://ws-feed.gdax.com" );
     spec.setHost( "ws-feed.gdax.com" );
     spec.setShouldLoadRemoteMetaData( false );
