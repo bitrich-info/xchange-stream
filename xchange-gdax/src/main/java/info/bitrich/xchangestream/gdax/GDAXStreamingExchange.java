@@ -14,7 +14,6 @@ import org.knowm.xchange.gdax.service.GDAXAccountServiceRaw;
  * GDAX Streaming Exchange. Connects to live WebSocket feed.
  */
 public class GDAXStreamingExchange extends GDAXExchange implements StreamingExchange {
-    //private static final String API_URI = "wss://ws-feed.gdax.com";
 
     private GDAXStreamingService streamingService;
     private GDAXStreamingMarketDataService streamingMarketDataService;
