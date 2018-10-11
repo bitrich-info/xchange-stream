@@ -1,95 +1,98 @@
 package info.bitrich.xchangestream.gdax;
 
+import org.knowm.xchange.ExchangeSpecification;
+import org.knowm.xchange.gdax.GDAXExchange;
+import org.knowm.xchange.gdax.dto.account.GDAXWebsocketAuthData;
+import org.knowm.xchange.gdax.service.GDAXAccountServiceRaw;
+
 import info.bitrich.xchangestream.core.ProductSubscription;
 import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import info.bitrich.xchangestream.service.netty.WebSocketClientHandler;
 import io.reactivex.Completable;
-import org.knowm.xchange.ExchangeSpecification;
-import org.knowm.xchange.gdax.GDAXExchange;
-import org.knowm.xchange.gdax.dto.account.GDAXWebsocketAuthData;
-import org.knowm.xchange.gdax.service.GDAXAccountServiceRaw;
 
 /**
  * GDAX Streaming Exchange. Connects to live WebSocket feed.
  */
 public class GDAXStreamingExchange extends GDAXExchange implements StreamingExchange {
 
-    private GDAXStreamingService streamingService;
-    private GDAXStreamingMarketDataService streamingMarketDataService;
+  private GDAXStreamingService streamingService;
+  private GDAXStreamingMarketDataService streamingMarketDataService;
 
-    public GDAXStreamingExchange() { }
+  public GDAXStreamingExchange() {
+  }
 
-    @Override
-    protected void initServices() {
-        super.initServices();
+  @Override
+  protected void initServices() {
+    super.initServices();
+  }
+
+  @Override
+  public Completable connect(ProductSubscription... args) {
+    if (args == null || args.length == 0)
+      throw new UnsupportedOperationException( "The ProductSubscription must be defined!" );
+    ExchangeSpecification exchangeSpec = getExchangeSpecification();
+    this.streamingService = new GDAXStreamingService( exchangeSpec.getSslUri(), () -> authData( exchangeSpec ) );
+    this.streamingMarketDataService = new GDAXStreamingMarketDataService( this.streamingService );
+    streamingService.subscribeMultipleCurrencyPairs( args );
+
+    return streamingService.connect();
+  }
+
+  private GDAXWebsocketAuthData authData(ExchangeSpecification exchangeSpec) {
+    GDAXWebsocketAuthData authData = null;
+    if (exchangeSpec.getApiKey() != null) {
+      try {
+        GDAXAccountServiceRaw rawAccountService = (GDAXAccountServiceRaw) getAccountService();
+        authData = rawAccountService.getWebsocketAuthData();
+      } catch (Exception e) {
+        logger.warn( "Failed attempting to acquire Websocket AuthData needed for private data on" +
+            " websocket.  Will only receive public information via API", e );
+      }
     }
+    return authData;
+  }
 
-    @Override
-    public Completable connect(ProductSubscription... args) {
-        if (args == null || args.length == 0)
-            throw new UnsupportedOperationException("The ProductSubscription must be defined!");
-        ExchangeSpecification exchangeSpec = getExchangeSpecification();
-        this.streamingService = new GDAXStreamingService(exchangeSpec.getSslUri(), () -> authData(exchangeSpec));
-        this.streamingMarketDataService = new GDAXStreamingMarketDataService(this.streamingService);
-        streamingService.subscribeMultipleCurrencyPairs(args);
+  @Override
+  public Completable disconnect() {
+    GDAXStreamingService service = this.streamingService;
+    streamingService = null;
+    streamingMarketDataService = null;
+    return service.disconnect();
+  }
 
-        return streamingService.connect();
-    }
+  @Override
+  public ExchangeSpecification getDefaultExchangeSpecification() {
+    ExchangeSpecification spec = super.getDefaultExchangeSpecification();
+    spec.setSslUri( "wss://ws-feed.gdax.com" );
+    spec.setPlainTextUri( "wss://ws-feed.gdax.com" );
+    spec.setHost( "ws-feed.gdax.com" );
+    spec.setShouldLoadRemoteMetaData( false );
 
-    private GDAXWebsocketAuthData authData(ExchangeSpecification exchangeSpec) {
-        GDAXWebsocketAuthData authData = null;
-        if ( exchangeSpec.getApiKey() != null ) {
-            try {
-                GDAXAccountServiceRaw rawAccountService = (GDAXAccountServiceRaw) getAccountService();
-                authData = rawAccountService.getWebsocketAuthData();
-            }
-            catch (Exception e) {
-                logger.warn("Failed attempting to acquire Websocket AuthData needed for private data on" +
-                            " websocket.  Will only receive public information via API", e);
-            }
-        }
-        return authData;
-    }
+    return spec;
+  }
 
-    @Override
-    public Completable disconnect() {
-        GDAXStreamingService service = this.streamingService;
-        streamingService = null;
-        streamingMarketDataService = null;
-        return service.disconnect();
-    }
+  @Override
+  public StreamingMarketDataService getStreamingMarketDataService() {
+    return streamingMarketDataService;
+  }
 
-    @Override
-    public ExchangeSpecification getDefaultExchangeSpecification() {
-        ExchangeSpecification spec = super.getDefaultExchangeSpecification();
-        exchangeSpecification.setSslUri( "wss://ws-feed.gdax.com" );
-        exchangeSpecification.setPlainTextUri( "wss://ws-feed.gdax.com" );
-        exchangeSpecification.setHost( "ws-feed.gdax.com" );
-        spec.setShouldLoadRemoteMetaData(false);
+  /**
+   * Enables the user to listen on channel inactive events and react appropriately.
+   *
+   * @param channelInactiveHandler a WebSocketMessageHandler instance.
+   */
+  public void setChannelInactiveHandler(WebSocketClientHandler.WebSocketMessageHandler channelInactiveHandler) {
+    streamingService.setChannelInactiveHandler( channelInactiveHandler );
+  }
 
-        return spec;
-    }
+  @Override
+  public boolean isAlive() {
+    return streamingService != null && streamingService.isSocketOpen();
+  }
 
-    @Override
-    public StreamingMarketDataService getStreamingMarketDataService() {
-        return streamingMarketDataService;
-    }
-
-    /**
-     * Enables the user to listen on channel inactive events and react appropriately.
-     *
-     * @param channelInactiveHandler a WebSocketMessageHandler instance.
-     */
-    public void setChannelInactiveHandler(WebSocketClientHandler.WebSocketMessageHandler channelInactiveHandler) {
-        streamingService.setChannelInactiveHandler(channelInactiveHandler);
-    }
-
-    @Override
-    public boolean isAlive() {
-        return streamingService != null && streamingService.isSocketOpen();
-    }
-
-    @Override
-    public void useCompressedMessages(boolean compressedMessages) { streamingService.useCompressedMessages(compressedMessages); }
+  @Override
+  public void useCompressedMessages(boolean compressedMessages) {
+    streamingService.useCompressedMessages( compressedMessages );
+  }
 }
