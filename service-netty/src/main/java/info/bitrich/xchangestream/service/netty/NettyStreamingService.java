@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -67,6 +68,7 @@ public abstract class NettyStreamingService<T> {
     private final NioEventLoopGroup eventLoopGroup;
     protected Map<String, Subscription> channels = new ConcurrentHashMap<>();
     private boolean compressedMessages = false;
+    private Bootstrap b;
 
     public NettyStreamingService(String apiUrl) {
         this(apiUrl, 65536);
@@ -89,6 +91,15 @@ public abstract class NettyStreamingService<T> {
     }
 
     public Completable connect() {
+        Random r = new Random();
+        try {
+            if(b != null){
+                b.group().shutdownGracefully().sync();
+            }
+            Thread.sleep(Long.valueOf(String.valueOf(50 + r.nextInt(100))));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return Completable.create(completable -> {
             try {
                 LOG.info("Connecting to {}://{}:{}{}", uri.getScheme(), uri.getHost(), uri.getPort(), uri.getPath());
@@ -128,7 +139,7 @@ public abstract class NettyStreamingService<T> {
                         uri, WebSocketVersion.V13, null, true, new DefaultHttpHeaders(), maxFramePayloadLength),
                         this::messageHandler);
 
-                Bootstrap b = new Bootstrap();
+                b = new Bootstrap();
                 b.group(eventLoopGroup)
                         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, java.lang.Math.toIntExact(connectionTimeout.toMillis()))
                         .channel(NioSocketChannel.class)
@@ -326,11 +337,15 @@ public abstract class NettyStreamingService<T> {
         public void channelInactive(ChannelHandlerContext ctx) {
             if (isManualDisconnect) {
                 isManualDisconnect = false;
+                ctx.fireChannelInactive();
             } else {
                 super.channelInactive(ctx);
                 LOG.info("Reopening websocket because it was closed by the host");
                 final Completable c = connect()
-                        .doOnError(t -> LOG.warn("Problem with reconnect", t))
+                        .doOnError(t -> {
+                            LOG.warn(" Problem with reconnect", t);
+                            resubscribeChannels();
+                        })
                         .retryWhen(new RetryWithDelay(retryDuration.toMillis()))
                         .doOnComplete(() -> {
                             LOG.info("Resubscribing channels");
