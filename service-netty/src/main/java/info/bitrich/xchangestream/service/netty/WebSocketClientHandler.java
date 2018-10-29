@@ -1,5 +1,8 @@
 package info.bitrich.xchangestream.service.netty;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.http.websocketx.*;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,14 +12,10 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker;
-import io.netty.handler.codec.http.websocketx.WebSocketFrame;
-import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException;
 import io.netty.util.CharsetUtil;
+
+import java.io.ByteArrayInputStream;
+import java.util.zip.GZIPInputStream;
 
 public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> {
     private static final Logger LOG = LoggerFactory.getLogger(WebSocketClientHandler.class);
@@ -86,6 +85,14 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         } else if (frame instanceof CloseWebSocketFrame) {
             LOG.info("WebSocket Client received closing");
             ch.close();
+        } else if (frame instanceof BinaryWebSocketFrame) {
+            BinaryWebSocketFrame binaryFrame = (BinaryWebSocketFrame) frame;
+            ByteBuf bf = binaryFrame.content();
+            byte[] bytes = new byte[bf.capacity()];
+            bf.readBytes(bytes);
+            GZIPInputStream gzipInputStream = new GZIPInputStream(new ByteArrayInputStream(bytes));
+            String message = IOUtils.toString(gzipInputStream);
+            handler.onMessage(message);
         }
     }
 
