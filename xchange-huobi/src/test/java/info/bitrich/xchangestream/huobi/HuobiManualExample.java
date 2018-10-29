@@ -2,7 +2,6 @@ package info.bitrich.xchangestream.huobi;
 
 import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingExchangeFactory;
-import info.bitrich.xchangestream.huobi.dto.HuobiKlineType;
 import info.bitrich.xchangestream.huobi.dto.HuobiStepType;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.trade.LimitOrder;
@@ -21,7 +20,7 @@ public class HuobiManualExample {
         exchange.connect().blockingAwait();
 
         exchange.getStreamingMarketDataService()
-                .getTicker(CurrencyPair.ETH_BTC, HuobiKlineType.MIN1.getName())
+                .getTicker(CurrencyPair.ETH_BTC)
                 .subscribe(ticker -> {
                     LOG.info("Ticker: {}", ticker);
                 }, throwable -> LOG.error("ERROR in getting ticker: ", throwable));
