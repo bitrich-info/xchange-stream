@@ -65,30 +65,29 @@ public class HuobiStreamingMarketDataService implements StreamingMarketDataServi
 
     @Override
     public Observable<Ticker> getTicker(CurrencyPair currencyPair, Object... args) {
-        String channel = String.format("market.%s%s.kline.",
+        String channel = String.format("market.%s%s.detail",
                 currencyPair.base.toString().toLowerCase(),
-                currencyPair.counter.toString().toLowerCase())
-                + args[0];
+                currencyPair.counter.toString().toLowerCase());
         return streamingService.subscribeChannel(channel)
                 .map(message -> {
                     JsonNode data = message.get("tick");
                     Date ts = new Date(message.get("ts").longValue());
-                    BigDecimal amount = data.get("amount").decimalValue(); // 成交量
-                    //BigDecimal count = data.get("count").decimalValue(); // 成交笔数
-                    BigDecimal open = data.get("open").decimalValue(); // 开盘价
-                    BigDecimal close = data.get("close").decimalValue(); // 收盘价,当K线为最晚的一根时，是最新成交价
-                    BigDecimal low = data.get("low").decimalValue(); // 最低价
-                    BigDecimal high = data.get("high").decimalValue(); // 最高价
-                    BigDecimal vol = data.get("vol").decimalValue(); // 成交额,即sum(每一笔成交价 * 该笔的成交量)
+                    BigDecimal amount = data.get("amount").decimalValue();
+                    BigDecimal open = data.get("open").decimalValue();
+                    BigDecimal close = data.get("close").decimalValue();
+                    BigDecimal high = data.get("high").decimalValue();
+                    //Long id = data.get("id").longValue();
+                    //Integer count = data.get("count").intValue();
+                    BigDecimal low = data.get("low").decimalValue();
+                    //BigDecimal vol = data.get("vol").decimalValue();
                     Ticker.Builder tickerBuilder = new Ticker.Builder();
                     tickerBuilder.currencyPair(currencyPair);
+                    tickerBuilder.timestamp(ts);
+                    tickerBuilder.volume(amount);
                     tickerBuilder.open(open);
                     tickerBuilder.last(close);
                     tickerBuilder.high(high);
                     tickerBuilder.low(low);
-                    tickerBuilder.vwap(vol);
-                    tickerBuilder.timestamp(ts);
-                    tickerBuilder.volume(amount);
                     return tickerBuilder.build();
                 });
     }
