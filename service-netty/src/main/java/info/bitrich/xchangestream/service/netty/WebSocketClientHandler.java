@@ -2,7 +2,6 @@ package info.bitrich.xchangestream.service.netty;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.websocketx.*;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +14,7 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.util.CharsetUtil;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.zip.GZIPInputStream;
 
 public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> {
@@ -91,8 +91,13 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             byte[] bytes = new byte[bf.capacity()];
             bf.readBytes(bytes);
             GZIPInputStream gzipInputStream = new GZIPInputStream(new ByteArrayInputStream(bytes));
-            String message = IOUtils.toString(gzipInputStream);
-            handler.onMessage(message);
+            ByteArrayOutputStream result = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = gzipInputStream.read(buffer)) != -1) {
+                result.write(buffer, 0, length);
+            }
+            handler.onMessage(result.toString());
         }
     }
 

@@ -1,15 +1,18 @@
 package info.bitrich.xchangestream.huobi;
 
-import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import info.bitrich.xchangestream.service.netty.JsonNettyStreamingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class HuobiStreamingService extends JsonNettyStreamingService {
 
+    private ObjectMapper mapper = new ObjectMapper();
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     public HuobiStreamingService(String apiUrl) {
@@ -65,10 +68,10 @@ public class HuobiStreamingService extends JsonNettyStreamingService {
      */
     @Override
     public String getSubscribeMessage(String channelName, Object... args) throws IOException {
-        JSONObject send = new JSONObject();
-        send.put("sub", channelName);
-        send.put("id", System.currentTimeMillis());
-        return send.toJSONString();
+        Map<String, Object> message = new HashMap<>();
+        message.put("sub", channelName);
+        message.put("id", System.currentTimeMillis());
+        return mapper.writeValueAsString(message);
     }
 
     @Override
