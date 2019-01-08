@@ -34,7 +34,7 @@ public class BitmexStreamingMarketDataService implements StreamingMarketDataServ
 
     @Override
     public Observable<OrderBook> getOrderBook(CurrencyPair currencyPair, Object... args) {
-        String instrument = currencyPair.base.toString() + currencyPair.counter.toString();
+        String instrument = currencyPair.base.getCurrencyCode() + currencyPair.counter.getCurrencyCode();
         String channelName = String.format("orderBookL2:%s", instrument);
 
         return streamingService.subscribeBitmexChannel(channelName).map(s -> {

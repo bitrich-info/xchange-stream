@@ -1,22 +1,15 @@
 package info.bitrich.xchangestream.bitmex;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import io.netty.handler.codec.http.websocketx.extensions.WebSocketClientExtensionHandler;
-import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import info.bitrich.xchangestream.bitmex.dto.BitmexWebSocketSubscriptionMessage;
 import info.bitrich.xchangestream.bitmex.dto.BitmexWebSocketTransaction;
 import info.bitrich.xchangestream.service.netty.JsonNettyStreamingService;
+import io.netty.handler.codec.http.websocketx.extensions.WebSocketClientExtensionHandler;
 import io.reactivex.Observable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 /**
  * Created by Lukas Zaoralek on 13.11.17.
@@ -36,6 +29,7 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
         if (message.has("error")) {
             String error = message.get("error").asText();
             LOG.error("Error with message: " + error);
+            LOG.debug("Error with message: " + message.toString());
             return;
         }
 
@@ -52,7 +46,7 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
             BitmexWebSocketTransaction transaction = objectMapper.treeToValue(s, BitmexWebSocketTransaction.class);
             return transaction;
         })
-                .share();
+        .share();
     }
 
     @Override
@@ -72,5 +66,12 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
     public String getUnsubscribeMessage(String channelName) throws IOException {
         BitmexWebSocketSubscriptionMessage subscribeMessage = new BitmexWebSocketSubscriptionMessage("unsubscribe", new String[]{});
         return objectMapper.writeValueAsString(subscribeMessage);
+    }
+    public void sendAuthKeyExpires(Object[] signature) throws IOException {
+
+        BitmexWebSocketSubscriptionMessage subscribeMessage =
+            new BitmexWebSocketSubscriptionMessage("authKeyExpires", signature);
+
+        sendMessage( objectMapper.writeValueAsString(subscribeMessage));
     }
 }

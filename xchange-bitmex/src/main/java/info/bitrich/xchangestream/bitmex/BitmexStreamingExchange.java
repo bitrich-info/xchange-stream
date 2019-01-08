@@ -65,4 +65,8 @@ public class BitmexStreamingExchange extends BitmexExchange implements Streaming
 
     @Override
     public void useCompressedMessages(boolean compressedMessages) { streamingService.useCompressedMessages(compressedMessages); }
+
+    public BitmexStreamingService getStreamingService() {
+        return streamingService;
+    }
 }
