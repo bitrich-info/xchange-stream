@@ -51,9 +51,13 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
 
     @Override
     protected String getChannelNameFromMessage(JsonNode message) throws IOException {
-        String instrument = message.get("data").get(0).get("symbol").asText();
-        String table = message.get("table").asText();
-        return String.format("%s:%s", table, instrument);
+        final JsonNode symbolNode = message.get("data").get(0).get("symbol");
+        final JsonNode tableNode = message.get("table");
+
+        if (symbolNode == null)
+            return tableNode.asText();
+        else
+            return String.format("%s:%s", tableNode.asText(), symbolNode.asText());
     }
 
     @Override
