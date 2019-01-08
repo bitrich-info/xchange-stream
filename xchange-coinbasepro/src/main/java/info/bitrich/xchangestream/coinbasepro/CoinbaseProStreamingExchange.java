@@ -1,16 +1,15 @@
 package info.bitrich.xchangestream.coinbasepro;
 
-import org.knowm.xchange.ExchangeSpecification;
-import org.knowm.xchange.coinbasepro.CoinbaseProExchange;
-import org.knowm.xchange.coinbasepro.dto.account.CoinbaseProWebsocketAuthData;
-import org.knowm.xchange.coinbasepro.service.CoinbaseProAccountServiceRaw;
-
 import info.bitrich.xchangestream.core.ProductSubscription;
 import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import info.bitrich.xchangestream.service.netty.WebSocketClientHandler;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
+import org.knowm.xchange.ExchangeSpecification;
+import org.knowm.xchange.coinbasepro.CoinbaseProExchange;
+import org.knowm.xchange.coinbasepro.dto.account.CoinbaseProWebsocketAuthData;
+import org.knowm.xchange.coinbasepro.service.CoinbaseProAccountServiceRaw;
 
 /**
  * CoinbasePro Streaming Exchange. Connects to live WebSocket feed.
@@ -102,4 +101,8 @@ public class CoinbaseProStreamingExchange extends CoinbaseProExchange implements
 
     @Override
     public void useCompressedMessages(boolean compressedMessages) { streamingService.useCompressedMessages(compressedMessages); }
+
+    public CoinbaseProStreamingService getStreamingService() {
+        return streamingService;
+    }
 }
