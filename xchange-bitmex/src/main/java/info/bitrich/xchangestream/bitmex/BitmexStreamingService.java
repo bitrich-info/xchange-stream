@@ -94,7 +94,7 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
         return objectMapper.writeValueAsString(subscribeMessage);
     }
 
-//    @Override
+    @Override  // called by NettyStreamingService.resubscribeChannels
     public String getAuthenticateMessage() throws IOException {
 //        connect().blockingAwait();
 

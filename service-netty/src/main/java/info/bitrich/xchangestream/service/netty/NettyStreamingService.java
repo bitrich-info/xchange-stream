@@ -310,7 +310,20 @@ public abstract class NettyStreamingService<T> {
         }).share();
     }
 
+    public String getAuthenticateMessage() throws IOException {
+        return null;
+    }
+
     public void resubscribeChannels() {
+        try {
+            final String authenticateMessage = getAuthenticateMessage();
+            if (authenticateMessage != null)
+                sendMessage(authenticateMessage);
+
+        } catch (IOException e) {
+            LOG.error("Failed to sendMessage getAuthenticateMessage");
+        }
+
         for (String channelId : channels.keySet()) {
             try {
                 Subscription subscription = channels.get(channelId);
