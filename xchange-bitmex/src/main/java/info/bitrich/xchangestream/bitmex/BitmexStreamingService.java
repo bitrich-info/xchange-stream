@@ -31,8 +31,27 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
         this.exchangeSpecification = exchangeSpecification;
     }
 
+//    @Override
+//    protected void onConnected() {
+//        try {
+//            sendMessage(getAuthenticateMessage());
+//        } catch (IOException e) {
+//            handleError(null, e);
+//        }
+//    }
+
     @Override
     protected void handleMessage(JsonNode message) {
+        if (message.has("info") && message.get("info").asText().startsWith("Welcome ")) {
+            if (exchangeSpecification.getApiKey() != null && exchangeSpecification.getSecretKey() != null) {
+                try {
+                    sendMessage(getAuthenticateMessage());
+                } catch (IOException e) {
+                    handleError(message, e);
+                }
+            }
+            return;
+        }
         if (message.has("info") || message.has("success")) {
             return;
         }
