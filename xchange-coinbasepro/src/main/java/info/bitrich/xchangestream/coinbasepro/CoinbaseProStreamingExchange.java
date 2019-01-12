@@ -16,6 +16,7 @@ import org.knowm.xchange.coinbasepro.service.CoinbaseProAccountServiceRaw;
  */
 public class CoinbaseProStreamingExchange extends CoinbaseProExchange implements StreamingExchange {
     private static final String API_URI = "wss://ws-feed.pro.coinbase.com";
+    private static final String API_SANDBOX_URI = "wss://ws-feed-public.sandbox.pro.coinbase.com";
 
     private CoinbaseProStreamingService streamingService;
     private CoinbaseProStreamingMarketDataService streamingMarketDataService;
@@ -32,7 +33,8 @@ public class CoinbaseProStreamingExchange extends CoinbaseProExchange implements
         if (args == null || args.length == 0)
             throw new UnsupportedOperationException("The ProductSubscription must be defined!");
         ExchangeSpecification exchangeSpec = getExchangeSpecification();
-        this.streamingService = new CoinbaseProStreamingService(API_URI, () -> authData(exchangeSpec));
+        String uri = exchangeSpec.getExchangeSpecificParametersItem(USE_SANDBOX).equals(true) ? API_SANDBOX_URI : API_URI;
+        this.streamingService = new CoinbaseProStreamingService(uri, () -> authData(exchangeSpec));
         this.streamingMarketDataService = new CoinbaseProStreamingMarketDataService(streamingService);
         streamingService.subscribeMultipleCurrencyPairs(args);
 
