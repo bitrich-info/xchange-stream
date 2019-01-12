@@ -6,8 +6,12 @@ import info.bitrich.xchangestream.bitmex.dto.BitmexWebSocketTransaction;
 import info.bitrich.xchangestream.service.netty.JsonNettyStreamingService;
 import io.netty.handler.codec.http.websocketx.extensions.WebSocketClientExtensionHandler;
 import io.reactivex.Observable;
+import org.knowm.xchange.ExchangeSpecification;
+import org.knowm.xchange.bitmex.service.BitmexDigest;
+import org.knowm.xchange.utils.nonce.ExpirationTimeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import si.mazi.rescu.SynchronizedValueFactory;
 
 import java.io.IOException;
 
@@ -16,12 +20,18 @@ import java.io.IOException;
  */
 public class BitmexStreamingService extends JsonNettyStreamingService {
     private static final Logger LOG = LoggerFactory.getLogger(BitmexStreamingService.class);
+    private ExchangeSpecification exchangeSpecification;
 
     public BitmexStreamingService(String apiUrl) {
         super(apiUrl, Integer.MAX_VALUE);
+        this.exchangeSpecification = null;
+    }
+    public BitmexStreamingService(String apiUrl, ExchangeSpecification exchangeSpecification) {
+        super(apiUrl, Integer.MAX_VALUE);
+        this.exchangeSpecification = exchangeSpecification;
     }
 
-	 @Override
+    @Override
     protected void handleMessage(JsonNode message) {
         if (message.has("info") || message.has("success")) {
             return;
@@ -72,11 +82,27 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
         BitmexWebSocketSubscriptionMessage subscribeMessage = new BitmexWebSocketSubscriptionMessage("unsubscribe", new String[]{});
         return objectMapper.writeValueAsString(subscribeMessage);
     }
-    public void sendAuthKeyExpires(Object[] signature) throws IOException {
+
+//    @Override
+    public String getAuthenticateMessage() throws IOException {
+//        connect().blockingAwait();
+
+        BitmexDigest bitmexDigest = BitmexDigest.createInstance(exchangeSpecification.getSecretKey(), exchangeSpecification.getApiKey() );
+        SynchronizedValueFactory<Long> nonceFactory = new ExpirationTimeFactory(30);
+
+        long nonce = nonceFactory.createValue();
+        String payload = "GET/realtime" + nonce;
+        String digestString = bitmexDigest.digestString(payload);
 
         BitmexWebSocketSubscriptionMessage subscribeMessage =
-            new BitmexWebSocketSubscriptionMessage("authKeyExpires", signature);
+                new BitmexWebSocketSubscriptionMessage("authKeyExpires",
+                new Object[]{exchangeSpecification.getApiKey(), nonce, digestString});
 
-        sendMessage( objectMapper.writeValueAsString(subscribeMessage));
+        //sendMessage( );
+
+        return objectMapper.writeValueAsString(subscribeMessage);
+
+        //streamingService.sendAuthKeyExpires(new Object[]{apiKey, nonce, digestString});
+        //Thread.sleep(1500);
     }
 }

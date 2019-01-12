@@ -29,9 +29,9 @@ public class BitmexStreamingExchange extends BitmexExchange implements Streaming
     protected void initServices() {
         super.initServices();
         if (exchangeSpecification.getExchangeSpecificParametersItem(USE_SANDBOX).equals(true))
-            this.streamingService = new BitmexStreamingService(API_SANDBOX_URI);
+            this.streamingService = new BitmexStreamingService(API_SANDBOX_URI, exchangeSpecification);
         else
-            this.streamingService = new BitmexStreamingService(API_URI);
+            this.streamingService = new BitmexStreamingService(API_URI, exchangeSpecification);
 
         streamingMarketDataService = new BitmexStreamingMarketDataService(streamingService);
     }
