@@ -99,6 +99,9 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
 //        connect().blockingAwait();
 
         BitmexDigest bitmexDigest = BitmexDigest.createInstance(exchangeSpecification.getSecretKey(), exchangeSpecification.getApiKey() );
+        if (bitmexDigest == null)
+            return null;
+
         SynchronizedValueFactory<Long> nonceFactory = new ExpirationTimeFactory(30);
 
         long nonce = nonceFactory.createValue();
