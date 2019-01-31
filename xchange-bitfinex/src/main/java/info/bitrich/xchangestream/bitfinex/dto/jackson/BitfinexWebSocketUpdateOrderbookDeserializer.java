@@ -9,6 +9,9 @@ import info.bitrich.xchangestream.bitfinex.dto.BitfinexWebSocketUpdateOrderbook;
 import java.io.IOException;
 
 public class BitfinexWebSocketUpdateOrderbookDeserializer extends StdDeserializer<BitfinexWebSocketUpdateOrderbook> {
+
+    private static final long serialVersionUID = -5932404683677998182L;
+
     protected BitfinexWebSocketUpdateOrderbookDeserializer(Class<?> vc) {
         super(vc);
     }

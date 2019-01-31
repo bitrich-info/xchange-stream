@@ -1,5 +1,6 @@
 package info.bitrich.xchangestream.service.netty;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
@@ -40,6 +41,14 @@ public abstract class JsonNettyStreamingService extends NettyStreamingService<Js
             }
         } else {
             handleMessage(jsonNode);
+        }
+    }
+
+    protected void sendObjectMessage(Object message) {
+        try {
+            sendMessage(objectMapper.writeValueAsString(message));
+        } catch (JsonProcessingException e) {
+            LOG.error("Error creating json message: {}", e.getMessage());
         }
     }
 }

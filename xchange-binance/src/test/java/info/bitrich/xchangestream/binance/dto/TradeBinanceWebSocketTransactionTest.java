@@ -8,8 +8,6 @@ import org.junit.Test;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.util.Iterator;
-import java.util.Map.Entry;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;

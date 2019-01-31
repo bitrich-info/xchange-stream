@@ -6,7 +6,8 @@ import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import info.bitrich.xchangestream.service.pusher.PusherStreamingService;
 import io.reactivex.Completable;
 import org.knowm.xchange.bitstamp.BitstampExchange;
-import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
+
+import static info.bitrich.xchangestream.service.ConnectableService.BEFORE_CONNECTION_HANDLER;
 
 public class BitstampStreamingExchange extends BitstampExchange implements StreamingExchange {
     private static final String API_KEY = "de504dc5763aeef9ff52";
@@ -21,6 +22,7 @@ public class BitstampStreamingExchange extends BitstampExchange implements Strea
     @Override
     protected void initServices() {
         super.initServices();
+        streamingService.setBeforeConnectionHandler((Runnable) getExchangeSpecification().getExchangeSpecificParametersItem(BEFORE_CONNECTION_HANDLER));
         streamingMarketDataService = new BitstampStreamingMarketDataService(streamingService);
     }
 

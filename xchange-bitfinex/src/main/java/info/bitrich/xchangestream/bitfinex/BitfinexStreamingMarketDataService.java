@@ -1,6 +1,5 @@
 package info.bitrich.xchangestream.bitfinex;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import info.bitrich.xchangestream.bitfinex.dto.*;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
@@ -11,8 +10,6 @@ import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.dto.marketdata.Ticker;
 import org.knowm.xchange.dto.marketdata.Trade;
 import org.knowm.xchange.dto.marketdata.Trades;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,11 +20,10 @@ import static org.knowm.xchange.bitfinex.v1.BitfinexAdapters.*;
  * Created by Lukas Zaoralek on 7.11.17.
  */
 public class BitfinexStreamingMarketDataService implements StreamingMarketDataService {
-    private static final Logger LOG = LoggerFactory.getLogger(BitfinexStreamingMarketDataService.class);
 
     private final BitfinexStreamingService service;
 
-    private Map<CurrencyPair, BitfinexOrderbook> orderbooks = new HashMap<>();
+    private final Map<CurrencyPair, BitfinexOrderbook> orderbooks = new HashMap<>();
 
     public BitfinexStreamingMarketDataService(BitfinexStreamingService service) {
         this.service = service;
@@ -94,5 +90,21 @@ public class BitfinexStreamingMarketDataService implements StreamingMarketDataSe
                     Trades adaptedTrades = adaptTrades(s.toBitfinexTrades(), currencyPair);
                     return adaptedTrades.getTrades();
                 });
+    }
+
+    public Observable<BitfinexWebSocketAuthOrder> getRawAuthenticatedOrders() {
+        return service.getAuthenticatedOrders();
+    }
+
+    public Observable<BitfinexWebSocketAuthPreTrade> getRawAuthenticatedPreTrades() {
+        return service.getAuthenticatedPreTrades();
+    }
+
+    public Observable<BitfinexWebSocketAuthTrade> getRawAuthenticatedTrades() {
+        return service.getAuthenticatedTrades();
+    }
+
+    public Observable<BitfinexWebSocketAuthBalance> getRawAuthenticatedBalances() {
+        return service.getAuthenticatedBalances();
     }
 }
