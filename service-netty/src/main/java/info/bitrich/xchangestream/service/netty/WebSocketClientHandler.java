@@ -86,6 +86,8 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         } else if (frame instanceof CloseWebSocketFrame) {
             LOG.info("WebSocket Client received closing");
             ch.close();
+        } else {
+            LOG.warn("Unknown WebSocket frame type received: {}", frame.getClass().getName());
         }
     }
 
