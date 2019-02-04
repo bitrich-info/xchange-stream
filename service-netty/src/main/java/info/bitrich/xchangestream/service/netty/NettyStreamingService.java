@@ -232,10 +232,10 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
                 if(f.isSuccess()) {
                     isManualDisconnect = false;
                 }
-                shutdownEventLoopGroup(completable);
+                shutdownEventLoopGroup(() -> completable.onError(t));
             });
         } else {
-            shutdownEventLoopGroup(completable);
+            shutdownEventLoopGroup(() -> completable.onError(t));
         }
     }
 
@@ -251,12 +251,12 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
                 CloseWebSocketFrame closeFrame = new CloseWebSocketFrame();
                 webSocketChannel.writeAndFlush(closeFrame).addListener(future -> {
                     channels.clear();
-                    shutdownEventLoopGroup(completable);
+                    shutdownEventLoopGroup(() -> completable.onComplete());
                 });
             } else {
                 LOG.warn("Disconnect called but already disconnected");
                 if (eventLoopGroup != null) {
-                    shutdownEventLoopGroup(completable);
+                    shutdownEventLoopGroup(() -> completable.onComplete());
                 } else {
                     completable.onComplete();
                 }
@@ -264,10 +264,10 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
         });
     }
 
-    private void shutdownEventLoopGroup(CompletableEmitter completable) {
+    private void shutdownEventLoopGroup(Runnable onComplete) {
         eventLoopGroup.shutdownGracefully(2, 30, TimeUnit.SECONDS).addListener(f -> {
             LOG.info("Disconnected");
-            completable.onComplete();
+            onComplete.run();
         });
     }
 
