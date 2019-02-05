@@ -232,9 +232,12 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
                 if(f.isSuccess()) {
                     isManualDisconnect = false;
                 }
-                shutdownEventLoopGroup(() -> completable.onError(t));
+                shutdownEventLoopGroup(() -> {
+                    LOG.info("Disconnected");
+                    completable.onError(t);
+                });
             });
-        } else {
+        } else if (eventLoopGroup != null) {
             shutdownEventLoopGroup(() -> completable.onError(t));
         }
     }
@@ -251,7 +254,10 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
                 CloseWebSocketFrame closeFrame = new CloseWebSocketFrame();
                 webSocketChannel.writeAndFlush(closeFrame).addListener(future -> {
                     channels.clear();
-                    shutdownEventLoopGroup(() -> completable.onComplete());
+                    shutdownEventLoopGroup(() -> {
+                        LOG.info("Disconnected");
+                        completable.onComplete();
+                    });
                 });
             } else {
                 LOG.warn("Disconnect called but already disconnected");
@@ -266,7 +272,6 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
 
     private void shutdownEventLoopGroup(Runnable onComplete) {
         eventLoopGroup.shutdownGracefully(2, 30, TimeUnit.SECONDS).addListener(f -> {
-            LOG.info("Disconnected");
             onComplete.run();
         });
     }
@@ -425,7 +430,7 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
                 super.channelInactive(ctx);
                 if (connectedSuccessfully) {
                     LOG.info("Reopening websocket because it was closed by the host");
-                    eventLoopGroup.shutdownGracefully(2, 30, TimeUnit.SECONDS).addListener(f -> connect().subscribe());
+                    shutdownEventLoopGroup(() -> connect().subscribe());
                 }
             }
         }
