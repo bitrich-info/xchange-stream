@@ -28,6 +28,8 @@
         <module>xchange-wex</module>
         <module>xchange-binance</module>
         <module>xchange-hitbtc</module>
+        <module>xchange-lykke</module>
+        <module>xchange-therock</module>
     </modules>
 
     <name>xchange-stream</name>
