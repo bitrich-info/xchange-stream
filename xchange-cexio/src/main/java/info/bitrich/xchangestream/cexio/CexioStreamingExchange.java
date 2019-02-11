@@ -47,4 +47,8 @@ public class CexioStreamingExchange extends CexIOExchange implements StreamingEx
         return streamingOrderDataService;
     }
 
+    @Override
+    public void useCompressedMessages(boolean compressedMessages) {
+
+    }
 }

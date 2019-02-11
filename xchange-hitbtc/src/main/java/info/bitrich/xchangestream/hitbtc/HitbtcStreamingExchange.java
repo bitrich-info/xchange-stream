@@ -11,7 +11,7 @@ import org.knowm.xchange.hitbtc.v2.HitbtcExchange;
 /**
  * Created by Pavel Chertalev on 15.03.2018.
  */
-public class HitbtcStreamingExchange extends HitbtcExchange implements StreamingExchange {
+public abstract class HitbtcStreamingExchange extends HitbtcExchange implements StreamingExchange {
     private static final String API_URI = "wss://api.hitbtc.com/api/2/ws";
 
     private final HitbtcStreamingService streamingService;
