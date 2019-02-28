@@ -6,10 +6,10 @@ import java.math.BigDecimal;
 
 public class LykkeBalanceDto {
 
-    String id;
-    String asset;
-    BigDecimal balance;
-    BigDecimal reserved;
+    private String id;
+    private String asset;
+    private BigDecimal balance;
+    private BigDecimal reserved;
 
     public LykkeBalanceDto(
             @JsonProperty("id") String id,

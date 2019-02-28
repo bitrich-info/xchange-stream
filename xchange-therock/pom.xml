@@ -14,19 +14,19 @@
         <dependency>
             <groupId>org.knowm.xchange</groupId>
             <artifactId>xchange-therock</artifactId>
-            <version>4.3.10-SNAPSHOT</version>
+            <version>4.3.16-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>info.bitrich.xchange-stream</groupId>
             <artifactId>xchange-stream-core</artifactId>
-            <version>4.3.3-SNAPSHOT</version>
+            <version>4.3.16-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>info.bitrich.xchange-stream</groupId>
             <artifactId>service-pusher</artifactId>
-            <version>4.3.3-SNAPSHOT</version>
+            <version>4.3.16-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -38,7 +38,7 @@
         <dependency>
             <groupId>info.bitrich.xchange-stream</groupId>
             <artifactId>xchange-stream-core</artifactId>
-            <version>4.3.14-SNAPSHOT</version>
+            <version>4.3.16-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
