@@ -33,8 +33,8 @@ public class LykkeStreamingMarketDataService implements StreamingMarketDataServi
     public LykkeStreamingMarketDataService(WampStreamingService wampStreamingService) {
         this.wampStreamingService = wampStreamingService;
     }
-    List<LimitOrder> asks = new ArrayList<>();
-    List<LimitOrder> bids = new ArrayList<>();
+    private List<LimitOrder> asks = new ArrayList<>();
+    private List<LimitOrder> bids = new ArrayList<>();
     boolean newUpdate = false;
 
     @Override
