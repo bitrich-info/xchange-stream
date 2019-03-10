@@ -143,7 +143,7 @@ public class BitfinexStreamingService extends JsonNettyStreamingService {
                 }
                 case ERROR:
                     if (message.get("code").asInt() == SUBSCRIPTION_FAILED) {
-                    LOG.error("Error with message: " + message.get("symbol") + " " + message.get("msg"));
+                        LOG.error("Error with message: " + message.get("symbol") + " " + message.get("msg"));
                         return;
                     }
                     super.handleError(message, new ExchangeException("Error code: " + message.get(ERROR_CODE).asText()));
