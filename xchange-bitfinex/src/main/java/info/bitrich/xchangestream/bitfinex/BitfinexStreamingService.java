@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import info.bitrich.xchangestream.bitfinex.dto.*;
 import info.bitrich.xchangestream.service.netty.JsonNettyStreamingService;
 import info.bitrich.xchangestream.service.netty.StreamingObjectMapperHelper;
-import io.netty.handler.codec.http.websocketx.extensions.WebSocketClientExtensionHandler;
+
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
 import org.apache.commons.lang3.StringUtils;
@@ -73,10 +73,10 @@ public class BitfinexStreamingService extends JsonNettyStreamingService {
         this.nonceFactory = nonceFactory;
     }
 
-    @Override
-    protected WebSocketClientExtensionHandler getWebSocketClientExtensionHandler() {
-        return null;
-    }
+//    @Override
+//    protected WebSocketClientExtensionHandler getWebSocketClientExtensionHandler() {
+//        return null;
+//    }
 
     @Override
     public void messageHandler(String message) {
