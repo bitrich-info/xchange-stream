@@ -96,8 +96,6 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
 
     @Override  // called by NettyStreamingService.resubscribeChannels
     public String getAuthenticateMessage() throws IOException {
-//        connect().blockingAwait();
-
         BitmexDigest bitmexDigest = BitmexDigest.createInstance(exchangeSpecification.getSecretKey(), exchangeSpecification.getApiKey() );
         if (bitmexDigest == null)
             return null;
@@ -112,11 +110,6 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
                 new BitmexWebSocketSubscriptionMessage("authKeyExpires",
                 new Object[]{exchangeSpecification.getApiKey(), nonce, digestString});
 
-        //sendMessage( );
-
         return objectMapper.writeValueAsString(subscribeMessage);
-
-        //streamingService.sendAuthKeyExpires(new Object[]{apiKey, nonce, digestString});
-        //Thread.sleep(1500);
     }
 }
