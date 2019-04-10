@@ -2,6 +2,7 @@ package info.bitrich.xchangestream.coinmate.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.knowm.xchange.coinmate.dto.marketdata.CoinmateTransactionsEntry;
+import org.knowm.xchange.currency.CurrencyPair;
 
 import java.math.BigDecimal;
 

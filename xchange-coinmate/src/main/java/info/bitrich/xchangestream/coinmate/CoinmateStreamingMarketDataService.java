@@ -15,13 +15,20 @@ import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.dto.marketdata.Ticker;
 import org.knowm.xchange.dto.marketdata.Trade;
+import org.knowm.xchange.dto.trade.UserTrade;
 import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
+import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 
 import java.util.List;
 
 public class CoinmateStreamingMarketDataService implements StreamingMarketDataService {
     private final PusherStreamingService service;
+    private String userId;
 
+    CoinmateStreamingMarketDataService(PusherStreamingService service,String userId) {
+        this.service = service;
+        this.userId = userId;
+    }
     CoinmateStreamingMarketDataService(PusherStreamingService service) {
         this.service = service;
     }
@@ -51,15 +58,20 @@ public class CoinmateStreamingMarketDataService implements StreamingMarketDataSe
         String channelName = "trades-" + getChannelPostfix(currencyPair);
 
         return service.subscribeChannel(channelName, "new_trades")
-                .map(s -> {
+                .map(message -> {
 
                     ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
-                    List<CoinmateWebSocketTrade> list = mapper.readValue(s, new TypeReference<List<CoinmateWebSocketTrade>>() {
+                    List<CoinmateWebSocketTrade> list = mapper.readValue(message, new TypeReference<List<CoinmateWebSocketTrade>>() {
                     });
                     return list;
                 })
                 .flatMapIterable(coinmateWebSocketTrades -> coinmateWebSocketTrades)
                 .map(coinmateWebSocketTrade -> CoinmateAdapters.adaptTrade(coinmateWebSocketTrade.toTransactionEntry(CoinmateUtils.getPair(currencyPair))));
+    }
+
+    @Override
+    public Observable<UserTrade> getUserTrades(CurrencyPair currencyPair, Object... args) {
+        throw new NotYetImplementedForExchangeException();
     }
 
     private String getChannelPostfix(CurrencyPair currencyPair) {
