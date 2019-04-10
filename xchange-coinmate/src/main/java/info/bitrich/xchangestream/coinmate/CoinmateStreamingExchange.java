@@ -20,7 +20,7 @@ public class CoinmateStreamingExchange extends CoinmateExchange implements Strea
     @Override
     protected void initServices() {
         super.initServices();
-        streamingMarketDataService = new CoinmateStreamingMarketDataService(streamingService);
+        streamingMarketDataService = new CoinmateStreamingMarketDataService(streamingService,exchangeSpecification.getUserName());
     }
 
     @Override

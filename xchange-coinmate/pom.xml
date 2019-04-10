@@ -13,23 +13,17 @@
         <dependency>
             <groupId>info.bitrich.xchange-stream</groupId>
             <artifactId>xchange-stream-core</artifactId>
-            <version>${project.parent.version}</version>
+            <version>4.3.16-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>info.bitrich.xchange-stream</groupId>
             <artifactId>service-pusher</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.knowm.xchange</groupId>
-            <artifactId>xchange-coinmate</artifactId>
-            <version>${xchange.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.knowm.xchange</groupId>
-            <artifactId>xchange-coinmate</artifactId>
             <version>4.3.16-SNAPSHOT</version>
-            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.knowm.xchange</groupId>
+            <artifactId>xchange-coinmate</artifactId>
+            <version>4.3.17-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>
