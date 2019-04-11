@@ -69,7 +69,7 @@ public class CoinmateStreamingMarketDataService implements StreamingMarketDataSe
                 .map(coinmateWebSocketTrade -> CoinmateAdapters.adaptTrade(coinmateWebSocketTrade.toTransactionEntry(CoinmateUtils.getPair(currencyPair))));
     }
 
-    @Override
+
     public Observable<UserTrade> getUserTrades(CurrencyPair currencyPair, Object... args) {
         throw new NotYetImplementedForExchangeException();
     }
