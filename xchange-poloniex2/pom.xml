@@ -25,11 +25,5 @@
             <artifactId>service-netty</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.knowm.xchange</groupId>
-            <artifactId>xchange-poloniex</artifactId>
-            <version>4.3.16-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 </project>

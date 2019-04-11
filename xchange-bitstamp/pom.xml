@@ -25,12 +25,6 @@
             <artifactId>xchange-bitstamp</artifactId>
             <version>${xchange.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.knowm.xchange</groupId>
-            <artifactId>xchange-bitstamp</artifactId>
-            <version>4.3.16-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 
 </project>
