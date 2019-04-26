@@ -18,12 +18,7 @@ public class KrakenStreamingMarketDataService implements StreamingMarketDataServ
 
     @Override
     public Observable<OrderBook> getOrderBook(CurrencyPair currencyPair, Object... args) {
-        return service.subscribeChannel("ping",new Object[]{"{\n" +
-                "  \"event\": \"ping\",\n"+
-                "}"}).map(message-> {
-            System.out.println(message);
-            return null;
-        });
+        return null;
     }
 
     @Override
