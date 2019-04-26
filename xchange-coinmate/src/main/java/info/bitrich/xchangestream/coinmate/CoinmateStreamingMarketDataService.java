@@ -3,6 +3,7 @@ package info.bitrich.xchangestream.coinmate;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import info.bitrich.xchangestream.coinmate.dto.CoinmateWebSocketTrade;
+import info.bitrich.xchangestream.coinmate.dto.CoinmateWebSocketUserTrade;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import info.bitrich.xchangestream.service.netty.StreamingObjectMapperHelper;
 import info.bitrich.xchangestream.service.pusher.PusherStreamingService;
@@ -19,6 +20,8 @@ import org.knowm.xchange.dto.trade.UserTrade;
 import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
 import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 public class CoinmateStreamingMarketDataService implements StreamingMarketDataService {
@@ -70,9 +73,25 @@ public class CoinmateStreamingMarketDataService implements StreamingMarketDataSe
     }
 
 
-    public Observable<UserTrade> getUserTrades(CurrencyPair currencyPair, Object... args) {
-        throw new NotYetImplementedForExchangeException();
-    }
+//    public Observable<UserTrade> getUserTrades(CurrencyPair currencyPair, Object... args) {
+//        String channelName = "private-user-trades-"+userId+"-"+getChannelPostfix(currencyPair);
+//
+//        return service.subscribeChannel(channelName,"list_of_user_trades")
+//                .map(message ->{
+//                    ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
+//                    List<CoinmateWebSocketUserTrade> userTrades = mapper.readValue(message,new TypeReference<List<CoinmateWebSocketUserTrade>>(){});
+//                    return userTrades;
+//                }).flatMapIterable(coinmateWebSocketUserTrades -> coinmateWebSocketUserTrades)
+//                .map(coinmateWebSocketUserTrade -> new UserTrade(
+//                        coinmateWebSocketUserTrade.getUserOrderType(),
+//                        original,
+//                        currencyPair,
+//                        BigDecimal.valueOf(coinmateWebSocketUserTrade.getPrice()),
+//                        new Date(coinmateWebSocketUserTrade.getTimestamp()),
+//                        coinmateWebSocketUserTrade.getTransactionId(),
+//                        coinmateWebSocketUserTrade.getTransactionId(),
+//                        ));
+//    }
 
     private String getChannelPostfix(CurrencyPair currencyPair) {
         return currencyPair.base.toString().toUpperCase() + "_" + currencyPair.counter.toString().toUpperCase();
