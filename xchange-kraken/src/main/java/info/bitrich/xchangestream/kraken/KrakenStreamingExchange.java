@@ -5,7 +5,9 @@ import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
+import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.kraken.KrakenExchange;
+import si.mazi.rescu.SynchronizedValueFactory;
 
 public class KrakenStreamingExchange extends KrakenExchange implements StreamingExchange {
     private static final String API_URI = "wss://ws.kraken.com";
@@ -39,13 +41,15 @@ public class KrakenStreamingExchange extends KrakenExchange implements Streaming
     }
 
     @Override
-    public Observable<Throwable> reconnectFailure() {
-        return streamingService.subscribeReconnectFailure();
+    public SynchronizedValueFactory<Long> getNonceFactory() {
+        return null;
     }
 
     @Override
-    public Observable<Object> connectionSuccess() {
-        return streamingService.subscribeConnectionSuccess();
+    public ExchangeSpecification getDefaultExchangeSpecification() {
+        ExchangeSpecification spec = super.getDefaultExchangeSpecification();
+        spec.setShouldLoadRemoteMetaData(false);
+        return spec;
     }
 
     @Override
@@ -55,7 +59,6 @@ public class KrakenStreamingExchange extends KrakenExchange implements Streaming
 
     @Override
     public void useCompressedMessages(boolean compressedMessages) {
-
+        streamingService.useCompressedMessages(compressedMessages);
     }
-
 }
