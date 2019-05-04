@@ -6,6 +6,7 @@ import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.dto.trade.LimitOrder;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.*;
 
 public class KrakenStreamingOrderBook {
@@ -33,7 +34,7 @@ public class KrakenStreamingOrderBook {
         return new LimitOrder(
                 orderType,order.getVolume(),
                 currencyPair,null,
-                null
+                Date.from(Instant.ofEpochSecond( Long.valueOf(order.getTimestamp().substring(0,order.getTimestamp().indexOf(".")))))
                 ,order.getPrice());
     }
 
@@ -53,9 +54,20 @@ public class KrakenStreamingOrderBook {
                 }
             }
         }
+        verifyOrderBook();
 
     }
 
+    public void verifyOrderBook(){
+        if(asks.firstKey().compareTo(bids.firstKey()) <= 0
+                || bids.firstKey().compareTo(asks.firstKey()) >=0){
+            if(asks.get(asks.firstKey()).getTimestamp().before(bids.get(bids.firstKey()).getTimestamp())){
+                asks.remove(asks.firstKey());
+            }else{
+                bids.remove(bids.firstKey());
+            }
+        }
+    }
     public OrderBook toOrderbook() {
         List<LimitOrder> orderbookAsks = new ArrayList<>(asks.values());
         List<LimitOrder> orderbookBids = new ArrayList<>(bids.values());
