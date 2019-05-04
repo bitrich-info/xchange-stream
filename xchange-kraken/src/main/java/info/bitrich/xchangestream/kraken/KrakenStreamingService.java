@@ -80,16 +80,15 @@ public class KrakenStreamingService extends JsonNettyStreamingService {
                             .concat(":")
                             .concat(message.get("pair").textValue())
             );
-            LOG.info("ChannelNameFromMessage: "+channels.get(message.get("channelID").toString()));
             channelName = channels.get(message.get("channelID").toString());
+            LOG.debug("Inserting new channel: " + channelName);
         }
-        LOG.info(message.toString());
+
         if(message.isArray() && message.get(0).isInt()){
-            LOG.info("INT: "+message.get(0).toString());
             channelName = channels.get(message.get(0).toString());
         }
 
-        LOG.info("GetChannelName: "+ message.toString());
+        LOG.debug("ChannelName: "+ channelName);
         return channelName;
     }
 
@@ -100,6 +99,7 @@ public class KrakenStreamingService extends JsonNettyStreamingService {
 
     @Override
     public String getUnsubscribeMessage(String channelName) throws IOException {
+
         KrakenSubscription subscription =
                 new KrakenSubscription(
                         channelName.substring(0,channelName.indexOf("|")),

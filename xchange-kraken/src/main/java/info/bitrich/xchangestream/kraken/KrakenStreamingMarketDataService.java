@@ -45,11 +45,10 @@ public class KrakenStreamingMarketDataService implements StreamingMarketDataServ
         return service.subscribeChannel(service.getChannelName(),createKrakenEvent(null,"book|0|25",currencyPairConverter(currencyPair)))
                 .filter(message->
                         (message.isArray() && (message.get(1).has("as") || message.get(1).has("a") || message.get(1).has("b")))).map(message-> {
-                    LOG.info("Channel "+service.getChannelName());
+
                     KrakenStreamingOrderBook orderBook;
                     JsonNode messageField = message.get(1);
                     if(messageField.has("as")){
-                        LOG.info("Initialization");
                         KrakenStreamingOrder[] asks = mapper.readValue(messageField.get("as").toString(),KrakenStreamingOrder[].class);
                         KrakenStreamingOrder[] bids = mapper.readValue(messageField.get("bs").toString(),KrakenStreamingOrder[].class);
                         orderBook = new KrakenStreamingOrderBook(asks,bids,currencyPair);
@@ -57,9 +56,9 @@ public class KrakenStreamingMarketDataService implements StreamingMarketDataServ
 
                     }else {
                         orderBook = orderbooks.get(currencyPair);
-                        if(messageField.has("a") && messageField.has("b")){
-                            KrakenStreamingOrder[] asks = mapper.readValue(messageField.get("a").toString(),KrakenStreamingOrder[].class);
-                            KrakenStreamingOrder[] bids = mapper.readValue(messageField.get("b").toString(),KrakenStreamingOrder[].class);
+                        if(message.size() == 3 && message.get(1).has("a") && message.get(2).has("b")){
+                            KrakenStreamingOrder[] asks = mapper.readValue(message.get(1).get("a").toString(),KrakenStreamingOrder[].class);
+                            KrakenStreamingOrder[] bids = mapper.readValue(message.get(2).get("b").toString(),KrakenStreamingOrder[].class);
                             orderBook.updateOrderBook(asks, Order.OrderType.ASK);
                             orderBook.updateOrderBook(bids, Order.OrderType.BID);
                         }
