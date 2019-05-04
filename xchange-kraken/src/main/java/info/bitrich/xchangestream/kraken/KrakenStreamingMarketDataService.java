@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
+/** @author makarid */
 public class KrakenStreamingMarketDataService implements StreamingMarketDataService {
     private static final Logger LOG = LoggerFactory.getLogger(KrakenStreamingMarketDataService.class);
     private final ObjectMapper mapper = new ObjectMapper();

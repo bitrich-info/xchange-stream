@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
 
+/** @author makarid */
 public class KrakenStreamingOrderBook {
 
     private SortedMap<BigDecimal, LimitOrder> asks;

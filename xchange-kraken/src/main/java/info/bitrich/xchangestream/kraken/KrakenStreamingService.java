@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** @author makarid */
 public class KrakenStreamingService extends JsonNettyStreamingService {
     private static final Logger LOG = LoggerFactory.getLogger(KrakenStreamingService.class);
     private String channelName;

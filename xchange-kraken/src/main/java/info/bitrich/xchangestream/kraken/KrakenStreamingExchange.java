@@ -9,6 +9,7 @@ import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.kraken.KrakenExchange;
 import si.mazi.rescu.SynchronizedValueFactory;
 
+/** @author makarid */
 public class KrakenStreamingExchange extends KrakenExchange implements StreamingExchange {
     private static final String API_URI = "wss://ws.kraken.com";
 
