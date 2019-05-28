@@ -61,12 +61,12 @@
 
     <distributionManagement>
         <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <id>mainbloq-maven-repo</id>
+            <url>s3://mainbloq-maven-repo/snapshot</url>
         </snapshotRepository>
         <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>mainbloq-maven-repo</id>
+            <url>s3://mainbloq-maven-repo/release</url>
         </repository>
     </distributionManagement>
 
@@ -143,6 +143,14 @@
                 <version>2.5.3</version>
             </plugin>
         </plugins>
+        <extensions>
+            <extension>
+                <groupId>com.gkatzioura.maven.cloud</groupId>
+                <artifactId>s3-storage-wagon</artifactId>
+                <version>1.9</version>
+            </extension>
+        </extensions>
+
     </build>
     <profiles>
         <profile>
@@ -212,4 +220,5 @@
             </build>
         </profile>
     </profiles>
+
 </project>
