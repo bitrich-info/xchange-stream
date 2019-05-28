@@ -57,13 +57,21 @@ public class BitmexOrderbook {
             boolean shouldDelete = action.equals("delete");
             String id = level.getId();
             BigDecimal price = orderBookSideIds.get(id);
-            orderBookSide.remove(price);
+            if (orderBookSide != null)
+                if (price != null)
+                    orderBookSide.remove(price);
+
             orderBookSideIds.remove(id);
             if (!shouldDelete) {
                 BitmexLimitOrder modifiedLevel = new BitmexLimitOrder(level.getSymbol(), level.getId(), level.getSide(), price,
                         level.getSize()); // Original level doesn't have price! see bitmex doc
-                orderBookSide.put(price, modifiedLevel);
-                orderBookSideIds.put(id, price);
+
+                if (orderBookSide != null)
+                    if (price != null)
+                        orderBookSide.put(price, modifiedLevel);
+
+                if (price != null)
+                    orderBookSideIds.put(id, price);
             }
         }
     }
