@@ -35,8 +35,10 @@ public class BitmexOrderbook {
         for (BitmexLimitOrder level : levels) {
             SortedMap<BigDecimal, BitmexLimitOrder> orderBookSide = level.getSide().equals(ASK_SIDE) ? asks : bids;
             Map<String, BigDecimal> orderBookSideIds = level.getSide().equals(ASK_SIDE) ? askIds : bidIds;
-            orderBookSide.put(level.getPrice(), level);
-            orderBookSideIds.put(level.getId(), level.getPrice());
+            if (level != null) {
+                orderBookSide.put(level.getPrice(), level);
+                orderBookSideIds.put(level.getId(), level.getPrice());
+            }
         }
     }
 
@@ -94,8 +96,10 @@ public class BitmexOrderbook {
 
         List<LimitOrder> limitOrders = new ArrayList<>(levels.length);
         for (BitmexLimitOrder level : levels) {
-            LimitOrder limitOrder = level.toLimitOrder();
-            limitOrders.add(limitOrder);
+            if (level != null) {
+                LimitOrder limitOrder = level.toLimitOrder();
+                limitOrders.add(limitOrder);
+            }
         }
 
         return limitOrders;
