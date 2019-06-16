@@ -6,7 +6,6 @@ import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import io.reactivex.Completable;
 import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.bitmex.BitmexExchange;
-import si.mazi.rescu.SynchronizedValueFactory;
 
 /**
  * Created by Lukas Zaoralek on 12.11.17.
@@ -44,11 +43,6 @@ public class BitmexStreamingExchange extends BitmexExchange implements Streaming
     @Override
     public Completable disconnect() {
         return streamingService.disconnect();
-    }
-
-    @Override
-    public SynchronizedValueFactory<Long> getNonceFactory() {
-        return null;
     }
 
     @Override
