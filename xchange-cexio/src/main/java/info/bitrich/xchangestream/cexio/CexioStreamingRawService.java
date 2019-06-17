@@ -5,13 +5,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import info.bitrich.xchangestream.cexio.dto.*;
 import info.bitrich.xchangestream.service.netty.JsonNettyStreamingService;
+import info.bitrich.xchangestream.service.netty.StreamingObjectMapperHelper;
+import io.reactivex.Completable;
+import io.reactivex.CompletableEmitter;
+import io.reactivex.CompletableOnSubscribe;
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
+import java.io.IOException;
+import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.Order;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 public class CexioStreamingRawService extends JsonNettyStreamingService {
 
@@ -23,9 +27,12 @@ public class CexioStreamingRawService extends JsonNettyStreamingService {
     public static final String PONG = "pong";
     public static final String ORDER = "order";
     public static final String TRANSACTION = "tx";
+    public static final String ORDERBOOK = "order-book-subscribe";
+    public static final String ORDERBOOK_UPDATE = "md_update";
 
     private String apiKey;
     private String apiSecret;
+    private AuthCompletable authCompletable = new AuthCompletable();
 
     private PublishSubject<Order> subjectOrder = PublishSubject.create();
     private PublishSubject<CexioWebSocketTransaction> subjectTransaction = PublishSubject.create();
@@ -34,19 +41,77 @@ public class CexioStreamingRawService extends JsonNettyStreamingService {
         super(apiUrl, Integer.MAX_VALUE);
     }
 
+    public static String GetOrderBookChannelForCurrencyPair(CurrencyPair currencyPair) {
+        return ORDERBOOK + "-" + currencyPair.toString();
+    }
+
+    public static CurrencyPair GetCurrencyPairForChannelName(String channelName) {
+        return new CurrencyPair(channelName.substring(ORDERBOOK.length() + 1));
+    }
+
     @Override
     protected String getChannelNameFromMessage(JsonNode message) throws IOException {
+        JsonNode eNode = message.get("e");
+        if (eNode.textValue().compareTo(ORDERBOOK_UPDATE) == 0) {
+            final ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
+            JsonNode dataNode = message.get("data");
+            CexioWebSocketOrderBookSubscribeResponse orderBookSubResp =
+                    mapper.readValue(dataNode.toString(), CexioWebSocketOrderBookSubscribeResponse.class);
+            CurrencyPair currencyPair = CexioAdapters.adaptCurrencyPair(orderBookSubResp.pair);
+            return GetOrderBookChannelForCurrencyPair(currencyPair);
+        } else {
+            JsonNode oidNode = message.get("oid");
+            if (oidNode == null) {
+                throw new IllegalArgumentException("Missing OID on message " + message);
+            }
+            return oidNode.textValue();
+        }
+    }
+
+    private Object GetEventSubscriptionData(String channelName, boolean isSubscribe, Object... args) {
+        switch (channelName) {
+            case ORDERBOOK:
+            {
+                CurrencyPair currencyPair = (CurrencyPair) args[0];
+                return new CexioWebSocketOrderBookSubscriptionData(currencyPair, isSubscribe);
+            }
+            default:
+            {
+                throw new IllegalArgumentException(
+                        "Cannot get subscription data for unknown channel name " + channelName);
+            }
+        }
+    }
+
+    private static String getEventNameFromChannel(String channelName) {
+        if (channelName.contains(ORDERBOOK)) {
+            return ORDERBOOK;
+        }
         return null;
     }
 
     @Override
     public String getSubscribeMessage(String channelName, Object... args) throws IOException {
-        return null;
+        String eventName = getEventNameFromChannel(channelName);
+        final Object eventSubData = GetEventSubscriptionData(eventName, true, args);
+        CexioWebSocketSubscriptionRequest subReq =
+                new CexioWebSocketSubscriptionRequest(eventName, eventSubData, channelName);
+        return objectMapper.writeValueAsString(subReq);
     }
 
     @Override
     public String getUnsubscribeMessage(String channelName) throws IOException {
-        return null;
+        String eventName = getEventNameFromChannel(channelName);
+
+        CurrencyPair currencyPairForChannel = null;
+        if (eventName.compareTo(ORDERBOOK) == 0) {
+            currencyPairForChannel = GetCurrencyPairForChannelName(channelName);
+        }
+
+        final Object eventSubData = GetEventSubscriptionData(eventName, false, currencyPairForChannel);
+        CexioWebSocketSubscriptionRequest subReq =
+                new CexioWebSocketSubscriptionRequest(eventName, eventSubData, channelName);
+        return objectMapper.writeValueAsString(subReq);
     }
 
     @Override
@@ -62,6 +127,32 @@ public class CexioStreamingRawService extends JsonNettyStreamingService {
         handleMessage(jsonNode);
     }
 
+    protected static class AuthCompletable implements CompletableOnSubscribe {
+        private CompletableEmitter completableEmitter;
+
+        @Override
+        public void subscribe(CompletableEmitter e) throws Exception {
+            this.completableEmitter = e;
+        }
+
+        public void SignalAuthComplete() {
+            completableEmitter.onComplete();
+        }
+
+        public void SignalError(String error) {
+            completableEmitter.onError(new IllegalStateException(error));
+        }
+    }
+
+    @Override
+    public Completable connect() {
+        synchronized (authCompletable) {
+            Completable parentCompletable = super.connect();
+            parentCompletable.blockingAwait();
+            return Completable.create(authCompletable);
+        }
+    }
+
     @Override
     protected void handleMessage(JsonNode message) {
         LOG.debug("Receiving message: {}", message);
@@ -74,9 +165,21 @@ public class CexioStreamingRawService extends JsonNettyStreamingService {
                         auth();
                         break;
                     case AUTH:
-                        CexioWebSocketAuthResponse response = deserialize(message, CexioWebSocketAuthResponse.class);
-                        if (response != null && !response.isSuccess()) {
-                            LOG.error("Authentication error: {}", response.getData().getError());
+                        CexioWebSocketAuthResponse response =
+                                deserialize(message, CexioWebSocketAuthResponse.class);
+                        if (response != null) {
+                            if (response.isSuccess()) {
+                                synchronized (authCompletable) {
+                                    authCompletable.SignalAuthComplete();
+                                }
+                            } else {
+                                String authErrorString =
+                                        new String("Authentication error: " + response.getData().getError());
+                                LOG.error(authErrorString);
+                                synchronized (authCompletable) {
+                                    authCompletable.SignalError(authErrorString);
+                                }
+                            }
                         }
                         break;
                     case PING:
@@ -105,6 +208,20 @@ public class CexioStreamingRawService extends JsonNettyStreamingService {
                             subjectTransaction.onError(e);
                         }
                         break;
+                    case ORDERBOOK:
+                        JsonNode okNode = message.get("ok");
+                        if (okNode.textValue().compareTo("ok") != 0) {
+                            String errorString =
+                                    "Error response for order book subscription: %s" + message.toString();
+                            LOG.error(errorString);
+                            subjectOrder.onError(new IllegalArgumentException(errorString));
+                        } else {
+                            super.handleMessage(message);
+                        }
+                        break;
+                    case ORDERBOOK_UPDATE:
+                        super.handleMessage(message);
+                        break;
                 }
             }
         } catch (JsonProcessingException e) {
@@ -113,11 +230,14 @@ public class CexioStreamingRawService extends JsonNettyStreamingService {
     }
 
     private void auth() {
+        if (apiSecret == null || apiKey == null) {
+            throw new IllegalStateException("API keys must be provided to use cexio streaming exchange");
+        }
         long timestamp = System.currentTimeMillis() / 1000;
         CexioDigest cexioDigest = CexioDigest.createInstance(apiSecret);
         String signature = cexioDigest.createSignature(timestamp, apiKey);
-        CexioWebSocketAuthMessage message = new CexioWebSocketAuthMessage(
-                new CexioWebSocketAuth(apiKey, signature, timestamp));
+        CexioWebSocketAuthMessage message =
+                new CexioWebSocketAuthMessage(new CexioWebSocketAuth(apiKey, signature, timestamp));
         sendMessage(message);
     }
 

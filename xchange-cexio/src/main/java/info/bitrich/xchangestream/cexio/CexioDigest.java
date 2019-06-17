@@ -5,7 +5,8 @@ import si.mazi.rescu.RestInvocation;
 
 public class CexioDigest extends BaseParamsDigest {
 
-    private static final char[] DIGITS = new char[]{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+    private static final char[] DIGITS =
+            new char[] {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
     protected CexioDigest(String secretKey) {
         super(secretKey, HMAC_SHA_256);
@@ -30,8 +31,7 @@ public class CexioDigest extends BaseParamsDigest {
         return out;
     }
 
-    public String createSignature(long timestamp, String apiKey)  {
+    public String createSignature(long timestamp, String apiKey) {
         return new String(encodeHex(getMac().doFinal((timestamp + apiKey).getBytes())));
     }
-
 }
