@@ -7,17 +7,17 @@ import java.util.List;
 import org.knowm.xchange.currency.CurrencyPair;
 
 public class CexioWebSocketOrderBookSubscriptionData {
-    @JsonProperty final List<String> pair;
+  @JsonProperty final List<String> pair;
 
-    @JsonProperty final boolean subscribe;
+  @JsonProperty final boolean subscribe;
 
-    @JsonProperty final int depth;
+  @JsonProperty final int depth;
 
-    public CexioWebSocketOrderBookSubscriptionData(CurrencyPair currencyPair, boolean subscribe) {
-        pair =
-                new ArrayList<String>(
-                        Arrays.asList(currencyPair.base.toString(), currencyPair.counter.toString()));
-        this.subscribe = subscribe;
-        this.depth = 10; // -1 for full depth
-    }
+  public CexioWebSocketOrderBookSubscriptionData(CurrencyPair currencyPair, boolean subscribe) {
+    pair =
+        new ArrayList<String>(
+            Arrays.asList(currencyPair.base.toString(), currencyPair.counter.toString()));
+    this.subscribe = subscribe;
+    this.depth = 10; // -1 for full depth
+  }
 }
