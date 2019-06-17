@@ -40,9 +40,10 @@ public class KrakenStreamingMarketDataService implements StreamingMarketDataServ
 
     @Override
     public Observable<OrderBook> getOrderBook(CurrencyPair currencyPair, Object... args) {
+        String channelName = "book|0|25";
 
-        service.setChannelName("book|0|25:"+ currencyPairConverter(currencyPair).toString());
-        return service.subscribeChannel(service.getChannelName(),createKrakenEvent(null,"book|0|25",currencyPairConverter(currencyPair)))
+        service.setChannelName(channelName+":"+ currencyPairConverter(currencyPair).toString());
+        return service.subscribeChannel(service.getChannelName(),createKrakenEvent(null,channelName,currencyPairConverter(currencyPair)))
                 .filter(message->
                         (message.isArray() && (message.get(1).has("as") || message.get(1).has("a") || message.get(1).has("b")))).map(message-> {
 
@@ -56,7 +57,7 @@ public class KrakenStreamingMarketDataService implements StreamingMarketDataServ
 
                     }else {
                         orderBook = orderbooks.get(currencyPair);
-                        if(message.size() == 3 && message.get(1).has("a") && message.get(2).has("b")){
+                        if(message.get(1).has("a") && message.get(2).has("b")){
                             KrakenStreamingOrder[] asks = mapper.readValue(message.get(1).get("a").toString(),KrakenStreamingOrder[].class);
                             KrakenStreamingOrder[] bids = mapper.readValue(message.get(2).get("b").toString(),KrakenStreamingOrder[].class);
                             orderBook.updateOrderBook(asks, Order.OrderType.ASK);
