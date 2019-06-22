@@ -42,8 +42,8 @@ public class CoinmateStreamingMarketDataService implements StreamingMarketDataSe
 
         return service.subscribeChannel(channelName, "order_book")
                 .map(s -> {
-                    ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
-                    CoinmateOrderBookData orderBookData = mapper.readValue(s, CoinmateOrderBookData.class);
+                    CoinmateOrderBookData orderBookData = StreamingObjectMapperHelper.getObjectMapper()
+                            .readValue(s, CoinmateOrderBookData.class);
                     CoinmateOrderBook coinmateOrderBook = new CoinmateOrderBook(false, null, orderBookData);
 
                     return CoinmateAdapters.adaptOrderBook(coinmateOrderBook, currencyPair);
@@ -63,8 +63,8 @@ public class CoinmateStreamingMarketDataService implements StreamingMarketDataSe
         return service.subscribeChannel(channelName, "new_trades")
                 .map(message -> {
 
-                    ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
-                    List<CoinmateWebSocketTrade> list = mapper.readValue(message, new TypeReference<List<CoinmateWebSocketTrade>>() {
+                    List<CoinmateWebSocketTrade> list = StreamingObjectMapperHelper.getObjectMapper()
+                            .readValue(message, new TypeReference<List<CoinmateWebSocketTrade>>() {
                     });
                     return list;
                 })

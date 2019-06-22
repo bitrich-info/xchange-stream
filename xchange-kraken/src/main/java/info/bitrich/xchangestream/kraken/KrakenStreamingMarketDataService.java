@@ -14,14 +14,9 @@ import org.knowm.xchange.dto.Order;
 import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.dto.marketdata.Ticker;
 import org.knowm.xchange.dto.marketdata.Trade;
-import org.knowm.xchange.dto.trade.LimitOrder;
-import org.knowm.xchange.kraken.KrakenAdapters;
-import org.knowm.xchange.kraken.KrakenUtils;
-import org.knowm.xchange.utils.jackson.CurrencyPairDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedMap;
@@ -40,10 +35,10 @@ public class KrakenStreamingMarketDataService implements StreamingMarketDataServ
 
     @Override
     public Observable<OrderBook> getOrderBook(CurrencyPair currencyPair, Object... args) {
-        String channelName = "book|0|25";
+        String channelName = "book-25";
 
         service.setChannelName(channelName+":"+ currencyPairConverter(currencyPair).toString());
-        return service.subscribeChannel(service.getChannelName(),createKrakenEvent(null,channelName,currencyPairConverter(currencyPair)))
+        return service.subscribeChannel(channelName+":"+currencyPairConverter(currencyPair),createKrakenEvent(null,channelName,currencyPairConverter(currencyPair)))
                 .filter(message->
                         (message.isArray() && (message.get(1).has("as") || message.get(1).has("a") || message.get(1).has("b")))).map(message-> {
 
@@ -95,18 +90,17 @@ public class KrakenStreamingMarketDataService implements StreamingMarketDataServ
             currencyPairList.add(currencyPairs[i].toString());
         }
 
-        return new KrakenEvent("subscribe",reqId,currencyPairList,createKrakenSubscription(eventString));
+        return new KrakenEvent("subscribe",reqId,currencyPairList, createKrakenBookSubscription(eventString));
     }
 
-    private KrakenSubscription createKrakenSubscription(String subscriptionString){
+    private KrakenSubscription createKrakenBookSubscription(String subscriptionString){
         KrakenSubscription subscription;
 
-        if(subscriptionString.contains("|")){
-            String name  = subscriptionString.substring(0,subscriptionString.indexOf("|"));
-            String interval = subscriptionString.substring(subscriptionString.indexOf("|")+1,subscriptionString.lastIndexOf("|"));
-            String depth = subscriptionString.substring(subscriptionString.lastIndexOf("|")+1);
-            subscription = new KrakenSubscription(name,Integer.valueOf(interval),Integer.valueOf(depth));
-        }else{
+        if (subscriptionString.contains("-")) {
+            String name = subscriptionString.substring(0, subscriptionString.indexOf("-"));
+            String depth = subscriptionString.substring(subscriptionString.lastIndexOf("-") + 1);
+            subscription = new KrakenSubscription(name, 0, Integer.valueOf(depth));
+        } else {
             subscription = new KrakenSubscription(subscriptionString);
         }
 

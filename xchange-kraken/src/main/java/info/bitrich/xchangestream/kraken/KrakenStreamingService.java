@@ -74,10 +74,9 @@ public class KrakenStreamingService extends JsonNettyStreamingService {
             JsonNode subscription = message.get("subscription");
             channels.put(message.get("channelID").toString(),
                     subscription.get("name").textValue()
-                            .concat("|")
-                            .concat((subscription.has("interval"))?subscription.get("interval").toString():"0")
-                            .concat("|")
-                            .concat((subscription.has("depth"))?subscription.get("depth").toString():"0")
+                            .concat("-")
+                            .concat((subscription.has("interval"))?subscription.get("interval").toString():"")
+                            .concat((subscription.has("depth"))?subscription.get("depth").toString():"")
                             .concat(":")
                             .concat(message.get("pair").textValue())
             );
