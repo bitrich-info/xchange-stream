@@ -90,7 +90,7 @@ public class BitmexTest {
                 .test()
                 .assertSubscribed()
                 .assertNoErrors()
-                .awaitCount(10)
+                .awaitCount(5)
                 .assertNever(book -> {
                     String err = BookSanityChecker.hasErrors(book);
                     LOG.info("err {}", err);
