@@ -72,27 +72,6 @@ public class CoinmateStreamingMarketDataService implements StreamingMarketDataSe
                 .map(coinmateWebSocketTrade -> CoinmateAdapters.adaptTrade(coinmateWebSocketTrade.toTransactionEntry(CoinmateUtils.getPair(currencyPair))));
     }
 
-
-//    public Observable<UserTrade> getUserTrades(CurrencyPair currencyPair, Object... args) {
-//        String channelName = "private-user-trades-"+userId+"-"+getChannelPostfix(currencyPair);
-//
-//        return service.subscribeChannel(channelName,"list_of_user_trades")
-//                .map(message ->{
-//                    ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
-//                    List<CoinmateWebSocketUserTrade> userTrades = mapper.readValue(message,new TypeReference<List<CoinmateWebSocketUserTrade>>(){});
-//                    return userTrades;
-//                }).flatMapIterable(coinmateWebSocketUserTrades -> coinmateWebSocketUserTrades)
-//                .map(coinmateWebSocketUserTrade -> new UserTrade(
-//                        coinmateWebSocketUserTrade.getUserOrderType(),
-//                        original,
-//                        currencyPair,
-//                        BigDecimal.valueOf(coinmateWebSocketUserTrade.getPrice()),
-//                        new Date(coinmateWebSocketUserTrade.getTimestamp()),
-//                        coinmateWebSocketUserTrade.getTransactionId(),
-//                        coinmateWebSocketUserTrade.getTransactionId(),
-//                        ));
-//    }
-
     private String getChannelPostfix(CurrencyPair currencyPair) {
         return currencyPair.base.toString().toUpperCase() + "_" + currencyPair.counter.toString().toUpperCase();
     }
