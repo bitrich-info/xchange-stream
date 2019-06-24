@@ -60,24 +60,6 @@ public class KrakenStreamingOrderBook {
     }
 
     public void verifyOrderBook(){
-//        asks.forEach((price, limitOrder) -> {
-//            if(price.compareTo(bids.firstKey()) <= 0){
-//                if(limitOrder.getTimestamp().before(bids.get(bids.firstKey()).getTimestamp())){
-//                    asks.remove(price);
-//                }else{
-//                    bids.remove(bids.firstKey());
-//                }
-//            }
-//        });
-//        bids.forEach((price, limitOrder) -> {
-//            if (price.compareTo(asks.firstKey()) >= 0){
-//                if(asks.get(asks.firstKey()).getTimestamp().before(bids.get(price).getTimestamp())){
-//                    asks.remove(asks.firstKey());
-//                }else{
-//                    bids.remove(price);
-//                }
-//            }
-//        });
         if(asks.firstKey().compareTo(bids.firstKey()) <= 0
                 || bids.firstKey().compareTo(asks.firstKey()) >=0){
             if(asks.get(asks.firstKey()).getTimestamp().before(bids.get(bids.firstKey()).getTimestamp())){

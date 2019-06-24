@@ -14,6 +14,7 @@ import org.knowm.xchange.dto.Order;
 import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.dto.marketdata.Ticker;
 import org.knowm.xchange.dto.marketdata.Trade;
+import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,12 +77,12 @@ public class KrakenStreamingMarketDataService implements StreamingMarketDataServ
 
     @Override
     public Observable<Ticker> getTicker(CurrencyPair currencyPair, Object... args) {
-        return null;
+        throw new NotYetImplementedForExchangeException();
     }
 
     @Override
     public Observable<Trade> getTrades(CurrencyPair currencyPair, Object... args) {
-        return null;
+        throw new NotYetImplementedForExchangeException();
     }
 
     private KrakenEvent createKrakenEvent(String reqId,String eventString,CurrencyPair... currencyPairs){
