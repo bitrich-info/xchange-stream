@@ -5,13 +5,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import info.bitrich.xchangestream.core.ProductSubscription;
 import org.knowm.xchange.coinbasepro.dto.account.CoinbaseProWebsocketAuthData;
 import org.knowm.xchange.currency.CurrencyPair;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import info.bitrich.xchangestream.core.ProductSubscription;
 
 /**
  * CoinbasePro subscription message.
@@ -128,10 +128,10 @@ public class CoinbaseProWebSocketSubscriptionMessage {
         this.channels = channels.toArray(new CoinbaseProProductSubsctiption[channels.size()]);
 
         if ( authData != null ) {
-	        this.key = authData.getKey();
-	        this.passphrase = authData.getPassphrase();
-	        this.signature = authData.getSignature();
-	        this.timestamp = String.valueOf(authData.getTimestamp());
+            this.key = authData.getKey();
+            this.passphrase = authData.getPassphrase();
+            this.signature = authData.getSignature();
+            this.timestamp = String.valueOf(authData.getTimestamp());
         }
     }
 
