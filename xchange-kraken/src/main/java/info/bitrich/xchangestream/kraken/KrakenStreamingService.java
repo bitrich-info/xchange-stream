@@ -56,7 +56,7 @@ public class KrakenStreamingService extends JsonNettyStreamingService {
             if (event != null && (krakenEvent = KrakenEventType.getEvent(event.textValue())) != null) {
                 switch (krakenEvent) {
                     case heartbeat:
-                        LOG.info("Heartbeat received");
+                        //LOG.info("Heartbeat received");
                         break;
                     case systemStatus:
                         KrakenSystemStatus systemStatus = mapper.treeToValue(message, KrakenSystemStatus.class);
