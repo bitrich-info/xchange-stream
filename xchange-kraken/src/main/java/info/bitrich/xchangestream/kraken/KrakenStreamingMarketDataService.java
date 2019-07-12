@@ -7,7 +7,6 @@ import info.bitrich.xchangestream.service.netty.StreamingObjectMapperHelper;
 import io.reactivex.Observable;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.dto.marketdata.Ticker;
@@ -26,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -42,7 +42,7 @@ public class KrakenStreamingMarketDataService implements StreamingMarketDataServ
     public static final String KRAKEN_CHANNEL_DELIMITER = "-";
 
     private final KrakenStreamingService service;
-    private final HashMap<String, KrakenOrderBookStorage> orderBooks = new HashMap<>();
+    private final Map<String, KrakenOrderBookStorage> orderBooks = new ConcurrentHashMap<>();
 
     public KrakenStreamingMarketDataService(KrakenStreamingService service) {
         this.service = service;
