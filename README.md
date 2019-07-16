@@ -93,6 +93,7 @@ Listening for live updates of
 
 Exchange | order books | trades | tickers | notes |
 -------- | ----------- | ------ | ------- |-------|
+**Bankera** | :heavy_check_mark: | :heavy_check_mark: | :construction: | Ticker support could be implemented using the trades and order book streams, even though the exchange doesn't explicitly return a ticker stream. |
 **Binance** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
 **Bitfinex** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
 **Bitflyer** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
