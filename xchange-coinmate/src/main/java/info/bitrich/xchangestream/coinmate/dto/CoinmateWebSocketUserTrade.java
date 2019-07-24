@@ -12,6 +12,9 @@ public class CoinmateWebSocketUserTrade {
     @JsonProperty("date")
     private final long timestamp;
 
+    @JsonProperty("amount")
+    private final double amount;
+
     @JsonProperty("price")
     private final double price;
 
@@ -37,6 +40,7 @@ public class CoinmateWebSocketUserTrade {
             @JsonProperty("transactionId") String transactionId,
             @JsonProperty("date") long timestamp,
             @JsonProperty("price") double price,
+            @JsonProperty("amount") double amount,
             @JsonProperty("buyOrderId") String buyOrderId,
             @JsonProperty("sellOrderId") String sellOrderId,
             @JsonProperty("orderType") Order.OrderType userOrderType,
@@ -45,6 +49,7 @@ public class CoinmateWebSocketUserTrade {
             @JsonProperty("tradeFeeType") String userFeeType) {
         this.transactionId = transactionId;
         this.timestamp = timestamp;
+        this.amount = amount;
         this.price = price;
         this.buyOrderId = buyOrderId;
         this.sellOrderId = sellOrderId;
@@ -60,6 +65,10 @@ public class CoinmateWebSocketUserTrade {
 
     public long getTimestamp() {
         return timestamp;
+    }
+
+    public double getAmount() {
+        return amount;
     }
 
     public double getPrice() {
@@ -95,6 +104,7 @@ public class CoinmateWebSocketUserTrade {
         return "CoinmateWebSocketUserTrade{" +
                 "transactionId='" + transactionId + '\'' +
                 ", timestamp=" + timestamp +
+                ", amount=" + amount +
                 ", price=" + price +
                 ", buyOrderId='" + buyOrderId + '\'' +
                 ", sellOrderId='" + sellOrderId + '\'' +

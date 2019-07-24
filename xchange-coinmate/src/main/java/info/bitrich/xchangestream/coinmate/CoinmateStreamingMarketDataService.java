@@ -12,15 +12,20 @@ import org.knowm.xchange.coinmate.CoinmateAdapters;
 import org.knowm.xchange.coinmate.CoinmateUtils;
 import org.knowm.xchange.coinmate.dto.marketdata.CoinmateOrderBook;
 import org.knowm.xchange.coinmate.dto.marketdata.CoinmateOrderBookData;
+import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.currency.CurrencyPair;
+import org.knowm.xchange.dto.Order;
 import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.dto.marketdata.Ticker;
 import org.knowm.xchange.dto.marketdata.Trade;
+import org.knowm.xchange.dto.marketdata.Trades;
 import org.knowm.xchange.dto.trade.UserTrade;
+import org.knowm.xchange.dto.trade.UserTrades;
 import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
 import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -70,6 +75,36 @@ public class CoinmateStreamingMarketDataService implements StreamingMarketDataSe
                 })
                 .flatMapIterable(coinmateWebSocketTrades -> coinmateWebSocketTrades)
                 .map(coinmateWebSocketTrade -> CoinmateAdapters.adaptTrade(coinmateWebSocketTrade.toTransactionEntry(CoinmateUtils.getPair(currencyPair))));
+    }
+
+    public Observable<UserTrades> getUserTrades(CurrencyPair currencyPair, Object... args){
+        String channelName = "private-open_orders-"+userId+"-"+getChannelPostfix(currencyPair);
+
+        return service.subscribeToPrivateChannel(channelName,"open_orders")
+                .map(message->{
+                    List<CoinmateWebSocketUserTrade> list = StreamingObjectMapperHelper.getObjectMapper()
+                            .readValue(message,new TypeReference<List<CoinmateWebSocketUserTrade>>(){});
+                    return list;
+                })
+                .flatMapIterable(coinmateWebSocketUserTrades -> coinmateWebSocketUserTrades)
+                .map(coinmateWebSocketUserTrade -> {
+                    List<UserTrade> userTradeList = new ArrayList<>();
+                    userTradeList.add(new UserTrade(
+                            coinmateWebSocketUserTrade.getUserOrderType(),
+                            BigDecimal.valueOf(coinmateWebSocketUserTrade.getAmount()),
+                            currencyPair,
+                            BigDecimal.valueOf(coinmateWebSocketUserTrade.getPrice()),
+                            new Date(coinmateWebSocketUserTrade.getTimestamp()),
+                            coinmateWebSocketUserTrade.getTransactionId(),
+                            (coinmateWebSocketUserTrade.getUserOrderType().equals(Order.OrderType.BID)
+                                    ?coinmateWebSocketUserTrade.getBuyOrderId()
+                                    :coinmateWebSocketUserTrade.getSellOrderId()),
+                            BigDecimal.valueOf(coinmateWebSocketUserTrade.getFee()),
+                            Currency.getInstance(coinmateWebSocketUserTrade.getUserFeeType())));
+
+                    return new UserTrades(userTradeList, Trades.TradeSortType.SortByTimestamp);
+
+                });
     }
 
     private String getChannelPostfix(CurrencyPair currencyPair) {

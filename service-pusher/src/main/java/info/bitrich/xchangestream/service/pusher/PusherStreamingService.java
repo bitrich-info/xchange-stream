@@ -3,6 +3,9 @@ package info.bitrich.xchangestream.service.pusher;
 import com.pusher.client.Pusher;
 import com.pusher.client.PusherOptions;
 import com.pusher.client.channel.Channel;
+import com.pusher.client.channel.PrivateChannel;
+import com.pusher.client.channel.PrivateChannelEventListener;
+import com.pusher.client.channel.SubscriptionEventListener;
 import com.pusher.client.connection.ConnectionEventListener;
 import com.pusher.client.connection.ConnectionState;
 import com.pusher.client.connection.ConnectionStateChange;
@@ -25,9 +28,9 @@ public class PusherStreamingService extends ConnectableService  {
         pusher = new Pusher(apiKey);
     }
 
-    public PusherStreamingService(String apiKey, String cluster) {
-        PusherOptions options = new PusherOptions();
-        options.setCluster(cluster);
+    public PusherStreamingService(String apiKey, PusherOptions options) {
+//        PusherOptions options = new PusherOptions();
+//        options.setCluster(cluster);
         pusher = new Pusher(apiKey, options);
     }
 
@@ -85,6 +88,41 @@ public class PusherStreamingService extends ConnectableService  {
                     LOG.debug("Incoming data: {}", data);
                     e.onNext(data);
                 });
+            }
+        }).doOnDispose(() -> pusher.unsubscribe(channelName));
+    }
+
+    public Observable<String> subscribeToPrivateChannel(String channelName, String eventName) {
+        return subscribeToPrivateChannel(channelName, Collections.singletonList(eventName));
+    }
+
+    public Observable<String> subscribeToPrivateChannel(String channelName, List<String> eventsName) {
+        LOG.info("Subscribing to channel {}.", channelName);
+        return Observable.<String>create(e -> {
+            if (!ConnectionState.CONNECTED.equals(pusher.getConnection().getState())) {
+                e.onError(new NotConnectedException());
+                return;
+            }
+            PrivateChannel channel = pusher.subscribePrivate(channelName);
+            PrivateChannelEventListener privateChannelEventListener = new PrivateChannelEventListener() {
+                @Override
+                public void onAuthenticationFailure(String s, Exception e) {
+                    LOG.error("Error on authentication: "+e.getMessage(),e);
+                }
+
+                @Override
+                public void onSubscriptionSucceeded(String s) {
+                    LOG.info("Successful subscription {}",s);
+                }
+
+                @Override
+                public void onEvent(String s, String s1, String s2) {
+                    LOG.info("OnEvent: {} {} {}",s,s1,s2);
+                    e.onNext(s2);
+                }
+            };
+            for (String event : eventsName) {
+                channel.bind(event,privateChannelEventListener);
             }
         }).doOnDispose(() -> pusher.unsubscribe(channelName));
     }
