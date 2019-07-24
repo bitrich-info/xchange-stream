@@ -21,10 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -55,6 +52,12 @@ public class KrakenStreamingMarketDataService implements StreamingMarketDataServ
         return subscribe(channelName, MIN_DATA_ARRAY_SIZE, depth)
                 .map(KrakenOrderBookUtils::parse)
                 .map(ob -> {
+
+                    LOG.info("ChannelName: "+ob.getChannelName());
+                    LOG.info("Pair: "+ob.getPair());
+                    LOG.info("Asks: "+ Arrays.asList(ob.getAsk()).toString());
+                    LOG.info("Bids: "+ Arrays.asList(ob.getBid()).toString());
+                    LOG.info("Type: "+ob.getType().toString());
                     KrakenOrderBookStorage orderBook = ob.toKrakenOrderBook(orderBooks.get(channelName), depth);
                     orderBooks.put(channelName, orderBook);
                     return KrakenAdapters.adaptOrderBook(orderBook.toKrakenDepth(), currencyPair);
