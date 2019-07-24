@@ -42,7 +42,7 @@ public class KrakenStreamingOrderBookTest {
             dis2.dispose();
     }
 
-//    @Test
+    @Test
     public void orderBookVerificationTest(){
         StreamingExchange krakenExchange = StreamingExchangeFactory.INSTANCE.createExchange(KrakenStreamingExchange.class.getName());
         krakenExchange.connect(ProductSubscription.create().addAll(CurrencyPair.ETH_BTC).addAll(CurrencyPair.BTC_USD).addAll(CurrencyPair.BTC_EUR).build()).blockingAwait();

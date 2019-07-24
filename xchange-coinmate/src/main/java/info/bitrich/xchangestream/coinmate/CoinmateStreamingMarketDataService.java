@@ -77,36 +77,6 @@ public class CoinmateStreamingMarketDataService implements StreamingMarketDataSe
                 .map(coinmateWebSocketTrade -> CoinmateAdapters.adaptTrade(coinmateWebSocketTrade.toTransactionEntry(CoinmateUtils.getPair(currencyPair))));
     }
 
-    public Observable<UserTrades> getUserTrades(CurrencyPair currencyPair, Object... args){
-        String channelName = "private-open_orders-"+userId+"-"+getChannelPostfix(currencyPair);
-
-        return service.subscribeToPrivateChannel(channelName,"open_orders")
-                .map(message->{
-                    List<CoinmateWebSocketUserTrade> list = StreamingObjectMapperHelper.getObjectMapper()
-                            .readValue(message,new TypeReference<List<CoinmateWebSocketUserTrade>>(){});
-                    return list;
-                })
-                .flatMapIterable(coinmateWebSocketUserTrades -> coinmateWebSocketUserTrades)
-                .map(coinmateWebSocketUserTrade -> {
-                    List<UserTrade> userTradeList = new ArrayList<>();
-                    userTradeList.add(new UserTrade(
-                            coinmateWebSocketUserTrade.getUserOrderType(),
-                            BigDecimal.valueOf(coinmateWebSocketUserTrade.getAmount()),
-                            currencyPair,
-                            BigDecimal.valueOf(coinmateWebSocketUserTrade.getPrice()),
-                            new Date(coinmateWebSocketUserTrade.getTimestamp()),
-                            coinmateWebSocketUserTrade.getTransactionId(),
-                            (coinmateWebSocketUserTrade.getUserOrderType().equals(Order.OrderType.BID)
-                                    ?coinmateWebSocketUserTrade.getBuyOrderId()
-                                    :coinmateWebSocketUserTrade.getSellOrderId()),
-                            BigDecimal.valueOf(coinmateWebSocketUserTrade.getFee()),
-                            Currency.getInstance(coinmateWebSocketUserTrade.getUserFeeType())));
-
-                    return new UserTrades(userTradeList, Trades.TradeSortType.SortByTimestamp);
-
-                });
-    }
-
     private String getChannelPostfix(CurrencyPair currencyPair) {
         return currencyPair.base.toString().toUpperCase() + "_" + currencyPair.counter.toString().toUpperCase();
     }
