@@ -52,12 +52,6 @@ public class KrakenStreamingMarketDataService implements StreamingMarketDataServ
         return subscribe(channelName, MIN_DATA_ARRAY_SIZE, depth)
                 .map(KrakenOrderBookUtils::parse)
                 .map(ob -> {
-
-                    LOG.info("ChannelName: "+ob.getChannelName());
-                    LOG.info("Pair: "+ob.getPair());
-                    LOG.info("Asks: "+ Arrays.asList(ob.getAsk()).toString());
-                    LOG.info("Bids: "+ Arrays.asList(ob.getBid()).toString());
-                    LOG.info("Type: "+ob.getType().toString());
                     KrakenOrderBookStorage orderBook = ob.toKrakenOrderBook(orderBooks.get(channelName), depth);
                     orderBooks.put(channelName, orderBook);
                     return KrakenAdapters.adaptOrderBook(orderBook.toKrakenDepth(), currencyPair);
