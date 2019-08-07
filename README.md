@@ -89,28 +89,29 @@ More information about reactive streams can be found at [RxJava wiki](https://gi
 
 ## What is supported
 
-Listening for live updates of
+Listening for live updates of:
 
-Exchange | order books | trades | tickers | notes |
--------- | ----------- | ------ | ------- |-------|
-**Bankera** | :heavy_check_mark: | :heavy_check_mark: | :construction: | Ticker support could be implemented using the trades and order book streams, even though the exchange doesn't explicitly return a ticker stream. |
-**Binance** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
-**Bitfinex** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
-**Bitflyer** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
-**BitMEX** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | We are short of maintainers able to review pull requests and provide support for Bitmex, so there is a backlog of pull requests and support is likely broken. Can you help? |
-**Bitstamp** | :heavy_check_mark: | :heavy_check_mark: | :x: | |
-**CEX.IO** | :heavy_check_mark: | :x: | :x: | New support, not widely tested  |
-**Coinbase Pro** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
-**Coinmate** | :heavy_check_mark: | :heavy_check_mark: | :x: | |
-**OKCoin** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
-**OKEx** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
-**Poloniex** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
-**Gemini** | :heavy_check_mark: | :heavy_check_mark: | :x: | |
-**Wex** | :heavy_check_mark: | :heavy_check_mark: | :x: | |
+| Exchange         | order books        | trades (public)    | tickers            | balances           | trades (user)      | open orders        | notes |
+| ---------------- | ------------------ | ------------------ | ------------------ | ------------------ | ------------------ | ------------------ | ----- |
+| **Bankera**      | :heavy_check_mark: | :heavy_check_mark: | :construction:     | :question:         | :question:         | :question:         | Ticker support could be implemented using the trades and order book streams, even though the exchange doesn't explicitly return a ticker stream. |
+| **Binance**      | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
+| **Bitfinex**     | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
+| **Bitflyer**     | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :question:         | :question:         | :question:         | |
+| **BitMEX**       | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :construction:     | :construction:     | :construction:     | We are short of maintainers able to review pull requests and provide support for Bitmex, so there is a backlog of pull requests and support is likely broken. Can you help? |
+| **Bitstamp**     | :heavy_check_mark: | :heavy_check_mark: | :x:                | :question:         | :question:         | :question:         | |
+| **CEX.IO**       | :heavy_check_mark: | :x:                | :x:                | :question:         | :question:         | :question:         | New support, not widely tested  |
+| **Coinbase Pro** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
+| **Coinmate**     | :heavy_check_mark: | :heavy_check_mark: | :x:                | :question:         | :question:         | :question:         | |
+| **OKCoin**       | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :question:         | :question:         | :question:         | |
+| **OKEx**         | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :question:         | :question:         | :question:         | |
+| **Poloniex**     | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :question:         | :question:         | :question:         | |
+| **Gemini**       | :heavy_check_mark: | :heavy_check_mark: | :x:                | :construction:     | :construction:     | :construction:     | |
+| **Wex**          | :heavy_check_mark: | :heavy_check_mark: | :x:                | :question:         | :question:         | :question:         | |
 
 - :heavy_check_mark: - implemented
 - :construction: - missing but can be implemented
 - :x: - not supported by the exchange
+- :question: - exchange support level not known (please fill in)
 
 If you missing a specific exchange implementation, feel free to propose a pull request or open an issue with some sweet BTC bounty. 
  
