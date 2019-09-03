@@ -97,6 +97,21 @@ public class BitmexWebSocketTransaction {
         return positions;
     }
 
+    public BitmexMargin[] toBitmexMargin(){
+        BitmexMargin[] margins = new BitmexMargin[this.data.size()];
+        for (int i=0;i < this.data.size(); i++){
+            JsonNode jsonPosition = this.data.get(i);
+
+            try {
+                margins[i] = (BitmexMargin) this.mapper.readValue(jsonPosition.toString(),BitmexMargin.class);
+            }catch (IOException ex){
+                ex.printStackTrace();
+            }
+        }
+
+        return margins;
+    }
+
     public BitmexExecution[] toBitmexExecutions(){
         BitmexExecution[] executions = new BitmexExecution[this.data.size()];
         for (int i=0;i < this.data.size(); i++){

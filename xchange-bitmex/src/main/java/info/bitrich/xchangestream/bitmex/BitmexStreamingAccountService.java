@@ -1,13 +1,14 @@
 package info.bitrich.xchangestream.bitmex;
 
-import info.bitrich.xchangestream.bitmex.dto.BitmexPosition;
+import info.bitrich.xchangestream.bitmex.dto.BitmexWebSocketTransaction;
 import info.bitrich.xchangestream.core.StreamingAccountService;
 import io.reactivex.Observable;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.dto.account.Balance;
 
+import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.Arrays;
+import java.math.RoundingMode;
 
 public class BitmexStreamingAccountService implements StreamingAccountService {
 
@@ -19,14 +20,33 @@ public class BitmexStreamingAccountService implements StreamingAccountService {
 
     @Override
     public Observable<Balance> getBalanceChanges(Currency currency, Object... args) {
-        String channelName = "position";
 
-        return streamingService.subscribeBitmexChannel(channelName).map(s->{
-            BitmexPosition[] positions = s.toBitmexPositions();
-            Arrays.stream(positions).forEach(position->{
-                System.out.println(position.toString());
-            });
-            return new Balance(Currency.BTC, BigDecimal.valueOf(1),BigDecimal.ONE);
-        });
+        if(currency.equals(Currency.XBT) || currency.equals(Currency.BTC)) {
+
+            return streamingService.subscribeBitmexChannel("margin")
+
+                    .map(BitmexWebSocketTransaction::toBitmexMargin)
+                    .map(margin -> {
+
+                        BigDecimal grossLastValue = (margin[0].getGrossLastValue() == 0 && margin[0].getRiskValue() != 0)
+                                ? BigDecimal.valueOf(margin[0].getRiskValue()).divide(BigDecimal.valueOf(100000000),8, RoundingMode.UNNECESSARY)
+                                : BigDecimal.valueOf(margin[0].getGrossLastValue()).divide(BigDecimal.valueOf(100000000),8, RoundingMode.UNNECESSARY);
+
+                        BigDecimal marginBalance = (margin[0].getMarginBalance() == 0 && margin[0].getWalletBalance() != 0)
+                                ? BigDecimal.valueOf(margin[0].getWalletBalance()).divide(BigDecimal.valueOf(100000000),8, RoundingMode.UNNECESSARY)
+                                : BigDecimal.valueOf(margin[0].getMarginBalance()).divide(BigDecimal.valueOf(100000000),8, RoundingMode.UNNECESSARY);
+
+                        return new Balance(
+                                currency,
+                                grossLastValue.add(marginBalance),
+                                marginBalance,
+                                grossLastValue
+                        );
+
+                    }).filter(balance-> balance.getAvailable().compareTo(BigDecimal.ZERO) != 0);
+        }else{
+            return Observable.error(new IOException("Bitmex exchange only supports XBT or BTC currency."));
+        }
+
     }
 }
