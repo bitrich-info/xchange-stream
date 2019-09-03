@@ -9,7 +9,6 @@ import io.reactivex.Observable;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.dto.account.Balance;
 import org.knowm.xchange.dto.account.Wallet;
-import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,12 +25,28 @@ public class CoinmateStreamingAccountService implements StreamingAccountService 
     }
 
     public Observable<Balance> getBalanceChanges(Currency currency, Object... args) {
-        return getWalletChanges().map(wallet -> wallet.getBalance(currency));
+        String channelName = "private-user_balances-" + userId;
+
+        return service.subscribePrivateChannel(channelName, "user_balances")
+                .map((message) -> {
+                    Map<String, CoinmateWebsocketBalance> balanceMap =
+                    StreamingObjectMapperHelper.getObjectMapper().readValue(message, new TypeReference<Map<String, CoinmateWebsocketBalance>>() {});
+            return balanceMap;
+        }).map((balanceMap) -> {
+            CoinmateWebsocketBalance currencyBalance = balanceMap.get(currency.toString());
+            return new Balance(
+                        currency,
+                        currencyBalance.getBalance(),
+                        currencyBalance.getBalance().subtract(currencyBalance.getReserved()),
+                        currencyBalance.getReserved()
+                    );
+        });
     }
 
     public Observable<Wallet> getWalletChanges(Object... args) {
-        String channelName = "private-user_balances-" + this.userId;
-        return this.service.subscribePrivateChannel(channelName, "user_balances").map((message) -> {
+        String channelName = "private-user_balances-" + userId;
+
+        return service.subscribePrivateChannel(channelName, "user_balances").map((message) -> {
             Map<String, CoinmateWebsocketBalance> balanceMap =
                     StreamingObjectMapperHelper.getObjectMapper().readValue(message, new TypeReference<Map<String, CoinmateWebsocketBalance>>() {});
             return balanceMap;
