@@ -1,11 +1,14 @@
 package info.bitrich.xchangestream.bitmex;
 
 
+import info.bitrich.xchangestream.bitmex.dto.BitmexExecution;
 import info.bitrich.xchangestream.bitmex.dto.BitmexOrder;
 import info.bitrich.xchangestream.core.StreamingTradeService;
 import io.reactivex.Observable;
+import org.knowm.xchange.bitmex.dto.marketdata.BitmexPrivateOrder;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.Order;
+import org.knowm.xchange.dto.trade.UserTrade;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -33,6 +36,20 @@ public class BitmexStreamingTradeService implements StreamingTradeService {
                     .filter(bitmexOrder -> bitmexOrder.getSymbol().equals(instrument))
                     .filter(BitmexOrder::isNotWorkingIndicator)
                     .map(BitmexOrder::toOrder).collect(Collectors.toList());
+        });
+    }
+
+    @Override
+    public Observable<UserTrade> getUserTrades(CurrencyPair currencyPair, Object... args) {
+        String channelName = "execution";
+        String instrument = currencyPair.base.toString() + currencyPair.counter.toString();
+
+        return streamingService.subscribeBitmexChannel(channelName).flatMapIterable(s -> {
+            BitmexExecution[] bitmexExecutions = s.toBitmexExecutions();
+            return Arrays.stream(bitmexExecutions)
+                    .filter(bitmexExecution -> bitmexExecution.getSymbol().equals(instrument))
+                    .filter(bitmexExecution -> !(bitmexExecution.getOrdStatus().equals(BitmexPrivateOrder.OrderStatus.New)))
+                    .map(BitmexExecution::toUserTrade).collect(Collectors.toList());
         });
     }
 }

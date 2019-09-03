@@ -1,11 +1,13 @@
 package info.bitrich.xchangestream.bitmex;
 
+import info.bitrich.xchangestream.bitmex.dto.BitmexPosition;
 import info.bitrich.xchangestream.core.StreamingAccountService;
 import io.reactivex.Observable;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.dto.account.Balance;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 
 public class BitmexStreamingAccountService implements StreamingAccountService {
 
@@ -20,7 +22,10 @@ public class BitmexStreamingAccountService implements StreamingAccountService {
         String channelName = "position";
 
         return streamingService.subscribeBitmexChannel(channelName).map(s->{
-            System.out.println(s.getData().toString());
+            BitmexPosition[] positions = s.toBitmexPositions();
+            Arrays.stream(positions).forEach(position->{
+                System.out.println(position.toString());
+            });
             return new Balance(Currency.BTC, BigDecimal.valueOf(1),BigDecimal.ONE);
         });
     }
