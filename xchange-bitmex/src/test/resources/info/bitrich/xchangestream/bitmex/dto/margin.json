@@ -1,0 +1,16 @@
+[
+  {
+    "account": 4644,
+    "currency": "XBt",
+    "grossMarkValue": 466900000,
+    "riskValue": 466900000,
+    "maintMargin": 7652247,
+    "unrealisedPnl": 2601583,
+    "marginBalance": 208949323,
+    "marginBalancePcnt": 0.4475,
+    "marginLeverage": 2.234513102490406,
+    "marginUsedPcnt": 0.0366,
+    "timestamp": "2019-09-03T14:11:45.469Z",
+    "grossLastValue": 466900000
+  }
+]

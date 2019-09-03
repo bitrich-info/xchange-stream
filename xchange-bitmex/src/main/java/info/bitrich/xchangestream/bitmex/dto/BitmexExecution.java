@@ -4,8 +4,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.knowm.xchange.bitmex.dto.marketdata.BitmexPrivateOrder;
 import org.knowm.xchange.bitmex.dto.trade.BitmexSide;
+import org.knowm.xchange.currency.Currency;
+import org.knowm.xchange.currency.CurrencyPair;
+import org.knowm.xchange.dto.Order;
+import org.knowm.xchange.dto.trade.UserTrade;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 
 /**
@@ -324,6 +329,23 @@ public class BitmexExecution {
 
     public Date getTimestamp() {
         return timestamp;
+    }
+
+    public UserTrade toUserTrade(){
+        return new UserTrade(
+                (side.equals("Buy"))
+                        ? Order.OrderType.BID
+                        : Order.OrderType.ASK,
+                    BigDecimal.valueOf(lastQty),
+                new CurrencyPair(symbol.substring(0, 3), symbol.substring(3)),
+                lastPx,
+                transactTime,
+                execID,
+                orderID,
+                BigDecimal.valueOf(execComm).divide(BigDecimal.valueOf(100000000),8,RoundingMode.UNNECESSARY),
+                Currency.XBT
+                );
+
     }
 
     @Override
