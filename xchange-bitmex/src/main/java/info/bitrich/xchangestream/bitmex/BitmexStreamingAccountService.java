@@ -21,7 +21,7 @@ public class BitmexStreamingAccountService implements StreamingAccountService {
     /*
         Total Amount = real btc on bitmex account + all borrowed btc in order to go long or short in real-time
         Available Amount = real btc on the account + any unrealised profit/loss in real-time
-        Frozen Amount = all borrowed btc funds in order to go long or short.
+        Frozen Amount = all borrowed btc funds in order to go long or short in real-time
      */
 
     @Override
