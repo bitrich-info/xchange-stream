@@ -1,7 +1,7 @@
-package info.bitrich.xchange.coinmate;
+package info.bitrich.xchangestream.coinmate;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import info.bitrich.xchange.coinmate.dto.CoinmateWebsocketBalance;
+import info.bitrich.xchangestream.coinmate.dto.CoinmateWebsocketBalance;
 import info.bitrich.xchangestream.core.StreamingAccountService;
 import info.bitrich.xchangestream.service.netty.StreamingObjectMapperHelper;
 import info.bitrich.xchangestream.service.pusher.PusherStreamingService;
