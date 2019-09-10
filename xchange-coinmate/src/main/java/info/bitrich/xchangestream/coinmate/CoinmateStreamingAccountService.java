@@ -63,7 +63,7 @@ public class CoinmateStreamingAccountService implements StreamingAccountService 
             });
             return balances;
         }).map((balances) -> {
-            return new Wallet("spot", balances);
+            return Wallet.Builder.from(balances).id("spot").build();
         });
     }
 }
