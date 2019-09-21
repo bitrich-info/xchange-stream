@@ -12,7 +12,6 @@ import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.dto.marketdata.Ticker;
 import org.knowm.xchange.dto.marketdata.Trade;
 import org.knowm.xchange.kraken.KrakenAdapters;
-import org.knowm.xchange.kraken.KrakenUtils;
 import org.knowm.xchange.kraken.dto.marketdata.KrakenPublicOrder;
 import org.knowm.xchange.kraken.dto.marketdata.KrakenPublicTrade;
 import org.knowm.xchange.kraken.dto.marketdata.KrakenTicker;
