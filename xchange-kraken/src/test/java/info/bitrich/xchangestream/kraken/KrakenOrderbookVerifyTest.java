@@ -40,7 +40,8 @@ public class KrakenOrderbookVerifyTest {
         bids.add(new KrakenPublicOrder(BigDecimal.valueOf(9250),BigDecimal.ONE, Date.from(Instant.now()).getTime()));
         bids.add(new KrakenPublicOrder(BigDecimal.valueOf(9240),BigDecimal.ONE, Date.from(Instant.now()).getTime()));
 
-        OrderBook orderBook = KrakenOrderBookUtils.verifyKrakenOrderBook(KrakenAdapters.adaptOrderBook(new KrakenDepth(asks,bids),CurrencyPair.BTC_EUR));
+        OrderBook orderBook = KrakenAdapters.adaptOrderBook(new KrakenDepth(asks,bids),CurrencyPair.BTC_EUR);
+        KrakenOrderBookUtils.verifyKrakenOrderBook(orderBook);
 
         assertThat(orderBook.getAsks().size()).isEqualTo(2);
         assertThat(orderBook.getBids().size()).isEqualTo(4);
@@ -67,7 +68,8 @@ public class KrakenOrderbookVerifyTest {
         bids.add(new KrakenPublicOrder(BigDecimal.valueOf(9250),BigDecimal.ONE, Date.from(Instant.now()).getTime()));
         bids.add(new KrakenPublicOrder(BigDecimal.valueOf(9240),BigDecimal.ONE, Date.from(Instant.now()).getTime()));
 
-        OrderBook orderBook = KrakenOrderBookUtils.verifyKrakenOrderBook(KrakenAdapters.adaptOrderBook(new KrakenDepth(asks,bids),CurrencyPair.BTC_EUR));
+        OrderBook orderBook = KrakenAdapters.adaptOrderBook(new KrakenDepth(asks,bids),CurrencyPair.BTC_EUR);
+        KrakenOrderBookUtils.verifyKrakenOrderBook(orderBook);
 
         assertThat(orderBook.getAsks().size()).isEqualTo(4);
         assertThat(orderBook.getBids().size()).isEqualTo(2);

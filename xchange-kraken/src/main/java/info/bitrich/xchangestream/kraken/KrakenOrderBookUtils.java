@@ -92,7 +92,7 @@ public class KrakenOrderBookUtils {
         return new BigDecimal(timestamp).multiply(new BigDecimal(1000)).longValue();
     }
 
-    public static OrderBook verifyKrakenOrderBook(OrderBook orderBook) {
+    public static void verifyKrakenOrderBook(OrderBook orderBook) {
 
         Collections.sort(orderBook.getBids());
         Collections.sort(orderBook.getAsks());
@@ -112,6 +112,5 @@ public class KrakenOrderBookUtils {
                                 (orderBook.getAsks().get(0).getLimitPrice().compareTo(bid.getLimitPrice()) <= 0
                                         && bid.getTimestamp().before(orderBook.getAsks().get(0).getTimestamp()))
                 );
-        return new OrderBook(orderBook.getTimeStamp(),orderBook.getAsks(),orderBook.getBids());
     }
 }

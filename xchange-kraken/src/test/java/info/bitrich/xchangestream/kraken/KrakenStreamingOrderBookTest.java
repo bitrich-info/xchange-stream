@@ -23,8 +23,8 @@ public class KrakenStreamingOrderBookTest {
         StreamingExchange krakenExchange = StreamingExchangeFactory.INSTANCE.createExchange(KrakenStreamingExchange.class.getName());
         krakenExchange.connect(ProductSubscription.create().addAll(CurrencyPair.ETH_BTC).addAll(CurrencyPair.BTC_USD).addAll(CurrencyPair.BTC_EUR).build()).blockingAwait();
         Disposable dis = krakenExchange.getStreamingMarketDataService().getOrderBook(CurrencyPair.ETH_BTC).subscribe(s->{
-
-            assertThat(s).isEqualTo(KrakenOrderBookUtils.verifyKrakenOrderBook(s));
+            KrakenOrderBookUtils.verifyKrakenOrderBook(s);
+            assertThat(s).isEqualTo(s);
             assertThat(s.getBids().get(0).getLimitPrice()).isLessThan(s.getAsks().get(0).getLimitPrice());
 
             for(int i=0;i<s.getBids().size();i++){
@@ -41,8 +41,8 @@ public class KrakenStreamingOrderBookTest {
             }
         });
         Disposable dis2 = krakenExchange.getStreamingMarketDataService().getOrderBook(CurrencyPair.BTC_EUR).subscribe(s->{
-
-            assertThat(s).isEqualTo(KrakenOrderBookUtils.verifyKrakenOrderBook(s));
+            KrakenOrderBookUtils.verifyKrakenOrderBook(s);
+            assertThat(s).isEqualTo(s);
             assertThat(s.getBids().get(0).getLimitPrice()).isLessThan(s.getAsks().get(0).getLimitPrice());
 
             for(int i=0;i<s.getBids().size();i++){

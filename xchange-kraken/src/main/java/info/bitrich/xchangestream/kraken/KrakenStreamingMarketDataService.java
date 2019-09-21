@@ -58,7 +58,9 @@ public class KrakenStreamingMarketDataService implements StreamingMarketDataServ
                 .map(ob -> {
                     KrakenOrderBookStorage orderBook = ob.toKrakenOrderBook(orderBooks.get(channelName), depth);
                     orderBooks.put(channelName, orderBook);
-                    return KrakenOrderBookUtils.verifyKrakenOrderBook(KrakenAdapters.adaptOrderBook(orderBook.toKrakenDepth(), currencyPair));
+                    OrderBook orderBook1 = KrakenAdapters.adaptOrderBook(orderBook.toKrakenDepth(), currencyPair);
+                    KrakenOrderBookUtils.verifyKrakenOrderBook(orderBook1);
+                    return orderBook1;
                 });
     }
 
