@@ -116,7 +116,7 @@ public class CoinbaseProWebSocketTransaction {
 
     private String[][] CoinbaseProOrderBookChanges(String side, String[][] changes, SortedMap<BigDecimal, String> sideEntries,
                                             int maxDepth) {
-        if (changes.length == 0) {
+        if (changes.length == 0 || sideEntries == null) {
             return null;
         }
 
