@@ -135,7 +135,7 @@ public class CoinbaseProWebSocketTransaction {
         for (Map.Entry<BigDecimal, String> level : sideEntries.entrySet()) {
             if (maxDepth > 0 && currentDepth > maxDepth) continue;
             String volume = level.getValue();
-            if (!volume.equals("0")) {
+            if (!(volume.equals("0.00000000") || volume.equals("0"))) {
                 levels.add(new String[]{level.getKey().toString(), volume, "1"});
                 currentDepth++;
             }
