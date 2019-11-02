@@ -63,7 +63,8 @@ public class CoinbaseProStreamingMarketDataService implements StreamingMarketDat
         return getRawWebSocketTransactions(currencyPair, false)
                 .filter(message -> message.getType().equals(SNAPSHOT) || message.getType().equals(L2UPDATE))
                 .map(s -> {
-                    if (s.getType().equals(SNAPSHOT)) {
+                    // check if bids/asks contains ccy - in-case we did not get the snapshot (this happens during reconnects)
+                    if (s.getType().equals(SNAPSHOT) || !bids.containsKey(currencyPair) || !asks.containsKey(currencyPair)) {
                         bids.put(currencyPair, new TreeMap<>(java.util.Collections.reverseOrder()));
                         asks.put(currencyPair, new TreeMap<>());
                     }
