@@ -65,8 +65,10 @@ public class BitstampStreamingMarketDataService implements StreamingMarketDataSe
                 .map(s -> {
                     ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
                     BitstampWebSocketTransaction transactions = mapper.treeToValue(s.get("data"), BitstampWebSocketTransaction.class);
-                    transactions = new BitstampWebSocketTransaction(new Date().getTime() / 1000L, transactions.getTid(),
-                            transactions.getPrice(), transactions.getAmount(), transactions.getType());
+                  
+                    //transactions = new BitstampWebSocketTransaction(new Date().getTime() / 1000L, transactions.getTid(),
+                    //        transactions.getPrice(), transactions.getAmount(), transactions.getType());
+
                     return BitstampAdapters.adaptTrade(transactions, currencyPair, 1000);
                 });
     }
