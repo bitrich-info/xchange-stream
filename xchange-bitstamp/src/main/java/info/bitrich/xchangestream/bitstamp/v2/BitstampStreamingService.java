@@ -20,14 +20,17 @@ public class BitstampStreamingService extends JsonNettyStreamingService {
 
     private static final String JSON_CHANNEL = "channel";
     private static final String JSON_EVENT = "event";
-    private static final String JSON_DATA = "data";
-    private static final ArrayList<String> JSON_DATA2 = new ArrayList<String>();
+    
+    // can be: trade, data...
+    private static final ArrayList<String> JSON_DATA = new ArrayList<String>();
     
     public BitstampStreamingService(String apiUrl) {
         super(apiUrl, Integer.MAX_VALUE);
         
         // add events
-        JSON_DATA2.add("trade");
+        JSON_DATA.add("trade");
+        // not yet tested
+        //JSON_DATA.add("data");
     }
 
     @Override
@@ -63,7 +66,7 @@ public class BitstampStreamingService extends JsonNettyStreamingService {
         }
         // event: trade
         //if (event.equals(JSON_DATA)) {
-        if (JSON_DATA2.contains(event)) {
+        if (JSON_DATA.contains(event)) {
         	super.handleMessage(message);
         }
     }

@@ -1,10 +1,16 @@
 package info.bitrich.xchangestream.bitstamp.v2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+// old version?
 import info.bitrich.xchangestream.bitstamp.dto.BitstampOrderBook;
-import info.bitrich.xchangestream.bitstamp.dto.BitstampWebSocketTransaction;
+
+
+import info.bitrich.xchangestream.bitstamp.v2.dto.BitstampWebSocketTrade;
+
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import info.bitrich.xchangestream.service.netty.StreamingObjectMapperHelper;
+
 import io.reactivex.Observable;
 import org.knowm.xchange.bitstamp.BitstampAdapters;
 import org.knowm.xchange.currency.CurrencyPair;
@@ -13,7 +19,6 @@ import org.knowm.xchange.dto.marketdata.Ticker;
 import org.knowm.xchange.dto.marketdata.Trade;
 import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
 
-import java.util.Date;
 
 /**
  * Bitstamp WebSocket V2 Streaming Market Data Service implementation
@@ -64,12 +69,18 @@ public class BitstampStreamingMarketDataService implements StreamingMarketDataSe
         return service.subscribeChannel(channelName, "trade")
                 .map(s -> {
                     ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
-                    BitstampWebSocketTransaction transactions = mapper.treeToValue(s.get("data"), BitstampWebSocketTransaction.class);
-                  
-                    //transactions = new BitstampWebSocketTransaction(new Date().getTime() / 1000L, transactions.getTid(),
-                    //        transactions.getPrice(), transactions.getAmount(), transactions.getType());
-
-                    return BitstampAdapters.adaptTrade(transactions, currencyPair, 1000);
+                    // v2 websocket trade data
+                    BitstampWebSocketTrade transactions = mapper.treeToValue(s.get("data"), BitstampWebSocketTrade.class);
+                    // convert
+                    org.knowm.xchange.bitstamp.dto.marketdata.BitstampTransaction bitstampTransaction = 
+                    		new org.knowm.xchange.bitstamp.dto.marketdata.BitstampTransaction(
+                    				transactions.getDate(), 
+                    				transactions.getTid(), 
+                    				transactions.getPrice(), 
+                    				transactions.getAmount(), 
+                    				transactions.getType()); 
+                    
+                    return BitstampAdapters.adaptTrade(bitstampTransaction, currencyPair, 1000);
                 });
     }
 
