@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Bitstamp WebSocket V2 streaming service implementation
@@ -20,9 +21,13 @@ public class BitstampStreamingService extends JsonNettyStreamingService {
     private static final String JSON_CHANNEL = "channel";
     private static final String JSON_EVENT = "event";
     private static final String JSON_DATA = "data";
-
+    private static final ArrayList<String> JSON_DATA2 = new ArrayList<String>();
+    
     public BitstampStreamingService(String apiUrl) {
         super(apiUrl, Integer.MAX_VALUE);
+        
+        // add events
+        JSON_DATA2.add("trade");
     }
 
     @Override
@@ -56,8 +61,10 @@ public class BitstampStreamingService extends JsonNettyStreamingService {
             LOG.warn("The message has been received from disconnected channel '{}'. Skipped.", channel);
             return;
         }
-        if (event.equals(JSON_DATA)) {
-            super.handleMessage(message);
+        // event: trade
+        //if (event.equals(JSON_DATA)) {
+        if (JSON_DATA2.contains(event)) {
+        	super.handleMessage(message);
         }
     }
 
