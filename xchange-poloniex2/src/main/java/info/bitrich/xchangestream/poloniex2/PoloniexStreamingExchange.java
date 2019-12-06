@@ -1,16 +1,16 @@
 package info.bitrich.xchangestream.poloniex2;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import info.bitrich.xchangestream.core.ProductSubscription;
 import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
+import info.bitrich.xchangestream.service.netty.StreamingObjectMapperHelper;
 import io.reactivex.Completable;
+import io.reactivex.Observable;
 import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.currency.CurrencyPair;
-import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import org.knowm.xchange.poloniex.PoloniexExchange;
 
 import java.io.IOException;
@@ -35,6 +35,7 @@ public class PoloniexStreamingExchange extends PoloniexExchange implements Strea
 
     @Override
     protected void initServices() {
+        applyStreamingSpecification(getExchangeSpecification(), streamingService);
         super.initServices();
         Map<CurrencyPair, Integer> currencyPairMap = getCurrencyPairMap();
         streamingMarketDataService = new PoloniexStreamingMarketDataService(streamingService, currencyPairMap);
@@ -42,8 +43,8 @@ public class PoloniexStreamingExchange extends PoloniexExchange implements Strea
 
     private Map<CurrencyPair, Integer> getCurrencyPairMap() {
         Map<CurrencyPair, Integer> currencyPairMap = new HashMap<>();
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        final ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
+
         try {
             URL tickerUrl = new URL(TICKER_URL);
             JsonNode jsonRootTickers = mapper.readTree(tickerUrl);
@@ -74,6 +75,11 @@ public class PoloniexStreamingExchange extends PoloniexExchange implements Strea
     }
 
     @Override
+    public Observable<Object> connectionIdle() {
+        return streamingService.subscribeIdle();
+    }
+
+    @Override
     public ExchangeSpecification getDefaultExchangeSpecification() {
         ExchangeSpecification spec = super.getDefaultExchangeSpecification();
         spec.setShouldLoadRemoteMetaData(false);
@@ -93,4 +99,13 @@ public class PoloniexStreamingExchange extends PoloniexExchange implements Strea
 
     @Override
     public void useCompressedMessages(boolean compressedMessages) { streamingService.useCompressedMessages(compressedMessages); }
+    
+    @Override
+    public Observable<Object> connectionSuccess() {
+        return streamingService.subscribeConnectionSuccess();
+    }
+    @Override
+    public Observable<Throwable> reconnectFailure() {
+        return streamingService.subscribeReconnectFailure();
+    }
 }

@@ -6,6 +6,7 @@ import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import info.bitrich.xchangestream.okcoin.dto.OkCoinOrderbook;
 import info.bitrich.xchangestream.okcoin.dto.OkCoinWebSocketTrade;
 import info.bitrich.xchangestream.okcoin.dto.marketdata.FutureTicker;
+import info.bitrich.xchangestream.service.netty.StreamingObjectMapperHelper;
 import io.reactivex.Observable;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.Order;
@@ -33,12 +34,11 @@ import java.util.Map;
 public class OkCoinStreamingMarketDataService implements StreamingMarketDataService {
     private final OkCoinStreamingService service;
 
-    private final ObjectMapper mapper = new ObjectMapper();
-    private final Map<CurrencyPair, OkCoinOrderbook> orderbooks = new HashMap<>();
+    private final ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
+    private final Map<String, OkCoinOrderbook> orderbooks = new HashMap<>();
 
     OkCoinStreamingMarketDataService(OkCoinStreamingService service) {
         this.service = service;
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     /**
@@ -70,16 +70,17 @@ public class OkCoinStreamingMarketDataService implements StreamingMarketDataServ
                 channel = channel + "_" + args[1];
             }
         }
+        final String key=channel;
 
         return service.subscribeChannel(channel)
                 .map(s -> {
                     OkCoinOrderbook okCoinOrderbook;
-                    if (!orderbooks.containsKey(currencyPair)) {
+                    if (!orderbooks.containsKey(key)) {
                         OkCoinDepth okCoinDepth = mapper.treeToValue(s.get("data"), OkCoinDepth.class);
                         okCoinOrderbook = new OkCoinOrderbook(okCoinDepth);
-                        orderbooks.put(currencyPair, okCoinOrderbook);
+                        orderbooks.put(key, okCoinOrderbook);
                     } else {
-                        okCoinOrderbook = orderbooks.get(currencyPair);
+                        okCoinOrderbook = orderbooks.get(key);
                         if (s.get("data").has("asks")) {
                             if (s.get("data").get("asks").size() > 0) {
                                 BigDecimal[][] askLevels = mapper.treeToValue(s.get("data").get("asks"), BigDecimal[][].class);

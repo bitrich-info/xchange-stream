@@ -1,10 +1,9 @@
 package info.bitrich.xchangestream.poloniex2;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import info.bitrich.xchangestream.poloniex2.dto.PoloniexWebSocketEvent;
 import info.bitrich.xchangestream.poloniex2.dto.PoloniexWebSocketEventsTransaction;
+import info.bitrich.xchangestream.poloniex2.dto.PoloniexWebSocketOrderbookModifiedEvent;
 import info.bitrich.xchangestream.poloniex2.dto.PoloniexWebSocketSubscriptionMessage;
 import info.bitrich.xchangestream.service.netty.JsonNettyStreamingService;
 import io.reactivex.Completable;
@@ -14,8 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -31,16 +30,21 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
 
 
     public PoloniexStreamingService(String apiUrl) {
-        super(apiUrl, Integer.MAX_VALUE);
+        super(apiUrl, Integer.MAX_VALUE, DEFAULT_CONNECTION_TIMEOUT, DEFAULT_RETRY_DURATION, 2);
     }
 
     @Override
     protected void handleMessage(JsonNode message) {
+
         if (message.isArray()) {
+            if (message.size() < 3) {
+                if (message.get(0).asText().equals(HEARTBEAT)) return;
+                else if (message.get(0).asText().equals("1002")) return;
+            }
             Integer channelId = new Integer(message.get(0).toString());
             if (channelId > 0 && channelId < 1000) {
                 JsonNode events = message.get(2);
-                if (events.isArray()) {
+                if (events != null && events.isArray()) {
                     JsonNode event = events.get(0);
                     if (event.get(0).toString().equals("\"i\"")) {
                         if (event.get(1).has("orderBook")) {
@@ -60,25 +64,8 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
     }
 
     @Override
-    public void messageHandler(String message) {
-        LOG.debug("Received message: {}", message);
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode;
-
-        // Parse incoming message to JSON
-        try {
-            jsonNode = objectMapper.readTree(message);
-        } catch (IOException e) {
-            LOG.error("Error parsing incoming message to JSON: {}", message);
-            return;
-        }
-
-        if (jsonNode.isArray() && jsonNode.size() < 3) {
-            if (jsonNode.get(0).asText().equals(HEARTBEAT)) return;
-            else if (jsonNode.get(0).asText().equals("1002")) return;
-        }
-
-        handleMessage(jsonNode);
+    public boolean processArrayMassageSeparately() {
+        return false;
     }
 
     @Override
@@ -91,20 +78,33 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
         return subscriptions.get(channelName);
     }
 
-    public Observable<PoloniexWebSocketEvent> subscribeCurrencyPairChannel(CurrencyPair currencyPair) {
+    public Observable<List<PoloniexWebSocketEvent>> subscribeCurrencyPairChannel(CurrencyPair currencyPair) {
         String channelName = currencyPair.counter.toString() + "_" + currencyPair.base.toString();
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
         return subscribeChannel(channelName)
-                .flatMapIterable(s -> {
-                    PoloniexWebSocketEventsTransaction transaction = mapper.readValue(s.toString(), PoloniexWebSocketEventsTransaction.class);
-                    return Arrays.asList(transaction.getEvents());
-                }).share();
+                .map(jsonNode -> objectMapper.treeToValue(jsonNode, PoloniexWebSocketEventsTransaction.class))
+                .scan((poloniexWebSocketEventsTransactionOld, poloniexWebSocketEventsTransactionNew) -> {
+                    final boolean initialSnapshot = poloniexWebSocketEventsTransactionNew.getEvents()
+                            .stream().anyMatch(PoloniexWebSocketOrderbookModifiedEvent.class::isInstance);
+                    final boolean sequenceContinuous = poloniexWebSocketEventsTransactionOld.getSeqId() + 1
+                            == poloniexWebSocketEventsTransactionNew.getSeqId();
+                    if (!initialSnapshot || sequenceContinuous) {
+                        return poloniexWebSocketEventsTransactionNew;
+                    } else {
+                        throw new RuntimeException(
+                                String.format(
+                                        "Invalid sequencing, old: %s new: %s",
+                                        objectMapper.writeValueAsString(poloniexWebSocketEventsTransactionOld),
+                                        objectMapper.writeValueAsString(poloniexWebSocketEventsTransactionNew)
+                                )
+                        );
+                    }
+                })
+                .map(PoloniexWebSocketEventsTransaction::getEvents)
+                .share();
     }
 
     @Override
-    protected String getChannelNameFromMessage(JsonNode message) throws IOException {
+    protected String getChannelNameFromMessage(JsonNode message) {
         String strChannelId = message.get(0).asText();
         Integer channelId = new Integer(strChannelId);
         if (channelId >= 1000) return strChannelId;
@@ -115,8 +115,6 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
     public String getSubscribeMessage(String channelName, Object... args) throws IOException {
         PoloniexWebSocketSubscriptionMessage subscribeMessage = new PoloniexWebSocketSubscriptionMessage("subscribe",
                 channelName);
-
-        ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.writeValueAsString(subscribeMessage);
     }
 
@@ -124,8 +122,6 @@ public class PoloniexStreamingService extends JsonNettyStreamingService {
     public String getUnsubscribeMessage(String channelName) throws IOException {
         PoloniexWebSocketSubscriptionMessage subscribeMessage = new PoloniexWebSocketSubscriptionMessage("unsubscribe",
                 channelName);
-
-        ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.writeValueAsString(subscribeMessage);
     }
 
