@@ -1,4 +1,4 @@
-package info.bitrich.xchangestream.service.exception;
+package info.bitrich.xchangestream.exception;
 
 /**
  * Exception indicating that call cannot be completed because not connected to the exchange's streaming API.

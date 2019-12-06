@@ -1,4 +1,4 @@
-package info.bitrich.xchangestream.service;
+package info.bitrich.xchangestream;
 
 import io.reactivex.Completable;
 
