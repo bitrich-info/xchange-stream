@@ -1,4 +1,4 @@
-package info.bitrich.xchangestream.service;
+package info.bitrich.xchangestream;
 
 import io.reactivex.Completable;
 
@@ -15,7 +15,7 @@ public abstract class ConnectableService {
      * static final TimedSemaphore limiter = new TimedSemaphore(1, MINUTES, 15);
      * ExchangeSpecification spec = exchange.getDefaultExchangeSpecification();
      * spec.setExchangeSpecificParameters(ImmutableMap.of(
-     *   {@link ConnectableService#BEFORE_CONNECTION_HANDLER}, () -> limiter.acquire()
+     *   {@link info.bitrich.xchangestream.service.ConnectableService#BEFORE_CONNECTION_HANDLER}, () -> limiter.acquire()
      * ));
      * }
      * </pre>

@@ -32,7 +32,6 @@ public class BitfinexManualExample {
 
     public static void main(String[] args) throws Exception {
         CertHelper.trustAllCerts();
-
         ExchangeSpecification defaultExchangeSpecification = new ExchangeSpecification(BitfinexStreamingExchange.class);
         defaultExchangeSpecification.setExchangeSpecificParametersItem(ConnectableService.BEFORE_CONNECTION_HANDLER, (Runnable) BitfinexManualExample::rateLimit);
 
