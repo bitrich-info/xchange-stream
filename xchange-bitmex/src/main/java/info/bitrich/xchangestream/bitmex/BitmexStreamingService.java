@@ -152,7 +152,7 @@ public class BitmexStreamingService extends JsonNettyStreamingService {
 
     @Override
     protected WebSocketClientExtensionHandler getWebSocketClientExtensionHandler() {
-        return null;
+        return BitmexWebsocketHandler.INSTANCE;
     }
 
     public Observable<BitmexWebSocketTransaction> subscribeBitmexChannel(String channelName) {
