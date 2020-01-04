@@ -55,7 +55,7 @@ public class PoloniexStreamingExchange extends PoloniexExchange implements Strea
 
                 String[] currencies = pairSymbol.split("_");
                 CurrencyPair currencyPair = new CurrencyPair(new Currency(currencies[1]), new Currency(currencies[0]));
-                currencyPairMap.put(currencyPair, new Integer(id));
+                currencyPairMap.put(currencyPair, Integer.valueOf(id));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -72,6 +72,11 @@ public class PoloniexStreamingExchange extends PoloniexExchange implements Strea
     @Override
     public Completable disconnect() {
         return streamingService.disconnect();
+    }
+
+    @Override
+    public Observable<Object> connectionIdle() {
+        return streamingService.subscribeIdle();
     }
 
     @Override
