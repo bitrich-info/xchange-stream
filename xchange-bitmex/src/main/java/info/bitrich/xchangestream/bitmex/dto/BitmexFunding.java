@@ -2,27 +2,38 @@ package info.bitrich.xchangestream.bitmex.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class BitmexFunding extends BitmexMarketDataEvent {
+import java.math.BigDecimal;
+import java.util.Date;
 
-    private double fundingRate;
-
-    private double fundingRateDaily;
+public class BitmexFunding {
+    private String symbol;
+    private Date timestamp;
+    private BigDecimal fundingRate;
+    private BigDecimal fundingRateDaily;
 
     public BitmexFunding(@JsonProperty("symbol") String symbol,
-                         @JsonProperty("timestamp") String timestamp,
-                         @JsonProperty("fundingRate") double fundingRate,
-                         @JsonProperty("fundingRateDaily") double fundingRateDaily) {
-        super(symbol, timestamp);
+                         @JsonProperty("timestamp") Date timestamp,
+                         @JsonProperty("fundingRate") BigDecimal fundingRate,
+                         @JsonProperty("fundingRateDaily") BigDecimal fundingRateDaily) {
+        this.symbol = symbol;
+        this.timestamp = timestamp;
         this.fundingRate = fundingRate;
         this.fundingRateDaily = fundingRateDaily;
     }
 
-    public double getFundingRate() {
+    public String getSymbol() {
+        return symbol;
+    }
+
+    public Date getTimestamp() {
+        return timestamp;
+    }
+
+    public BigDecimal getFundingRate() {
         return fundingRate;
     }
 
-    public double getFundingRateDaily() {
+    public BigDecimal getFundingRateDaily() {
         return fundingRateDaily;
     }
-
 }

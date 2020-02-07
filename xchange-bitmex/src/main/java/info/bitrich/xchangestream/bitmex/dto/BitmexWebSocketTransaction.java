@@ -69,27 +69,81 @@ public class BitmexWebSocketTransaction {
 
     public BitmexOrder[] toBitmexOrders() {
         BitmexOrder[] orders = new BitmexOrder[this.data.size()];
-        for(int i = 0; i < this.data.size(); ++i) {
+        for (int i = 0; i < this.data.size(); ++i) {
             JsonNode jsonOrder = this.data.get(i);
 
             try {
-                orders[i] = (BitmexOrder) this.mapper.readValue(jsonOrder.toString(), BitmexOrder.class);
+                orders[i] = mapper.readValue(jsonOrder.toString(), BitmexOrder.class);
             } catch (IOException var5) {
                 var5.printStackTrace();
             }
         }
-
         return orders;
+    }
+
+    public BitmexExecution[] toBitmexExecutions() {
+        BitmexExecution[] executions = new BitmexExecution[data.size()];
+        for (int i = 0; i < data.size(); ++i) {
+            JsonNode jsonExecution = data.get(i);
+            try {
+                executions[i] = mapper.readValue(jsonExecution.toString(), BitmexExecution.class);
+            } catch (IOException var5) {
+                var5.printStackTrace();
+            }
+        }
+        return executions;
     }
 
     public BitmexFunding toBitmexFunding() {
         BitmexFunding funding = null;
         try {
-            funding = this.mapper.readValue(this.data.get(0).toString(), BitmexFunding.class);
+            funding = mapper.readValue(this.data.get(0).toString(), BitmexFunding.class);
         } catch (IOException var5) {
             var5.printStackTrace();
         }
         return funding;
+    }
+
+    public BitmexWallet toBitmexWallet() {
+        BitmexWallet wallet = null;
+        try {
+            wallet = mapper.readValue(this.data.get(0).toString(), BitmexWallet.class);
+        } catch (IOException var5) {
+            var5.printStackTrace();
+        }
+        return wallet;
+    }
+
+    public BitmexAffiliate toBitmexAffiliate() {
+        BitmexAffiliate affiliate = null;
+        try {
+            affiliate = mapper.readValue(this.data.get(0).toString(), BitmexAffiliate.class);
+        } catch (Exception var5) {
+            var5.printStackTrace();
+        }
+        return affiliate;
+    }
+    public BitmexMargin toBitmexMargin() {
+        BitmexMargin margin = null;
+        try {
+            margin = mapper.readValue(this.data.get(0).toString(), BitmexMargin.class);
+        } catch (Exception var5) {
+            var5.printStackTrace();
+        }
+        return margin;
+    }
+
+    public BitmexPosition[] toBitmexPositions(){
+        BitmexPosition[] positions = new BitmexPosition[data.size()];
+        for (int i = 0; i < data.size(); ++i) {
+            JsonNode jsonPosition = data.get(i);
+            try {
+                positions[i] = mapper.readValue(jsonPosition.toString(), BitmexPosition.class);
+            } catch (Exception var5) {
+                var5.printStackTrace();
+            }
+        }
+        return positions;
     }
 
     public String getTable() {

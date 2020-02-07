@@ -8,85 +8,101 @@ import org.knowm.xchange.bitmex.dto.trade.BitmexSide;
 import java.math.BigDecimal;
 import java.util.Date;
 
-/**
- * @author Nikita Belenkiy on 05/06/2018.
- */
 public class BitmexExecution {
-
-    protected String execID;
-    protected String orderID;
-    protected String clOrdID;
-    protected String clOrdLinkID;
-    protected long account;
-    protected String symbol;
-    protected BitmexSide side;
-    protected Long lastQty;
-    protected BigDecimal lastPx;
-    protected BigDecimal underlyingLastPx;
-    protected String lastMkt;
-    protected String lastLiquidityInd;
-    protected BigDecimal simpleOrderQty;
-    protected Long orderQty;
-    protected BigDecimal price;
-    protected Long displayQty;
-    protected BigDecimal stopPx;
-    protected BigDecimal pegOffsetValue;
-    protected String pegPriceType;
-    protected String currency;
-    protected String settlCurrency;
-    protected String execType;
-    protected String ordType;
-    protected String timeInForce;
-    protected String execInst;
-    protected String contingencyType;
-    protected String exDestination;
-    protected BitmexPrivateOrder.OrderStatus ordStatus;
-    protected String triggered;
-    protected Boolean workingIndicator;
-    protected String ordRejReason;
-    protected BigDecimal simpleLeavesQty;
-    protected Long leavesQty;
-    protected BigDecimal simpleCumQty;
-    protected BigDecimal cumQty;
-    protected BigDecimal avgPx;
-    protected BigDecimal commission;
-    protected String tradePublishIndicator;
-    protected String multiLegReportingType;
-    protected String text;
-    protected String trdMatchID;
-    protected Long execCost;
-    protected Long execComm;
-    protected BigDecimal homeNotional;
-    protected BigDecimal foreignNotional;
-    protected Date transactTime;
-    protected Date timestamp;
+    private String execID;
+     private String orderID;
+     private String clOrdID;
+     private String clOrdLinkID;
+     private long account;
+     private String symbol;
+     private String side;
+     private Long lastQty;
+     private BigDecimal lastPx;
+     private BigDecimal underlyingLastPx;
+     private String lastMkt;
+     private String lastLiquidityInd;
+     private BigDecimal simpleOrderQty;
+     private Long orderQty;
+     private BigDecimal price;
+     private Long displayQty;
+     private BigDecimal stopPx;
+     private BigDecimal pegOffsetValue;
+     private String pegPriceType;
+     private String currency;
+     private String settlCurrency;
+     private String execType;
+     private String ordType;
+     private String timeInForce;
+     private String execInst;
+     private String contingencyType;
+     private String exDestination;
+     private BitmexPrivateOrder.OrderStatus ordStatus;
+     private String triggered;
+     private Boolean workingIndicator;
+     private String ordRejReason;
+     private BigDecimal simpleLeavesQty;
+     private Long leavesQty;
+     private BigDecimal simpleCumQty;
+     private BigDecimal cumQty;
+     private BigDecimal avgPx;
+     private BigDecimal commission;
+     private String tradePublishIndicator;
+     private String multiLegReportingType;
+     private String text;
+     private String trdMatchID;
+     private Long execCost;
+     private Long execComm;
+     private BigDecimal homeNotional;
+     private BigDecimal foreignNotional;
+     private Date transactTime;
+     private Date timestamp;
 
     @JsonCreator
-    public BitmexExecution(@JsonProperty("execID") String execID, @JsonProperty("orderID") String orderID,
-                           @JsonProperty("clOrdID") String clOrdID, @JsonProperty("clOrdLinkID") String clOrdLinkID,
-                           @JsonProperty("account") int account, @JsonProperty("symbol") String symbol,
-                           @JsonProperty("side") BitmexSide side,
+    public BitmexExecution(@JsonProperty("execID") String execID,
+                           @JsonProperty("orderID") String orderID,
+                           @JsonProperty("clOrdID") String clOrdID,
+                           @JsonProperty("clOrdLinkID") String clOrdLinkID,
+                           @JsonProperty("account") int account,
+                           @JsonProperty("symbol") String symbol,
+                           @JsonProperty("side") String side,
                            @JsonProperty("lastQty") Long lastQty,
-                           @JsonProperty("lastPx") BigDecimal lastPx, @JsonProperty("underlyingLastPx") BigDecimal underlyingLastPx,
-                           @JsonProperty("lastMkt") String lastMkt, @JsonProperty("lastLiquidityInd") String lastLiquidityInd,
-                           @JsonProperty("simpleOrderQty") BigDecimal simpleOrderQty, @JsonProperty("orderQty") long orderQty,
-                           @JsonProperty("price") BigDecimal price, @JsonProperty("displayQty") Long displayQty, @JsonProperty("stopPx") BigDecimal stopPx,
-                           @JsonProperty("pegOffsetValue") BigDecimal pegOffsetValue, @JsonProperty("pegPriceType") String pegPriceType,
-                           @JsonProperty("currency") String currency, @JsonProperty("settlCurrency") String settlCurrency,
+                           @JsonProperty("lastPx") BigDecimal lastPx,
+                           @JsonProperty("underlyingLastPx") BigDecimal underlyingLastPx,
+                           @JsonProperty("lastMkt") String lastMkt,
+                           @JsonProperty("lastLiquidityInd") String lastLiquidityInd,
+                           @JsonProperty("simpleOrderQty") BigDecimal simpleOrderQty,
+                           @JsonProperty("orderQty") long orderQty,
+                           @JsonProperty("price") BigDecimal price,
+                           @JsonProperty("displayQty") Long displayQty, @JsonProperty("stopPx") BigDecimal stopPx,
+                           @JsonProperty("pegOffsetValue") BigDecimal pegOffsetValue,
+                           @JsonProperty("pegPriceType") String pegPriceType,
+                           @JsonProperty("currency") String currency,
+                           @JsonProperty("settlCurrency") String settlCurrency,
                            @JsonProperty("execType") String execType,
-                           @JsonProperty("ordType") String ordType, @JsonProperty("timeInForce") String timeInForce,
-                           @JsonProperty("execInst") String execInst, @JsonProperty("contingencyType") String contingencyType,
+                           @JsonProperty("ordType") String ordType,
+                           @JsonProperty("timeInForce") String timeInForce,
+                           @JsonProperty("execInst") String execInst,
+                           @JsonProperty("contingencyType") String contingencyType,
                            @JsonProperty("exDestination") String exDestination,
-                           @JsonProperty("ordStatus") BitmexPrivateOrder.OrderStatus ordStatus, @JsonProperty("triggered") String triggered,
-                           @JsonProperty("workingIndicator") boolean workingIndicator, @JsonProperty("ordRejReason") String ordRejReason,
-                           @JsonProperty("simpleLeavesQty") BigDecimal simpleLeavesQty, @JsonProperty("leavesQty") Long leavesQty,
-                           @JsonProperty("simpleCumQty") BigDecimal simpleCumQty, @JsonProperty("cumQty") BigDecimal cumQty,
-                           @JsonProperty("avgPx") BigDecimal avgPx, @JsonProperty("commission") BigDecimal commission,
-                           @JsonProperty("tradePublishIndicator") String tradePublishIndicator, @JsonProperty("multiLegReportingType") String multiLegReportingType,
-                           @JsonProperty("text") String text, @JsonProperty("trdMatchID") String trdMatchID,
-                           @JsonProperty("execCost") Long execCost, @JsonProperty("execComm") Long execComm,
+                           @JsonProperty("ordStatus") BitmexPrivateOrder.OrderStatus ordStatus,
+                           @JsonProperty("triggered") String triggered,
+                           @JsonProperty("workingIndicator") boolean workingIndicator,
+                           @JsonProperty("ordRejReason") String ordRejReason,
+                           @JsonProperty("simpleLeavesQty") BigDecimal simpleLeavesQty,
+                           @JsonProperty("leavesQty") Long leavesQty,
+                           @JsonProperty("simpleCumQty") BigDecimal simpleCumQty,
+                           @JsonProperty("cumQty") BigDecimal cumQty,
+                           @JsonProperty("avgPx") BigDecimal avgPx,
+                           @JsonProperty("commission") BigDecimal commission,
+                           @JsonProperty("tradePublishIndicator") String tradePublishIndicator,
+                           @JsonProperty("multiLegReportingType") String multiLegReportingType,
+                           @JsonProperty("text") String text,
+                           @JsonProperty("trdMatchID") String trdMatchID,
+                           @JsonProperty("execCost") Long execCost,
+                           @JsonProperty("execComm") Long execComm,
                            @JsonProperty("homeNotional") BigDecimal homeNotional,
-                           @JsonProperty("foreignNotional") BigDecimal foreignNotional, @JsonProperty("transactTime") Date transactTime,
+                           @JsonProperty("foreignNotional") BigDecimal foreignNotional,
+                           @JsonProperty("transactTime") Date transactTime,
                            @JsonProperty("timestamp") Date timestamp) {
         this.execID = execID;
         this.orderID = orderID;
@@ -137,7 +153,6 @@ public class BitmexExecution {
         this.timestamp = timestamp;
     }
 
-
     public String getExecID() {
         return execID;
     }
@@ -162,7 +177,7 @@ public class BitmexExecution {
         return symbol;
     }
 
-    public BitmexSide getSide() {
+    public String getSide() {
         return side;
     }
 
@@ -254,7 +269,7 @@ public class BitmexExecution {
         return triggered;
     }
 
-    public Boolean isWorkingIndicator() {
+    public Boolean getWorkingIndicator() {
         return workingIndicator;
     }
 
@@ -324,58 +339,5 @@ public class BitmexExecution {
 
     public Date getTimestamp() {
         return timestamp;
-    }
-
-    @Override
-    public String toString() {
-        return "BitmexExecution{" +
-                "execID='" + execID + '\'' +
-                ", orderID='" + orderID + '\'' +
-                ", clOrdID='" + clOrdID + '\'' +
-                ", clOrdLinkID='" + clOrdLinkID + '\'' +
-                ", account=" + account +
-                ", symbol='" + symbol + '\'' +
-                ", side=" + side +
-                ", lastQty=" + lastQty +
-                ", lastPx=" + lastPx +
-                ", underlyingLastPx=" + underlyingLastPx +
-                ", lastMkt='" + lastMkt + '\'' +
-                ", lastLiquidityInd='" + lastLiquidityInd + '\'' +
-                ", simpleOrderQty=" + simpleOrderQty +
-                ", orderQty=" + orderQty +
-                ", price=" + price +
-                ", displayQty=" + displayQty +
-                ", stopPx=" + stopPx +
-                ", pegOffsetValue=" + pegOffsetValue +
-                ", pegPriceType='" + pegPriceType + '\'' +
-                ", currency='" + currency + '\'' +
-                ", settlCurrency='" + settlCurrency + '\'' +
-                ", execType='" + execType + '\'' +
-                ", ordType='" + ordType + '\'' +
-                ", timeInForce='" + timeInForce + '\'' +
-                ", execInst='" + execInst + '\'' +
-                ", contingencyType='" + contingencyType + '\'' +
-                ", exDestination='" + exDestination + '\'' +
-                ", ordStatus='" + ordStatus + '\'' +
-                ", triggered='" + triggered + '\'' +
-                ", workingIndicator=" + workingIndicator +
-                ", ordRejReason='" + ordRejReason + '\'' +
-                ", simpleLeavesQty=" + simpleLeavesQty +
-                ", leavesQty=" + leavesQty +
-                ", simpleCumQty=" + simpleCumQty +
-                ", cumQty=" + cumQty +
-                ", avgPx=" + avgPx +
-                ", commission=" + commission +
-                ", tradePublishIndicator='" + tradePublishIndicator + '\'' +
-                ", multiLegReportingType='" + multiLegReportingType + '\'' +
-                ", text='" + text + '\'' +
-                ", trdMatchID='" + trdMatchID + '\'' +
-                ", execCost=" + execCost +
-                ", execComm=" + execComm +
-                ", homeNotional=" + homeNotional +
-                ", foreignNotional=" + foreignNotional +
-                ", transactTime=" + transactTime +
-                ", timestamp=" + timestamp +
-                '}';
     }
 }

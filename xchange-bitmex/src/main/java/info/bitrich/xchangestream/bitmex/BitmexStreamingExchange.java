@@ -1,9 +1,6 @@
 package info.bitrich.xchangestream.bitmex;
 
-import info.bitrich.xchangestream.core.ProductSubscription;
-import info.bitrich.xchangestream.core.StreamingExchange;
-import info.bitrich.xchangestream.core.StreamingMarketDataService;
-import io.netty.channel.ChannelHandlerContext;
+import info.bitrich.xchangestream.core.*;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import org.knowm.xchange.ExchangeSpecification;
@@ -55,6 +52,10 @@ public class BitmexStreamingExchange extends BitmexExchange implements Streaming
         return spec;
     }
 
+    public BitmexStreamingService getBitmexStreamingService() {
+        return streamingService;
+    }
+
     @Override
     public StreamingMarketDataService getStreamingMarketDataService() {
         return streamingMarketDataService;
@@ -76,7 +77,9 @@ public class BitmexStreamingExchange extends BitmexExchange implements Streaming
     }
 
     @Override
-    public void useCompressedMessages(boolean compressedMessages) { streamingService.useCompressedMessages(compressedMessages); }
+    public void useCompressedMessages(boolean compressedMessages) {
+        streamingService.useCompressedMessages(compressedMessages);
+    }
 
     @Override
     public Observable<Long> messageDelay() {
