@@ -147,3 +147,4 @@ public class OkCoinStreamingService extends JsonNettyStreamingService {
         }
     }
 }
+

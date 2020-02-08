@@ -7,24 +7,24 @@ import io.reactivex.Completable;
 import io.reactivex.Observable;
 import org.knowm.xchange.okcoin.OkCoinExchange;
 
-public class OkCoinStreamingExchange extends OkCoinExchange implements StreamingExchange {
-    private static final String API_URI = "wss://real.okcoin.com:10440/websocket";
+public class OkCoinV3StreamingExchange extends OkCoinExchange implements StreamingExchange {
+    private static final String API_URI = "wss://real.okcoin.com:10442/ws/v3";
 
-    private final OkCoinStreamingService streamingService;
-    private OkCoinStreamingMarketDataService streamingMarketDataService;
+    private final OkCoinV3StreamingService streamingService;
+    private OkCoinV3StreamingMarketDataService streamingMarketDataService;
 
-    public OkCoinStreamingExchange() {
-        streamingService = new OkCoinStreamingService(API_URI);
+    public OkCoinV3StreamingExchange() {
+        streamingService = new OkCoinV3StreamingService(API_URI);
     }
 
-    protected OkCoinStreamingExchange(OkCoinStreamingService streamingService) {
+    protected OkCoinV3StreamingExchange(OkCoinV3StreamingService streamingService) {
         this.streamingService = streamingService;
     }
 
     @Override
     protected void initServices() {
         super.initServices();
-        streamingMarketDataService = new OkCoinStreamingMarketDataService(streamingService);
+        streamingMarketDataService = new OkCoinV3StreamingMarketDataService(streamingService);
     }
 
     @Override
@@ -60,4 +60,3 @@ public class OkCoinStreamingExchange extends OkCoinExchange implements Streaming
     @Override
     public void useCompressedMessages(boolean compressedMessages) { streamingService.useCompressedMessages(compressedMessages); }
 }
-

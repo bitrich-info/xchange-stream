@@ -61,3 +61,4 @@ public class OkCoinStreamingMarketDataServiceTest {
         test.assertResult(expected);
     }
 }
+
