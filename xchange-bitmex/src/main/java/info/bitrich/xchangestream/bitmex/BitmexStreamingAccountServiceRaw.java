@@ -6,19 +6,21 @@ import info.bitrich.xchangestream.bitmex.dto.BitmexWallet;
 import info.bitrich.xchangestream.bitmex.dto.BitmexWebSocketTransaction;
 import io.reactivex.Observable;
 
-public class BitmexStreamingAccountServiceRaw {
+public class BitmexStreamingAccountServiceRaw implements BitmexStreamingAccountService {
     private BitmexStreamingService streamingService;
 
-    public BitmexStreamingAccountServiceRaw(BitmexStreamingExchange exchange) {
-        this.streamingService = exchange.getBitmexStreamingService();
+    public BitmexStreamingAccountServiceRaw(BitmexStreamingService streamingService) {
+        this.streamingService = streamingService;
     }
 
+    @Override
     public Observable<BitmexWallet> getWalletChanges() {
         String channelName = "wallet";
         return streamingService.subscribeBitmexChannel(channelName)
                 .map(BitmexWebSocketTransaction::toBitmexWallet);
     }
 
+    @Override
     public Observable<BitmexAffiliate> getAffiliateChanges() {
         String channelName = "affiliate";
         return streamingService.subscribeBitmexChannel(channelName)
@@ -30,6 +32,7 @@ public class BitmexStreamingAccountServiceRaw {
                         }));
     }
 
+    @Override
     public Observable<BitmexMargin> getMarginChanges() {
         String channelName = "margin";
         return streamingService.subscribeBitmexChannel(channelName)

@@ -6,13 +6,14 @@ import info.bitrich.xchangestream.bitmex.dto.BitmexPosition;
 import io.reactivex.Observable;
 import org.knowm.xchange.currency.CurrencyPair;
 
-public class BitmexStreamingTradeServiceRaw {
+public class BitmexStreamingTradeServiceRaw implements BitmexStreamingTradeService {
     private final BitmexStreamingService streamingService;
 
-    public BitmexStreamingTradeServiceRaw(BitmexStreamingExchange exchange) {
-        this.streamingService = exchange.getBitmexStreamingService();
+    public BitmexStreamingTradeServiceRaw(BitmexStreamingService streamingService) {
+        this.streamingService = streamingService;
     }
 
+    @Override
     public Observable<BitmexOrder> getOrderChanges(CurrencyPair currencyPair) {
         String channelName = "order";
         String instrument = currencyPair.base.toString() + currencyPair.counter.toString();
@@ -28,6 +29,7 @@ public class BitmexStreamingTradeServiceRaw {
                         }));
     }
 
+    @Override
     public Observable<BitmexExecution> getExecutionChanges(CurrencyPair currencyPair) {
         String channelName = "execution";
         String instrument = currencyPair.base.toString() + currencyPair.counter.toString();
@@ -43,6 +45,7 @@ public class BitmexStreamingTradeServiceRaw {
                         }));
     }
 
+    @Override
     public Observable<BitmexPosition> getPositionChanges(CurrencyPair currencyPair) {
         String channelName = "position";
         String instrument = currencyPair.base.toString() + currencyPair.counter.toString();

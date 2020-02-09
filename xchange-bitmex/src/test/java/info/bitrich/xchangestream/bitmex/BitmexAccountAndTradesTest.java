@@ -17,8 +17,6 @@ public class BitmexAccountAndTradesTest {
     private String secretKey = "yyyy";
 
     private BitmexStreamingExchange exchange;
-    private BitmexStreamingAccountServiceRaw accountServiceRaw;
-    private BitmexStreamingTradeServiceRaw tradeServiceRaw;
 
     @Before
     public void setUp() {
@@ -29,10 +27,6 @@ public class BitmexAccountAndTradesTest {
         exchange = (BitmexStreamingExchange) StreamingExchangeFactory.INSTANCE.createExchange(spec);
         exchange.connect().blockingAwait();
         Assert.assertTrue(exchange.isAlive());
-        accountServiceRaw = new BitmexStreamingAccountServiceRaw(exchange);
-        Assert.assertNotNull(accountServiceRaw);
-        tradeServiceRaw = new BitmexStreamingTradeServiceRaw(exchange);
-        Assert.assertNotNull(tradeServiceRaw);
     }
 
     @After
@@ -47,17 +41,18 @@ public class BitmexAccountAndTradesTest {
         AtomicBoolean affiliate = new AtomicBoolean(false);
         affiliate.set(true);//stub for condition. need to check on account with refs
 
-        accountServiceRaw.getMarginChanges()
+        BitmexStreamingAccountService accountService = exchange.getStreamingAccountServiceCompat();
+        accountService.getMarginChanges()
                 .subscribe(bitmexMargin -> {
                     System.out.println("In margin stream");
                     margin.set(true);
                 });
-        accountServiceRaw.getWalletChanges()
+        accountService.getWalletChanges()
                 .subscribe(bitmexWallet -> {
                     System.out.println("In wallet stream");
                     wallet.set(true);
                 });
-        accountServiceRaw.getAffiliateChanges()
+        accountService.getAffiliateChanges()
                 .subscribe(bitmexAffiliate -> {
                     System.out.println("In affiliate stream");
                     affiliate.set(true);
@@ -81,19 +76,20 @@ public class BitmexAccountAndTradesTest {
 
         CurrencyPair currencyPair = CurrencyPair.XBT_USD;
 
-        tradeServiceRaw.getPositionChanges(currencyPair)
+        BitmexStreamingTradeService tradeService = exchange.getStreamingTradeServiceCompat();
+        tradeService.getPositionChanges(currencyPair)
                 .subscribe(pos -> {
                     System.out.println("In position stream");
                     position.set(true);
                 });
 
-        tradeServiceRaw.getExecutionChanges(currencyPair)
+        tradeService.getExecutionChanges(currencyPair)
                 .subscribe(execution1 -> {
                     System.out.println("In execution stream");
                     execution.set(true);
                 });
 
-        tradeServiceRaw.getOrderChanges(currencyPair)
+        tradeService.getOrderChanges(currencyPair)
                 .subscribe(ord -> {
                     System.out.println("In order stream");
                     order.set(true);

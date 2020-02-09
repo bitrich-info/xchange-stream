@@ -1,6 +1,8 @@
 package info.bitrich.xchangestream.bitmex;
 
-import info.bitrich.xchangestream.core.*;
+import info.bitrich.xchangestream.core.ProductSubscription;
+import info.bitrich.xchangestream.core.StreamingExchange;
+import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import org.knowm.xchange.ExchangeSpecification;
@@ -15,6 +17,8 @@ public class BitmexStreamingExchange extends BitmexExchange implements Streaming
 
     private BitmexStreamingService streamingService;
     private BitmexStreamingMarketDataService streamingMarketDataService;
+    private BitmexStreamingAccountService streamingAccountService;
+    private BitmexStreamingTradeService streamingTradeService;
 
     public BitmexStreamingExchange() {
     }
@@ -24,6 +28,8 @@ public class BitmexStreamingExchange extends BitmexExchange implements Streaming
         super.initServices();
         streamingService = createStreamingService();
         streamingMarketDataService = new BitmexStreamingMarketDataService(streamingService, this);
+        streamingAccountService = new BitmexStreamingAccountServiceRaw(streamingService);
+        streamingTradeService = new BitmexStreamingTradeServiceRaw(streamingService);
     }
 
     @Override
@@ -52,16 +58,21 @@ public class BitmexStreamingExchange extends BitmexExchange implements Streaming
         return spec;
     }
 
-    public BitmexStreamingService getBitmexStreamingService() {
-        return streamingService;
-    }
-
     @Override
     public StreamingMarketDataService getStreamingMarketDataService() {
         return streamingMarketDataService;
     }
 
+    public BitmexStreamingAccountService getStreamingAccountServiceCompat() {
+        return streamingAccountService;
+    }
+
+    public BitmexStreamingTradeService getStreamingTradeServiceCompat() {
+        return streamingTradeService;
+    }
+
     @Override
+
     public Observable<Throwable> reconnectFailure() {
         return streamingService.subscribeReconnectFailure();
     }
