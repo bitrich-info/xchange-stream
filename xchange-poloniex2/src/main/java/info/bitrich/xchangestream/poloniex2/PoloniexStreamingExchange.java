@@ -8,6 +8,7 @@ import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import info.bitrich.xchangestream.service.netty.StreamingObjectMapperHelper;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.currency.CurrencyPair;
@@ -37,12 +38,13 @@ public class PoloniexStreamingExchange extends PoloniexExchange implements Strea
     protected void initServices() {
         applyStreamingSpecification(getExchangeSpecification(), streamingService);
         super.initServices();
-        Map<CurrencyPair, Integer> currencyPairMap = getCurrencyPairMap();
-        streamingMarketDataService = new PoloniexStreamingMarketDataService(streamingService, currencyPairMap);
+        Pair<Map<CurrencyPair, Integer>, Map<Integer, CurrencyPair>> currencyPairMaps = getCurrencyPairMap();
+        streamingMarketDataService = new PoloniexStreamingMarketDataService(streamingService, currencyPairMaps);
     }
 
-    private Map<CurrencyPair, Integer> getCurrencyPairMap() {
+    private Pair<Map<CurrencyPair, Integer>, Map<Integer, CurrencyPair>> getCurrencyPairMap() {
         Map<CurrencyPair, Integer> currencyPairMap = new HashMap<>();
+        Map<Integer, CurrencyPair> currencyIdMap = new HashMap<>();
         final ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
 
         try {
@@ -56,12 +58,14 @@ public class PoloniexStreamingExchange extends PoloniexExchange implements Strea
                 String[] currencies = pairSymbol.split("_");
                 CurrencyPair currencyPair = new CurrencyPair(new Currency(currencies[1]), new Currency(currencies[0]));
                 currencyPairMap.put(currencyPair, Integer.valueOf(id));
+                currencyIdMap.put(Integer.valueOf(id), currencyPair);
+
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return currencyPairMap;
+        return Pair.of(currencyPairMap, currencyIdMap);
     }
 
     @Override

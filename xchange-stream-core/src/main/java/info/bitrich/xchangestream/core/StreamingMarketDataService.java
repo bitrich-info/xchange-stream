@@ -7,6 +7,8 @@ import org.knowm.xchange.dto.marketdata.Trade;
 
 import io.reactivex.Observable;
 
+import java.util.Arrays;
+
 
 public interface StreamingMarketDataService {
     /**
@@ -37,6 +39,24 @@ public interface StreamingMarketDataService {
      * @return {@link Observable} that emits {@link Ticker} when exchange sends the update.
      */
     Observable<Ticker> getTicker(CurrencyPair currencyPair, Object... args);
+
+    /**
+     * Get all tickers on the exchange. This may not be supported on all Exchanges.
+     * Emits {@link info.bitrich.xchangestream.service.exception.NotConnectedException} When not connected to the WebSocket API.
+     *
+     * <p><strong>Warning:</strong> There are currently no guarantees
+     * that messages will not be skipped, or that any initial state
+     * message will be sent on connection.</p>
+     *
+     * @return {@link Observable} that emits {@link Ticker} when exchange sends the update.
+     */
+    default Observable<Ticker> getTickers(CurrencyPair... args) {
+        return Arrays.asList(args).stream()
+                .map(s -> getTicker(s))
+                .reduce(Observable::mergeWith)
+                .get();
+    }
+
 
     /**
      * Get the trades performed by the exchange.

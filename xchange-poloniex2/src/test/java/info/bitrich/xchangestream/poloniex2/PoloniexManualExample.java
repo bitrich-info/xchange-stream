@@ -13,7 +13,9 @@ public class PoloniexManualExample {
 
     public static void main(String[] args) throws Exception {
         CurrencyPair usdtBtc = new CurrencyPair(new Currency("BTC"), new Currency("USDT"));
-//        CertHelper.trustAllCerts();
+        CurrencyPair ltcbtc = new CurrencyPair(new Currency("LTC"), new Currency("BTC"));
+//
+        //        CertHelper.trustAllCerts();
         StreamingExchange exchange = StreamingExchangeFactory.INSTANCE.createExchange(PoloniexStreamingExchange.class.getName());
         ExchangeSpecification defaultExchangeSpecification = exchange.getDefaultExchangeSpecification();
 //        defaultExchangeSpecification.setExchangeSpecificParametersItem(StreamingExchange.SOCKS_PROXY_HOST, "localhost");
@@ -37,7 +39,7 @@ public class PoloniexManualExample {
             LOG.info("First bid: {}", orderBook.getBids().get(0));
         }, throwable -> LOG.error("ERROR in getting order book: ", throwable));
 
-        exchange.getStreamingMarketDataService().getTicker(usdtBtc).subscribe(ticker -> {
+        exchange.getStreamingMarketDataService().getTickers(usdtBtc, ltcbtc).subscribe(ticker -> {
             LOG.info("TICKER: {}", ticker);
         }, throwable -> LOG.error("ERROR in getting ticker: ", throwable));
 

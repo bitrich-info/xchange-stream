@@ -2,6 +2,7 @@ package info.bitrich.xchangestream.poloniex;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.MinMaxPriorityQueue;
+import com.google.common.collect.Sets;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import info.bitrich.xchangestream.poloniex.utils.MinMaxPriorityQueueUtils;
 import info.bitrich.xchangestream.service.wamp.WampStreamingService;
@@ -90,6 +91,12 @@ public class PoloniexStreamingMarketDataService implements StreamingMarketDataSe
 
     @Override
     public Observable<Ticker> getTicker(CurrencyPair currencyPair, Object... args) {
+        return getTickers(currencyPair);
+    }
+
+    @Override
+    public Observable<Ticker> getTickers(CurrencyPair... args) {
+        HashSet<CurrencyPair> pairs = Sets.newHashSet(args);
         return streamingService.subscribeChannel("ticker")
                 .map(pubSubData -> {
                     PoloniexMarketData marketData = new PoloniexMarketData();
@@ -105,7 +112,7 @@ public class PoloniexStreamingMarketDataService implements StreamingMarketDataSe
                     PoloniexTicker ticker = new PoloniexTicker(marketData, PoloniexUtils.toCurrencyPair(pubSubData.arguments().get(0).asText()));
                     return PoloniexAdapters.adaptPoloniexTicker(ticker, ticker.getCurrencyPair());
                 })
-                .filter(ticker -> ticker.getCurrencyPair().equals(currencyPair));
+                .filter(ticker -> pairs.contains(ticker.getCurrencyPair()));
     }
 
     @Override
