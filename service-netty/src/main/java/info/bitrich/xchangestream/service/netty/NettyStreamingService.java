@@ -328,8 +328,8 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
             if (channels.remove(channelId) != null) {
                 try {
                     sendMessage(getUnsubscribeMessage(channelId));
-                } catch (Exception e) {
-                    // ignore
+                } catch (IOException e) {
+                    LOG.warn("Failed to unsubscribe channel: {}",channelId);
                 }
             }
         }).share();
