@@ -47,7 +47,9 @@ public class LgoStreamingMarketDataServiceTest {
                                 CurrencyPair.BTC_USD,
                                 new BigDecimal("428.5000"),
                                 dateFormat.parse("2019-07-19T12:25:01.596Z"),
-                                "3128770"));
+                                "3128770",
+                                null,
+                                null));
         assertThat(trades.blockingLast())
                 .isEqualToComparingFieldByField(
                         new Trade(
@@ -56,7 +58,9 @@ public class LgoStreamingMarketDataServiceTest {
                                 CurrencyPair.BTC_USD,
                                 new BigDecimal("420.3000"),
                                 dateFormat.parse("2019-07-19T12:25:05.860Z"),
-                                "3128771"));
+                                "3128771",
+                                null,
+                                null));
     }
 
     @Test

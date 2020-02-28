@@ -75,7 +75,7 @@ public class BitstampStreamingMarketDataServiceTest extends BitstampStreamingMar
 
         when(streamingService.subscribeChannel(eq("live_trades"), eq("trade"))).thenReturn(Observable.just(trade));
 
-        Trade expected = new Trade(Order.OrderType.ASK, new BigDecimal("34.390000000000001"), CurrencyPair.BTC_USD, new BigDecimal("914.38999999999999"), new Date(1484858423000L), "177827396");
+        Trade expected = new Trade(Order.OrderType.ASK, new BigDecimal("34.390000000000001"), CurrencyPair.BTC_USD, new BigDecimal("914.38999999999999"), new Date(1484858423000L), "177827396", "177827396", "177827396");
 
         // Call get order book observable
         TestObserver<Trade> test = marketDataService.getTrades(CurrencyPair.BTC_USD).test();

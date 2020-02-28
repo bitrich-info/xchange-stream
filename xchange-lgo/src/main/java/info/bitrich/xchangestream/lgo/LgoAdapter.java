@@ -112,6 +112,6 @@ public class LgoAdapter {
     }
 
     static UserTrade adaptUserTrade(CurrencyPair currencyPair, LgoMatchOrderEvent event) {
-        return new UserTrade(event.getOrderType(), event.getFilledQuantity(), currencyPair, event.getTradePrice(), event.getTime(), event.getTradeId(), event.getOrderId(), event.getFees(), currencyPair.counter);
+        return new UserTrade(event.getOrderType(), event.getFilledQuantity(), currencyPair, event.getTradePrice(), event.getTime(), event.getTradeId(), event.getOrderId(), event.getFees(), currencyPair.counter, event.getOrderId());
     }
 }

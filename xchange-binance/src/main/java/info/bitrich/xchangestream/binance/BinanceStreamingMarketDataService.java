@@ -50,13 +50,16 @@ public class BinanceStreamingMarketDataService implements StreamingMarketDataSer
 
     private static final JavaType TICKER_TYPE = getObjectMapper()
             .getTypeFactory()
-            .constructType(new TypeReference<BinanceWebsocketTransaction<TickerBinanceWebsocketTransaction>>() {});
+            .constructType(new TypeReference<BinanceWebsocketTransaction<TickerBinanceWebsocketTransaction>>() {
+            });
     private static final JavaType TRADE_TYPE = getObjectMapper()
             .getTypeFactory()
-            .constructType(new TypeReference<BinanceWebsocketTransaction<TradeBinanceWebsocketTransaction>>() {});
+            .constructType(new TypeReference<BinanceWebsocketTransaction<TradeBinanceWebsocketTransaction>>() {
+            });
     private static final JavaType DEPTH_TYPE = getObjectMapper()
             .getTypeFactory()
-            .constructType(new TypeReference<BinanceWebsocketTransaction<DepthBinanceWebSocketTransaction>>() {});
+            .constructType(new TypeReference<BinanceWebsocketTransaction<DepthBinanceWebSocketTransaction>>() {
+            });
 
     private final BinanceStreamingService service;
 
@@ -70,7 +73,8 @@ public class BinanceStreamingMarketDataService implements StreamingMarketDataSer
     private final Runnable onApiCall;
 
     private final AtomicBoolean fallenBack = new AtomicBoolean();
-    private final AtomicReference<Runnable> fallbackOnApiCall = new AtomicReference<>(() -> {});
+    private final AtomicReference<Runnable> fallbackOnApiCall = new AtomicReference<>(() -> {
+    });
 
     public BinanceStreamingMarketDataService(BinanceStreamingService service, BinanceMarketDataService marketDataService, Runnable onApiCall) {
         this.service = service;
@@ -109,14 +113,16 @@ public class BinanceStreamingMarketDataService implements StreamingMarketDataSer
     @Override
     public Observable<Trade> getTrades(CurrencyPair currencyPair, Object... args) {
         return getRawTrades(currencyPair, args)
-            .map(rawTrade -> new Trade(
-                BinanceAdapters.convertType(rawTrade.isBuyerMarketMaker()),
-                rawTrade.getQuantity(),
-                currencyPair,
-                rawTrade.getPrice(),
-                new Date(rawTrade.getTimestamp()),
-                String.valueOf(rawTrade.getTradeId())
-            ));
+                .map(rawTrade -> new Trade(
+                        BinanceAdapters.convertType(rawTrade.isBuyerMarketMaker()),
+                        rawTrade.getQuantity(),
+                        currencyPair,
+                        rawTrade.getPrice(),
+                        new Date(rawTrade.getTimestamp()),
+                        String.valueOf(rawTrade.getTradeId()),
+                        String.valueOf(rawTrade.getTradeId()),
+                        String.valueOf(rawTrade.getTradeId())
+                ));
     }
 
     private static String channelFromCurrency(CurrencyPair currencyPair, String subscriptionType) {
@@ -126,7 +132,7 @@ public class BinanceStreamingMarketDataService implements StreamingMarketDataSer
 
     /**
      * Registers subsriptions with the streaming service for the given products.
-     *
+     * <p>
      * As we receive messages as soon as the connection is open, we need to register subscribers to handle these before the
      * first messages arrive.
      */
@@ -290,10 +296,13 @@ public class BinanceStreamingMarketDataService implements StreamingMarketDataSer
                 .map(transaction -> transaction.getData().getRawTrade());
     }
 
-    /** Force observable to execute its body, this way we get `BinanceStreamingService` to register the observables emitter
-     * ready for our message arrivals. */
+    /**
+     * Force observable to execute its body, this way we get `BinanceStreamingService` to register the observables emitter
+     * ready for our message arrivals.
+     */
     private <T> Observable<T> triggerObservableBody(Observable<T> observable) {
-        Consumer<T> NOOP = whatever -> {};
+        Consumer<T> NOOP = whatever -> {
+        };
         observable.subscribe(NOOP);
         return observable;
     }

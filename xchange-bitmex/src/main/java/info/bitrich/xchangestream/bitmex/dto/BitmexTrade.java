@@ -37,6 +37,6 @@ public class BitmexTrade extends BitmexLimitOrder {
     public Trade toTrade() {
         CurrencyPair pair = getCurrencyPair();
         Order.OrderType orderType = getOrderSide();
-        return new Trade(orderType, size, pair, price, getDate(), trdMatchID);
+        return new Trade(orderType, size, pair, price, getDate(), trdMatchID, trdMatchID, trdMatchID);
     }
 }

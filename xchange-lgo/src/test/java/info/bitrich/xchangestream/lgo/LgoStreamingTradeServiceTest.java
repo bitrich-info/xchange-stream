@@ -131,7 +131,7 @@ public class LgoStreamingTradeServiceTest {
         assertThat(trades).hasSize(1);
         assertThat(trades.get(0))
                 .usingRecursiveComparison()
-                .isEqualTo(new UserTrade(Order.OrderType.ASK, new BigDecimal("0.50000000"), CurrencyPair.BTC_USD, new BigDecimal("955.3000"), date, "4441691", "156508560418400001", new BigDecimal("0.2388"), Currency.USD));
+                .isEqualTo(new UserTrade(Order.OrderType.ASK, new BigDecimal("0.50000000"), CurrencyPair.BTC_USD, new BigDecimal("955.3000"), date, "4441691", "156508560418400001", new BigDecimal("0.2388"), Currency.USD, "156508560418400001"));
     }
 
     @Test
