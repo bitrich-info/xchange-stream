@@ -312,7 +312,7 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
         LOG.info("Subscribing to channel {}", channelId);
 
         return Observable.<T>create(e -> {
-            if (webSocketChannel == null || !webSocketChannel.isOpen()) {
+            if (webSocketChannel == null) { // || !webSocketChannel.isOpen()) {
                 e.onError(new NotConnectedException());
             }
             channels.computeIfAbsent(channelId, cid -> {
@@ -326,7 +326,11 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
             });
         }).doOnDispose(() -> {
             if (channels.remove(channelId) != null) {
-                sendMessage(getUnsubscribeMessage(channelId));
+                try {
+                    sendMessage(getUnsubscribeMessage(channelId));
+                } catch (Exception e) {
+                    // ignore
+                }
             }
         }).share();
     }
