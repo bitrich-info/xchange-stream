@@ -8,6 +8,7 @@ import io.reactivex.Completable;
 import io.reactivex.Observable;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.marketdata.OrderBook;
@@ -61,18 +62,21 @@ public class BitmexTest {
     }
 
     @Test
+    @Ignore
     public void shouldReceiveBooks() {
         Observable<OrderBook> orderBookObservable = streamingMarketDataService.getOrderBook(xbtUsd);
         awaitDataCount(orderBookObservable);
     }
 
     @Test
+    @Ignore
     public void shouldReceiveRawTickers() {
         Observable<BitmexTicker> rawTickerObservable = streamingMarketDataService.getRawTicker(xbtUsd);
         awaitDataCount(rawTickerObservable);
     }
 
     @Test
+    @Ignore
     public void shouldReceiveTickers() {
         Observable<Ticker> tickerObservable = streamingMarketDataService.getTicker(xbtUsd);
         awaitDataCount(tickerObservable);
@@ -85,6 +89,7 @@ public class BitmexTest {
     }
 
     @Test
+    @Ignore
     public void shouldHaveNoBookErrors() {
         streamingMarketDataService.getOrderBook(xbtUsd)
                 .test()

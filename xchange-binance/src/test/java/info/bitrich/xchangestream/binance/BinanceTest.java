@@ -3,6 +3,7 @@ package info.bitrich.xchangestream.binance;
 import info.bitrich.xchangestream.core.ProductSubscription;
 import info.bitrich.xchangestream.core.StreamingExchangeFactory;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.currency.CurrencyPair;
@@ -12,6 +13,7 @@ import static info.bitrich.xchangestream.binance.BinanceStreamingExchange.USE_HI
 public class BinanceTest {
 
     @Test
+    @Ignore
     public void channelCreateUrlTest() {
         BinanceStreamingExchange exchange = (BinanceStreamingExchange) StreamingExchangeFactory.INSTANCE
                 .createExchange(BinanceStreamingExchange.class.getName());
@@ -27,6 +29,7 @@ public class BinanceTest {
     }
 
     @Test
+    @Ignore
     public void channelCreateUrlWithUpdateFrequencyTest() {
         ProductSubscription.ProductSubscriptionBuilder builder = ProductSubscription.create();
         builder.addTicker(CurrencyPair.BTC_USD).addTicker(CurrencyPair.DASH_BTC).addOrderbook(CurrencyPair.ETH_BTC);
