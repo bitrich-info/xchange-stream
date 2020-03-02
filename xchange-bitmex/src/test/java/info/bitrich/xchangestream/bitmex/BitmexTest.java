@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
  * @author Foat Akhmadeev
  * 31/05/2018
  */
+@Ignore // Requires Bitmex to be up and contactable or the build fails.
 public class BitmexTest {
     private static final Logger LOG = LoggerFactory.getLogger(BitmexTest.class);
 
