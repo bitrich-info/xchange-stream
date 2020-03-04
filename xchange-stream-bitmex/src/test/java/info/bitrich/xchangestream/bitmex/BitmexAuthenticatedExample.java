@@ -13,6 +13,7 @@ public class BitmexAuthenticatedExample {
 
   private static final Logger LOG = LoggerFactory.getLogger(BitmexAuthenticatedExample.class);
 
+  @SuppressWarnings("deprecation")
   public static void main(String[] args) throws Exception {
     CertHelper.trustAllCerts();
     StreamingExchange exchange =

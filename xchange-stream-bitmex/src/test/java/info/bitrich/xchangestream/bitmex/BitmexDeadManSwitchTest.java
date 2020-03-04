@@ -24,6 +24,7 @@ public class BitmexDeadManSwitchTest {
 
   @Test
   @Ignore
+  @SuppressWarnings("deprecation")
   public void testDeadmanSwitch() throws Exception {
     CertHelper.trustAllCerts();
     BitmexStreamingExchange exchange =

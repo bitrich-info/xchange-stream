@@ -27,6 +27,7 @@ public class BitmexOrderReplaceTest {
 
   @Test
   @Ignore
+  @SuppressWarnings("deprecation")
   public void testOrderReplace() throws Exception {
     CertHelper.trustAllCerts();
     BitmexStreamingExchange exchange =

@@ -36,6 +36,7 @@ public class LgoStreamingTradeServiceTest {
   private SynchronizedValueFactory<Long> nonceFactory;
 
   @Before
+  @SuppressWarnings("unchecked")
   public void setUp() {
     dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));

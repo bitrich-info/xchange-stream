@@ -20,6 +20,7 @@ public class HitbtcStreamingServiceTest {
 
   @Rule public ExpectedException thrown;
 
+  @SuppressWarnings("deprecation")
   public HitbtcStreamingServiceTest() {
     thrown = ExpectedException.none();
   }
