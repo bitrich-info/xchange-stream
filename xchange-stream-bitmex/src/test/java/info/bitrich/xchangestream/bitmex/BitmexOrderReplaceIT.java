@@ -5,7 +5,7 @@ import static org.knowm.xchange.bitmex.BitmexPrompt.PERPETUAL;
 import info.bitrich.xchangestream.core.StreamingExchange;
 import java.math.BigDecimal;
 import java.util.List;
-import org.junit.Ignore;
+
 import org.junit.Test;
 import org.knowm.xchange.ExchangeFactory;
 import org.knowm.xchange.ExchangeSpecification;
@@ -22,11 +22,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** @author Nikita Belenkiy on 18/05/2018. */
-public class BitmexOrderReplaceTest {
-  private static final Logger logger = LoggerFactory.getLogger(BitmexOrderReplaceTest.class);
+public class BitmexOrderReplaceIT {
+  private static final Logger logger = LoggerFactory.getLogger(BitmexOrderReplaceIT.class);
 
   @Test
-  @Ignore
   public void testOrderReplace() throws Exception {
     CertHelper.trustAllCerts();
     BitmexStreamingExchange exchange =

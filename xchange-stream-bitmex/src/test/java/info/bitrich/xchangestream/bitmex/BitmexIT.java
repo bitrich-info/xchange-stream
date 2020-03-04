@@ -19,9 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** @author Foat Akhmadeev 31/05/2018 */
-@Ignore // Requires Bitmex to be up and contactable or the build fails.
-public class BitmexTest {
-  private static final Logger LOG = LoggerFactory.getLogger(BitmexTest.class);
+public class BitmexIT {
+  private static final Logger LOG = LoggerFactory.getLogger(BitmexIT.class);
 
   private static final CurrencyPair xbtUsd = CurrencyPair.XBT_USD;
   private static final int MIN_DATA_COUNT = 2;
@@ -52,7 +51,7 @@ public class BitmexTest {
         .test()
         .assertSubscribed()
         .assertNoErrors()
-        .awaitCount(BitmexTest.MIN_DATA_COUNT)
+        .awaitCount(BitmexIT.MIN_DATA_COUNT)
         .assertNoTimeout()
         .dispose();
   }

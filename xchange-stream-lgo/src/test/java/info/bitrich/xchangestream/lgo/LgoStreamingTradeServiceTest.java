@@ -373,7 +373,7 @@ public class LgoStreamingTradeServiceTest {
             "abcdefg",
             new Date().toInstant().minus(1, ChronoUnit.HOURS),
             new Date().toInstant().plus(1, ChronoUnit.HOURS));
-    InputStream stream = LgoStreamingExchangeExample.class.getResourceAsStream("/public.pem");
+    InputStream stream = LgoStreamingTradeServiceTest.class.getResourceAsStream("/public.pem");
     String utf8 = IOUtils.toString(stream, StandardCharsets.UTF_8);
     key.setValue(parsePublicKey(utf8));
     when(keyService.selectKey()).thenReturn(key);
