@@ -15,6 +15,7 @@ public interface StreamingExchange extends Exchange {
   String ENABLE_LOGGING_HANDLER = "Enable_Logging_Handler";
   String SOCKS_PROXY_HOST = "SOCKS_Proxy_Host";
   String SOCKS_PROXY_PORT = "SOCKS_Proxy_Port";
+  String DISABLE_NETTY_RECONNECT = "No_Netty_Retry";
 
   /**
    * Connects to the WebSocket API of the exchange.
@@ -128,5 +129,8 @@ public interface StreamingExchange extends Exchange {
     if (enable_logging_handler != null && enable_logging_handler) {
       streamingService.setEnableLoggingHandler(true);
     }
+    Boolean noNettyRetry = (Boolean) exchangeSpec.getExchangeSpecificParametersItem(DISABLE_NETTY_RECONNECT);
+    if (noNettyRetry != null)
+        streamingService.setDisableNettyReconnect(noNettyRetry);
   }
 }
