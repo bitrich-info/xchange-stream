@@ -224,18 +224,18 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
             }
             reconnFailEmitters.forEach(emitter -> emitter.onNext(t));
         })
-        .doOnComplete(() -> {
-            LOG.warn("Resubscribing channels");
-            resubscribeChannels();
-
-            connectionSuccessEmitters.forEach(emitter -> emitter.onNext(new Object()));
-        });
+        .doOnComplete(() -> connectionSuccessEmitters.forEach(emitter -> emitter.onNext(new Object())));
     }
 
     private void scheduleReconnect() {
         LOG.info("Scheduling reconnection");
         webSocketChannel.eventLoop().schedule(
-                () -> connect().subscribe(),
+                () -> connect().subscribe(
+                    () -> {
+                      LOG.warn("Resubscribing channels");
+                      resubscribeChannels();
+                    }
+                ),
                 retryDuration.toMillis(),
                 TimeUnit.MILLISECONDS);
     }
