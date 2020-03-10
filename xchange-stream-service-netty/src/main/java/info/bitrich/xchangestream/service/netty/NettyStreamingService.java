@@ -363,17 +363,20 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
               if (webSocketChannel == null || !webSocketChannel.isOpen()) {
                 e.onError(new NotConnectedException());
               }
-              channels.computeIfAbsent(
-                  channelId,
-                  cid -> {
-                    Subscription newSubscription = new Subscription(e, channelName, args);
-                    try {
-                      sendMessage(getSubscribeMessage(channelName, args));
-                    } catch (IOException throwable) {
-                      e.onError(throwable);
-                    }
-                    return newSubscription;
-                  });
+              Subscription subscription = new Subscription(e, channelName, args);
+              Subscription oldSubscription = channels.put(channelId, subscription);
+              if (oldSubscription != null && oldSubscription.emitter != null) {
+                if (!oldSubscription.emitter.isDisposed()) {
+                  LOG.warn(
+                      "Channel {} has an existing subscriber, that is not disposed of", channelName);
+                }
+              }
+
+              try {
+                sendMessage(getSubscribeMessage(channelName, subscription.args));
+              } catch (IOException ex) {
+                e.onError(ex);
+              }
             })
         .doOnDispose(
             () -> {
