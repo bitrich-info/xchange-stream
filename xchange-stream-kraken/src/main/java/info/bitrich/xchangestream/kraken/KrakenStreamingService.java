@@ -163,6 +163,19 @@ public class KrakenStreamingService extends JsonNettyStreamingService {
       }
       subscriptionRequestMap.put(reqID, channelName);
 
+      Observable.timer(2, TimeUnit.SECONDS)
+          .takeWhile(t -> isSocketOpen())
+          .subscribe(
+              t -> {
+                String chName = subscriptionRequestMap.get(reqID);
+                if (chName != null && chName.equals(channelName)) {
+                  LOG.error("Unable to subscribe channel {}", channelName);
+                  handleChannelError(
+                      channelName,
+                      new KrakenException("Unable to subscribe to channel " + channelName));
+                }
+              });
+
       KrakenSubscriptionMessage subscriptionMessage =
           new KrakenSubscriptionMessage(
               reqID,
