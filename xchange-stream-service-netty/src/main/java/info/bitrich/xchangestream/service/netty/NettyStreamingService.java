@@ -70,9 +70,11 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
       this.channelName = channelName;
       this.args = args;
     }
+
     public String getChannelName() {
       return channelName;
     }
+
     public Object[] getArgs() {
       return args;
     }
