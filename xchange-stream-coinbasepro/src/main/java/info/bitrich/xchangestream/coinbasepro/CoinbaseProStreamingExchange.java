@@ -84,11 +84,17 @@ public class CoinbaseProStreamingExchange extends CoinbaseProExchange implements
 
   @Override
   public Observable<Throwable> reconnectFailure() {
+    if (streamingService == null)
+      return Observable.error(new NullPointerException("streamingService is null"));
+    
     return streamingService.subscribeReconnectFailure();
   }
 
   @Override
   public Observable<Object> connectionSuccess() {
+    if (streamingService == null)
+      return Observable.error(new NullPointerException("streamingService is null"));
+    
     return streamingService.subscribeConnectionSuccess();
   }
 
