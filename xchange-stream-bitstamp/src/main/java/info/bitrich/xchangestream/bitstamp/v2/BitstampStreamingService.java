@@ -18,10 +18,13 @@ public class BitstampStreamingService extends JsonNettyStreamingService {
   private static final String JSON_CHANNEL = "channel";
   private static final String JSON_EVENT = "event";
 
+  public static final String EVENT_ORDER_CREATED = "order_created";
+  public static final String EVENT_ORDER_CHANGED = "order_changed";
+  public static final String EVENT_ORDER_DELETED = "order_deleted";
   public static final String EVENT_ORDERBOOK = "data";
   public static final String EVENT_TRADE = "trade";
-  private static final String EVENT_SUBSCRIPTION_SUCCEEDED = "bts:subscription_succeeded";
-  private static final String EVENT_UNSUBSCRIPTION_SUCCEEDED = "bts:unsubscription_succeeded";
+  public static final String EVENT_SUBSCRIPTION_SUCCEEDED = "bts:subscription_succeeded";
+  public static final String EVENT_UNSUBSCRIPTION_SUCCEEDED = "bts:unsubscription_succeeded";
 
   public BitstampStreamingService(String apiUrl) {
     super(apiUrl, Integer.MAX_VALUE);
@@ -58,6 +61,9 @@ public class BitstampStreamingService extends JsonNettyStreamingService {
     String event = eventJsonNode.asText();
 
     switch (event) {
+      case EVENT_ORDER_CREATED:
+      case EVENT_ORDER_CHANGED:
+      case EVENT_ORDER_DELETED:
       case EVENT_ORDERBOOK:
       case EVENT_TRADE:
         if (!channels.containsKey(channel)) {

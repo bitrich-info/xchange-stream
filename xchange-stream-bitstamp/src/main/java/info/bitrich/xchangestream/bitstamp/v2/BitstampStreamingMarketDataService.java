@@ -2,6 +2,7 @@ package info.bitrich.xchangestream.bitstamp.v2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import info.bitrich.xchangestream.bitstamp.dto.BitstampWebSocketTransaction;
+import info.bitrich.xchangestream.bitstamp.v2.dto.BitstampWebSocketOrderEvent;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import info.bitrich.xchangestream.service.netty.StreamingObjectMapperHelper;
 import io.reactivex.Observable;
@@ -55,19 +56,31 @@ public class BitstampStreamingMarketDataService implements StreamingMarketDataSe
   }
 
   @Override
-  public Observable<Trade> getTrades(CurrencyPair currencyPair, Object... args) {
-    String channelName = "live_trades" + getChannelPostfix(currencyPair);
+    public Observable<Trade> getTrades(CurrencyPair currencyPair, Object... args) {
+        String channelName = "live_trades" + getChannelPostfix(currencyPair);
 
-    return service
-        .subscribeChannel(channelName, BitstampStreamingService.EVENT_TRADE)
-        .map(
-            s -> {
-              ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
-              BitstampWebSocketTransaction transactions =
-                  mapper.treeToValue(s.get("data"), BitstampWebSocketTransaction.class);
-              return BitstampAdapters.adaptTrade(transactions, currencyPair, 1);
-            });
-  }
+        return service
+                .subscribeChannel(channelName, BitstampStreamingService.EVENT_TRADE)
+                .map(
+                        s -> {
+                            ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
+                            BitstampWebSocketTransaction transactions =
+                                    mapper.treeToValue(s.get("data"), BitstampWebSocketTransaction.class);
+                            return BitstampAdapters.adaptTrade(transactions, currencyPair, 1);
+                        });
+    }
+
+    public Observable<BitstampWebSocketOrderEvent> getOrders(CurrencyPair currencyPair, Object... args) {
+        String channelName = "live_orders" + getChannelPostfix(currencyPair);
+
+        return service
+                .subscribeChannel(channelName, BitstampStreamingService.EVENT_ORDER_CREATED)
+                .map(
+                        s -> {
+                            ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
+                            return mapper.treeToValue(s, BitstampWebSocketOrderEvent.class);
+                        });
+    }
 
   private String getChannelPostfix(CurrencyPair currencyPair) {
     return "_"
