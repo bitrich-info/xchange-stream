@@ -6,6 +6,7 @@ import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.service.netty.WebSocketClientHandler;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
 import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.coinbasepro.CoinbaseProExchange;
 import org.knowm.xchange.coinbasepro.dto.account.CoinbaseProWebsocketAuthData;
@@ -23,6 +24,9 @@ public class CoinbaseProStreamingExchange extends CoinbaseProExchange implements
   private CoinbaseProStreamingService streamingService;
   private CoinbaseProStreamingMarketDataService streamingMarketDataService;
   private CoinbaseProStreamingTradeService streamingTradeService;
+
+  private PublishSubject<Throwable> reconnectFailureSubject = PublishSubject.create();
+  private PublishSubject<Object> connectionSuccessSubject = PublishSubject.create();
 
   public CoinbaseProStreamingExchange() {}
 
@@ -53,7 +57,11 @@ public class CoinbaseProStreamingExchange extends CoinbaseProExchange implements
 
     this.streamingMarketDataService = new CoinbaseProStreamingMarketDataService(streamingService);
     this.streamingTradeService = new CoinbaseProStreamingTradeService(streamingService);
-    streamingService.subscribeMultipleCurrencyPairs(args);
+    this.streamingService.subscribeMultipleCurrencyPairs(args);
+
+    this.streamingService.subscribeReconnectFailure().subscribe(reconnectFailureSubject);
+    this.streamingService.subscribeConnectionSuccess().subscribe(connectionSuccessSubject);
+
     return streamingService.connect();
   }
 
@@ -89,7 +97,7 @@ public class CoinbaseProStreamingExchange extends CoinbaseProExchange implements
 
   @Override
   public Observable<Object> connectionSuccess() {
-    return streamingService.subscribeConnectionSuccess();
+    return connectionSuccessSubject.share();
   }
 
   @Override
