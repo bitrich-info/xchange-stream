@@ -42,8 +42,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -81,8 +79,8 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
   private volatile NioEventLoopGroup eventLoopGroup;
   protected final Map<String, Subscription> channels = new ConcurrentHashMap<>();
   private boolean compressedMessages = false;
-  private final List<ObservableEmitter<Throwable>> reconnFailEmitters = new LinkedList<>();
-  private final List<ObservableEmitter<Object>> connectionSuccessEmitters = new LinkedList<>();
+  private final PublishSubject<Throwable> reconnFailEmitters = PublishSubject.create();
+  private final PublishSubject<Object> connectionSuccessEmitters = PublishSubject.create();
   private final PublishSubject<Object> subjectIdle = PublishSubject.create();
 
   // debugging
@@ -258,13 +256,13 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
               } else {
                 LOG.warn("Problem with connection", t);
               }
-              reconnFailEmitters.forEach(emitter -> emitter.onNext(t));
+              reconnFailEmitters.onNext(t);
             })
         .doOnComplete(
             () -> {
               resubscribeChannels();
 
-              connectionSuccessEmitters.forEach(emitter -> emitter.onNext(new Object()));
+              connectionSuccessEmitters.onNext(this);
             });
   }
 
@@ -352,11 +350,11 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
   }
 
   public Observable<Throwable> subscribeReconnectFailure() {
-    return Observable.create(reconnFailEmitters::add);
+    return reconnFailEmitters.share();
   }
 
   public Observable<Object> subscribeConnectionSuccess() {
-    return Observable.create(connectionSuccessEmitters::add);
+    return connectionSuccessEmitters.share();
   }
 
   public Observable<T> subscribeChannel(String channelName, Object... args) {
