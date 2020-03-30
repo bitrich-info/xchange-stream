@@ -12,6 +12,7 @@ import io.reactivex.CompletableOnSubscribe;
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
 import java.io.IOException;
+import java.time.Instant;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.Order;
 import org.slf4j.Logger;
@@ -183,6 +184,13 @@ public class CexioStreamingRawService extends JsonNettyStreamingService {
             }
             break;
           case PING:
+            // Sometimes the timestamp sent by Cex IO is up to a second ahead of current time. Then our pong sends a
+            // timestamp before Cex IO's own time.
+            // When this happens, Cex IO seems to ignore the pong and closes the connection 20-30 seconds later
+            long time = message.get("time").longValue();
+            while (Instant.now().isBefore(Instant.ofEpochMilli(time))) {
+              Thread.yield();
+            }
             pong();
             break;
           case ORDER:
