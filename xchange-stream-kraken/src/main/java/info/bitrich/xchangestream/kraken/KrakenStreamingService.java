@@ -32,6 +32,8 @@ import org.slf4j.LoggerFactory;
 public class KrakenStreamingService extends JsonNettyStreamingService {
   private static final Logger LOG = LoggerFactory.getLogger(KrakenStreamingService.class);
   private static final String EVENT = "event";
+  private static final int DEFAULT_SUBSCRIBE_WAIT_TIME = 2; // in seconds
+
   private final Map<Integer, String> channels = new ConcurrentHashMap<>();
   private ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
   private final boolean isPrivate;
@@ -163,16 +165,16 @@ public class KrakenStreamingService extends JsonNettyStreamingService {
       }
       subscriptionRequestMap.put(reqID, channelName);
 
-      Observable.timer(2, TimeUnit.SECONDS)
+      Observable.timer(DEFAULT_SUBSCRIBE_WAIT_TIME, TimeUnit.SECONDS)
           .takeWhile(t -> isSocketOpen())
           .subscribe(
               t -> {
                 String chName = subscriptionRequestMap.get(reqID);
                 if (chName != null && chName.equals(channelName)) {
-                  LOG.error("Unable to subscribe channel {}", channelName);
+                  LOG.error("Unable to subscribe channel {} for {} seconds", channelName, DEFAULT_SUBSCRIBE_WAIT_TIME);
                   handleChannelError(
                       channelName,
-                      new KrakenException("Unable to subscribe to channel " + channelName));
+                      new KrakenException("Failed to subscribe to channel " + channelName + " in " + DEFAULT_SUBSCRIBE_WAIT_TIME + " seconds"));
                 }
               });
 
