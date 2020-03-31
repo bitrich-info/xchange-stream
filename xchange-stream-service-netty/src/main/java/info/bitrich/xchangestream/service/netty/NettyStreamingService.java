@@ -240,13 +240,13 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
                                       }
                                     });
                           } else {
-                            scheduleReconnect();
                             completable.onError(channelFuture.cause());
+                            scheduleReconnect();
                           }
                         });
               } catch (Exception throwable) {
-                scheduleReconnect();
                 completable.onError(throwable);
+                scheduleReconnect();
               }
             })
         .doOnError(
@@ -417,6 +417,7 @@ public abstract class NettyStreamingService<T> extends ConnectableService {
   protected void handleError(T message, Throwable t) {
     String channel = getChannel(message);
     handleChannelError(channel, t);
+    reconnFailEmitters.onError(t);
   }
 
   protected void handleIdle(ChannelHandlerContext ctx) {
