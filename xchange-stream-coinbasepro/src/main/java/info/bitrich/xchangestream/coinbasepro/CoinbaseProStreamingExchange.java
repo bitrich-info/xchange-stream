@@ -92,7 +92,7 @@ public class CoinbaseProStreamingExchange extends CoinbaseProExchange implements
 
   @Override
   public Observable<Throwable> reconnectFailure() {
-    return streamingService.subscribeReconnectFailure();
+    return reconnectFailureSubject.share();
   }
 
   @Override
