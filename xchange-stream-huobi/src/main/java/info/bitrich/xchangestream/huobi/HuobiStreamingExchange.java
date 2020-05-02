@@ -4,6 +4,7 @@ import info.bitrich.xchangestream.core.ProductSubscription;
 import info.bitrich.xchangestream.core.StreamingExchange;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import io.reactivex.Completable;
+import io.reactivex.Observable;
 import org.knowm.xchange.huobi.HuobiExchange;
 
 public class HuobiStreamingExchange extends HuobiExchange implements StreamingExchange {
@@ -11,17 +12,15 @@ public class HuobiStreamingExchange extends HuobiExchange implements StreamingEx
     private static final String API_BASE_URI = "wss://api.huobi.pro/ws";
     private static final String API_URI_AWS = "wss://api-aws.huobi.pro/ws";
 
-    private final HuobiStreamingService streamingService;
+    private HuobiStreamingService streamingService;
     private HuobiStreamingMarketDataService streamingMarketDataService;
-
-    public HuobiStreamingExchange() {
-        this.streamingService = new HuobiStreamingService(API_BASE_URI);
-        this.streamingService.useCompressedMessages(true);
-    }
 
     @Override
     protected void initServices() {
         super.initServices();
+        Boolean aws = (Boolean)getExchangeSpecification().getExchangeSpecificParameters().getOrDefault("AWS", Boolean.FALSE);
+        this.streamingService = new HuobiStreamingService(aws ? API_URI_AWS : API_BASE_URI);
+        this.streamingService.useCompressedMessages(true);
         streamingMarketDataService = new HuobiStreamingMarketDataService(streamingService);
     }
 

@@ -21,16 +21,25 @@ public class HuobiManualExample {
         exchange.connect().blockingAwait();
 
         exchange.getStreamingMarketDataService()
-                .getTicker(CurrencyPair.ETH_BTC, HuobiKlineType.MIN1.getName())
+                .getTicker(CurrencyPair.ETH_BTC)
                 .subscribe(ticker -> {
                     LOG.info("Ticker: {}", ticker);
-                }, throwable -> LOG.error("ERROR in getting ticker: ", throwable));
+                }, throwable ->
+                    LOG.error("ERROR in getting ticker: ", throwable));
+
+      exchange.getStreamingMarketDataService()
+          .getTicker(CurrencyPair.ETH_BTC, HuobiKlineType.MIN5.getName())
+          .subscribe(ticker -> {
+            LOG.info("Ticker MIN5: {}", ticker);
+          }, throwable ->
+            LOG.error("ERROR in getting ticker: ", throwable));
 
         exchange.getStreamingMarketDataService()
                 .getTrades(CurrencyPair.ETH_BTC)
                 .subscribe(trade -> {
                     LOG.info("Trade: {}", trade);
-                }, throwable -> LOG.error("ERROR in getting trade: ", throwable));
+                }, throwable ->
+                    LOG.error("ERROR in getting trade: ", throwable));
 
         exchange.getStreamingMarketDataService()
                 .getOrderBook(CurrencyPair.ETH_BTC, HuobiStepType.STEP0.getName())
