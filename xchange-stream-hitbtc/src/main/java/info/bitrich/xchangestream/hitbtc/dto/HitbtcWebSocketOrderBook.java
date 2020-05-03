@@ -3,9 +3,7 @@ package info.bitrich.xchangestream.hitbtc.dto;
 import static java.util.Collections.reverseOrder;
 
 import java.math.BigDecimal;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
@@ -14,7 +12,6 @@ import org.knowm.xchange.hitbtc.v2.dto.HitbtcOrderLimit;
 
 /** Created by Pavel Chertalev on 15.03.2018. */
 public class HitbtcWebSocketOrderBook {
-  private static DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_ZONED_DATE_TIME.withZone(ZoneId.of("UTC"));
   private Map<BigDecimal, HitbtcOrderLimit> asks;
   private Map<BigDecimal, HitbtcOrderLimit> bids;
   private long sequence = 0;
@@ -41,8 +38,7 @@ public class HitbtcWebSocketOrderBook {
     }
 
     sequence = orderBookTransaction.getParams().getSequence();
-    timestamp = ZonedDateTime.parse(orderBookTransaction.getParams().getTimestamp(), DATE_FORMAT)
-            .toInstant().toEpochMilli();
+    timestamp = ZonedDateTime.parse(orderBookTransaction.getParams().getTimestamp()).toInstant().toEpochMilli();
   }
 
   public HitbtcOrderBook toHitbtcOrderBook() {
@@ -59,8 +55,7 @@ public class HitbtcWebSocketOrderBook {
     updateOrderBookItems(orderBookTransaction.getParams().getAsk(), asks);
     updateOrderBookItems(orderBookTransaction.getParams().getBid(), bids);
     sequence = orderBookTransaction.getParams().getSequence();
-    timestamp = ZonedDateTime.parse(orderBookTransaction.getParams().getTimestamp(), DATE_FORMAT)
-            .toInstant().toEpochMilli();
+    timestamp = ZonedDateTime.parse(orderBookTransaction.getParams().getTimestamp()).toInstant().toEpochMilli();
   }
 
   private void updateOrderBookItems(
