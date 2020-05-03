@@ -30,6 +30,7 @@
         <module>xchange-stream-bankera</module>
         <module>xchange-stream-kraken</module>
         <module>xchange-stream-lgo</module>
+        <module>xchange-stream-huobi</module>
     </modules>
 
     <name>xchange-stream</name>
