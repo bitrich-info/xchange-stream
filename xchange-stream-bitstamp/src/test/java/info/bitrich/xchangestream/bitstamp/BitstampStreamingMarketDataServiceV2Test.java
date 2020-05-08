@@ -6,6 +6,8 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.databind.JsonNode;
 import info.bitrich.xchangestream.bitstamp.v2.BitstampStreamingMarketDataService;
 import info.bitrich.xchangestream.bitstamp.v2.BitstampStreamingService;
+import info.bitrich.xchangestream.bitstamp.v2.dto.BitstampWebSocketOrderData;
+import info.bitrich.xchangestream.bitstamp.v2.dto.BitstampWebSocketOrderEvent;
 import io.reactivex.Observable;
 import io.reactivex.observers.TestObserver;
 import java.math.BigDecimal;
@@ -136,4 +138,59 @@ public class BitstampStreamingMarketDataServiceV2Test
   public void testGetTicker() throws Exception {
     marketDataService.getTicker(CurrencyPair.BTC_EUR).test();
   }
+
+  @Test
+  public void testOrders() throws Exception {
+    String channel = "live_orders_btcusd";
+    String event = "order_created";
+
+    testOrdersCommons("/orders-v2-created.json", channel, event,
+      new BitstampWebSocketOrderEvent(
+        new BitstampWebSocketOrderData(
+                0,
+                BigDecimal.valueOf(5901.51d),
+                1584902114L,
+                BigDecimal.valueOf(0.1379724d),
+                "1212691004391424",
+                "0.13797240",
+                "5901.51",
+                1212691004391424L,
+                "1584902114401000"),
+        "order_created",
+        "live_orders_btcusd"
+      )
+    );
+
+    testOrdersCommons("/orders-v2-deleted.json", channel, event,
+            new BitstampWebSocketOrderEvent(
+                    new BitstampWebSocketOrderData(
+                            0,
+                            BigDecimal.valueOf(5868.27d),
+                            1584902114L,
+                            BigDecimal.valueOf(0.06d),
+                            "1212691001229312",
+                            "0.06000000",
+                            "5868.27",
+                            1212691001229312L,
+                            "1584902114398000"),
+                    "order_deleted",
+                    "live_orders_btcusd"
+            )
+    );
+  }
+
+  public void testOrdersCommons(String resourceName, String channel, String event,
+                                BitstampWebSocketOrderEvent expected) throws Exception {
+    // Given order event in JSON
+    JsonNode order = mapper.readTree(this.getClass().getResource(resourceName));
+
+    when(streamingService.subscribeChannel(eq(channel), eq(event))).thenReturn(Observable.just(order));
+
+    // Call get order book observable
+    TestObserver<BitstampWebSocketOrderEvent> test = marketDataService.getOrders(CurrencyPair.BTC_USD).test();
+
+    // We get order book object in correct order
+    validateTrades(expected, test);
+  }
+
 }

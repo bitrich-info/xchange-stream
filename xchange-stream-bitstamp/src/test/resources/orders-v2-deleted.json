@@ -1,0 +1,15 @@
+{
+  "data": {
+    "order_type": 0,
+    "price": 5868.27,
+    "datetime": "1584902114",
+    "amount": 0.06,
+    "id_str": "1212691001229312",
+    "amount_str": "0.06000000",
+    "price_str": "5868.27",
+    "id": 1212691001229312,
+    "microtimestamp": "1584902114398000"
+  },
+  "event": "order_deleted",
+  "channel": "live_orders_btcusd"
+}
