@@ -5,13 +5,6 @@ import info.bitrich.xchangestream.core.StreamingMarketDataService;
 import info.bitrich.xchangestream.kraken.dto.enums.KrakenSubscriptionName;
 import info.bitrich.xchangestream.service.netty.StreamingObjectMapperHelper;
 import io.reactivex.Observable;
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.knowm.xchange.currency.CurrencyPair;
@@ -26,6 +19,14 @@ import org.knowm.xchange.kraken.dto.trade.KrakenOrderType;
 import org.knowm.xchange.kraken.dto.trade.KrakenType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /** @author makarid, pchertalev */
 public class KrakenStreamingMarketDataService implements StreamingMarketDataService {
@@ -145,7 +146,10 @@ public class KrakenStreamingMarketDataService implements StreamingMarketDataServ
 
   private String getChannelName(
       KrakenSubscriptionName subscriptionName, CurrencyPair currencyPair) {
-    String pair = currencyPair.base.toString() + "/" + currencyPair.counter.toString();
+    String pair =
+        KrakenAdapters.adaptCurrencyPair(
+                currencyPair.base.getCurrencyCode() + currencyPair.counter.getCurrencyCode())
+            .toString();
     return subscriptionName + KRAKEN_CHANNEL_DELIMITER + pair;
   }
 
