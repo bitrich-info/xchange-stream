@@ -28,7 +28,7 @@ public class BitfinexManualExample {
       LOG.warn("Bitfinex connection throttle control has been interrupted");
     }
   }
-
+  @SuppressWarnings("deprecation")
   public static void main(String[] args) throws Exception {
     CertHelper.trustAllCerts();
 
