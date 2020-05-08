@@ -13,8 +13,7 @@ import org.knowm.xchange.dto.Order;
 import org.knowm.xchange.dto.trade.*;
 import org.knowm.xchange.lgo.LgoEnv;
 
-@Ignore
-public class LgoStreamingExchangeExample {
+public class LgoStreamingExchangeIT {
 
   private LgoStreamingExchange exchange;
 
@@ -33,7 +32,7 @@ public class LgoStreamingExchangeExample {
   }
 
   private String readResource(String path) throws IOException {
-    InputStream stream = LgoStreamingExchangeExample.class.getResourceAsStream(path);
+    InputStream stream = LgoStreamingExchangeIT.class.getResourceAsStream(path);
     return IOUtils.toString(stream, StandardCharsets.UTF_8);
   }
 
